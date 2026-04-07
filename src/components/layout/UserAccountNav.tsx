@@ -3,15 +3,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Settings, User } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/layout/auth-provider'; 
 
 interface UserAccountNavProps {
   userName?: string;
@@ -19,8 +21,16 @@ interface UserAccountNavProps {
 }
 
 export function UserAccountNav({ userName = "UJ Admin", userEmail = "admin@uj.ac.za" }: UserAccountNavProps) {
+  const { logout } = useAuth();
+  const router = useRouter();
+  
   // Extract initials for the avatar fallback
   const initials = userName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+
+  const handleSignOut = () => {
+    logout();
+    router.push('/');
+  };
 
   return (
     <DropdownMenu>
@@ -72,7 +82,7 @@ export function UserAccountNav({ userName = "UJ Admin", userEmail = "admin@uj.ac
         
         <DropdownMenuItem
           className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-500 dark:focus:bg-red-950/30 cursor-pointer font-bold rounded-lg p-3 transition-colors"
-          onClick={() => console.log('Sign out clicked')}
+          onClick={handleSignOut}
         >
           <LogOut className="mr-3 h-4 w-4" />
           <span>Sign Out</span>
