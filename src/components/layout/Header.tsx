@@ -12,8 +12,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Restored components from the dashboard header
-import { NotificationBell } from "../../components/layout/NotificationBell";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserAccountNav } from "./UserAccountNav";
 
 export function Header() {
@@ -41,7 +40,7 @@ export function Header() {
               {/* Logo - Same as logged out view */}
               <Link href="/" className="flex items-center" onClick={closeMenu}>
                 <Image
-                  src="EchonavLogo.svg"
+                  src="/EchonavLogo.svg"
                   alt="EchoNav Logo"
                   width={30}
                   height={20}
