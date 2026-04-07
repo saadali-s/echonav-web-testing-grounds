@@ -1,0 +1,83 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Activity, AlertTriangle, ArrowRight, Map } from "lucide-react";
+import Link from "next/link";
+
+export interface MapData {
+  id: string;
+  name: string;
+  privacy: "PUBLIC" | "PRIVATE";
+  stats: { nodes: number; edges: number };
+  health: "ONLINE" | "MAINTENANCE";
+  updatedAt: string;
+}
+
+export function MapCard({ map }: { map: MapData }) {
+  const isHealthy = map.health === "ONLINE";
+
+  return (
+    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group">
+      {/* Thumbnail Area */}
+      <div className="h-40 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800 relative">
+        <Map className="h-12 w-12 text-zinc-950 dark:text-zinc-100 group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
+        
+        {/* Privacy Badge */}
+        <Badge 
+          variant={map.privacy === "PUBLIC" ? "default" : "secondary"} 
+          className="absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md"
+        >
+          {map.privacy}
+        </Badge>
+      </div>
+
+      <CardContent className="p-5 flex-1 space-y-5">
+        <div>
+          <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase truncate tracking-tight">{map.name}</h3>
+          <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest mt-1">Updated {map.updatedAt}</p>
+        </div>
+
+        {/* Graph Stats */}
+        <div className="flex items-center gap-4 text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none uppercase tracking-wider">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-zinc-500" />
+            <span className="text-lg font-black">{map.stats.nodes}</span> Nodes
+          </div>
+          <div className="w-0.5 h-6 bg-zinc-950 dark:bg-zinc-800"></div>
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-zinc-500" />
+            <span className="text-lg font-black">{map.stats.edges}</span> Edges
+          </div>
+        </div>
+
+        {/* Hardware Health Indicator */}
+        <div className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-wider">
+          {isHealthy ? (
+            <>
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-zinc-950"></span>
+              </span>
+              <span className="text-emerald-700 dark:text-emerald-500">All Hardware Online</span>
+            </>
+          ) : (
+            <>
+              <div className="h-5 w-5 bg-amber-100 border-2 border-amber-900 text-amber-900 flex items-center justify-center rounded-md shrink-0">
+                <AlertTriangle className="h-3 w-3" />
+              </div>
+              <span className="text-amber-700 dark:text-amber-500">Maintenance Required</span>
+            </>
+          )}
+        </div>
+      </CardContent>
+
+      <CardFooter className="p-5 pt-0 mt-auto">
+        <Button className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-widest rounded-lg h-10 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none" asChild>
+          <Link href={`/map-studio/${map.id}`}>
+            OPEN ARCHITECT <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
