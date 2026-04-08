@@ -1,15 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { ModeToggle } from "@/components/layout/theme-toggle";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/components/layout/auth-provider";
+import { ModeToggle } from "@/components/layout/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { NotificationBell } from "@/components/layout/NotificationBell";
@@ -40,7 +40,7 @@ export function Header() {
               {/* Logo - Same as logged out view */}
               <Link href="/" className="flex items-center" onClick={closeMenu}>
                 <Image
-                  src="/EchonavLogo.svg"
+                  src="./EchonavLogo.svg"
                   alt="EchoNav Logo"
                   width={30}
                   height={20}
