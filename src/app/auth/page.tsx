@@ -18,6 +18,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function AuthForm() {
   const { login } = useAuth();
@@ -26,11 +33,11 @@ function AuthForm() {
 
   const activeTab = searchParams.get("tab") || "login";
 
-  const handleTabChange = (value) => {
+  const handleTabChange = (value: string) => {
     router.push(`/auth?tab=${value}`);
   };
 
-  const handleAuthSubmit = (e) => {
+  const handleAuthSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     login();
     router.push("/dashboard");
@@ -138,12 +145,39 @@ function AuthForm() {
             </CardHeader>
             <form onSubmit={handleAuthSubmit}>
               <CardContent className="space-y-4">
+                {/* Institution Name */}
                 <div className="space-y-2">
-                  <Label htmlFor="new-email">Email</Label>
+                  <Label htmlFor="inst-name">Institution Name</Label>
+                  <Input 
+                    id="inst-name" 
+                    placeholder="e.g., University of Johannesburg" 
+                    className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20" 
+                    required 
+                  />
+                </div>
+
+                {/* Facility Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="facility-type">Facility Type</Label>
+                  <Select required>
+                    <SelectTrigger className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="university">University</SelectItem>
+                      <SelectItem value="mall">Shopping Mall</SelectItem>
+                      <SelectItem value="hospital">Hospital</SelectItem>
+                      <SelectItem value="other">Other Office/Building</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="new-email">Admin Email</Label>
                   <Input
                     id="new-email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder="admin@institution.com"
                     className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
                   />
