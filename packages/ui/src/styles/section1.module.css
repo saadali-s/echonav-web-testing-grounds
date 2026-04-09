@@ -1,0 +1,19 @@
+.h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: 0.05rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-sans);
+}
+.h2 {
+    font-size: 1.5rem;
+    color: var(--muted-foreground);
+    margin-bottom: 2rem;
+    margin-left: 0.25rem;
+}
+.cardHolder {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 2rem;
+}
