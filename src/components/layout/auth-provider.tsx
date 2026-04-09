@@ -1,30 +1,49 @@
 "use client";
 
 import * as React from "react";
+import { createClient } from "@/lib/supabase/client"; // Use your central client!
 
-// 1. Define the shape of your context
 interface AuthContextType {
   isLoggedIn: boolean;
   login: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
-// 2. Pass the type to createContext
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
+  // Use your lib's createClient function
+  const supabase = React.useMemo(() => createClient(), []);
+
+  React.useEffect(() => {
+    // If createClient returned null (due to missing keys), stop here
+    if (!supabase) return;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
   const login = () => setIsLoggedIn(true);
-  const logout = () => setIsLoggedIn(false);
+  
+  const logout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+      setIsLoggedIn(false);
+    }
+  };
 
   const value = React.useMemo(
-    () => ({
-      isLoggedIn,
-      login,
-      logout,
-    }),
-    [isLoggedIn],
+    () => ({ isLoggedIn, login, logout }),
+    [isLoggedIn, supabase]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

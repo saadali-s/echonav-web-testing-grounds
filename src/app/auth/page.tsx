@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import NextLink from "next/link";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -23,17 +23,94 @@ function AuthForm() {
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-
   const activeTab = searchParams.get("tab") || "login";
 
+  // --- FORM STATE ---
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Login State
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+
+  // Signup State
+  const [instName, setInstName] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const handleTabChange = (value: string) => {
+    setError(""); // Clear errors when switching tabs
     router.push(`/auth?tab=${value}`);
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  // --- LOGIN LOGIC ---
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login();
-    router.push("/dashboard");
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login(); // Update your AuthProvider state
+        router.push("/dashboard");
+      } else {
+        setError(data.error || "Failed to log in");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- SIGNUP LOGIC ---
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+
+    if (signupPassword !== confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Hit your newly created signup route
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          institution: instName,
+          email: signupEmail,
+          password: signupPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login();
+        router.push("/dashboard");
+      } else {
+        // Change this line to show the REAL error from the server
+        setError(data.error || "Failed to create account");
+        console.log("Full Server Error:", data); // Also log it to the console
+      }
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,6 +151,13 @@ function AuthForm() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Global Error Display */}
+        {error && (
+          <div className="mt-4 p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md text-center">
+            {error}
+          </div>
+        )}
+
         <TabsContent value="login" className="mt-4">
           <Card className="border-border/50 shadow-xl shadow-black/5">
             <CardHeader className="space-y-1">
@@ -84,7 +168,7 @@ function AuthForm() {
                 Enter your credentials to access your dashboard.
               </CardDescription>
             </CardHeader>
-            <form onSubmit={handleAuthSubmit}>
+            <form onSubmit={handleLoginSubmit}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -94,6 +178,8 @@ function AuthForm() {
                     placeholder="name@example.com"
                     className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -111,15 +197,18 @@ function AuthForm() {
                     type="password"
                     className="mb-3 h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                   />
                 </div>
               </CardContent>
               <CardFooter className="pt-2">
                 <Button
                   type="submit"
+                  disabled={isLoading}
                   className="mt-2 w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all"
                 >
-                  Log in
+                  {isLoading ? "Logging in..." : "Log in"}
                 </Button>
               </CardFooter>
             </form>
@@ -136,19 +225,19 @@ function AuthForm() {
                 Join EchoNav to start navigating with confidence.
               </CardDescription>
             </CardHeader>
-            <form onSubmit={handleAuthSubmit}>
+            <form onSubmit={handleSignupSubmit}>
               <CardContent className="space-y-4">
-                {/* Institution Name */}
                 <div className="space-y-2">
                   <Label htmlFor="inst-name">Institution Name</Label>
-                  <Input 
-                    id="inst-name" 
-                    placeholder="e.g., University of Johannesburg" 
-                    className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20" 
-                    required 
+                  <Input
+                    id="inst-name"
+                    placeholder="e.g., University of Johannesburg"
+                    className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
+                    required
+                    value={instName}
+                    onChange={(e) => setInstName(e.target.value)}
                   />
                 </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="new-email">Admin Email</Label>
                   <Input
@@ -157,6 +246,8 @@ function AuthForm() {
                     placeholder="admin@institution.com"
                     className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -166,6 +257,8 @@ function AuthForm() {
                     type="password"
                     className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -175,15 +268,18 @@ function AuthForm() {
                     type="password"
                     className="mb-3 h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                     required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                   />
                 </div>
               </CardContent>
               <CardFooter className="pt-2">
                 <Button
                   type="submit"
+                  disabled={isLoading}
                   className="mt-2 w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all"
                 >
-                  Create account
+                  {isLoading ? "Creating account..." : "Create account"}
                 </Button>
               </CardFooter>
             </form>
