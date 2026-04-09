@@ -18,13 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 function AuthForm() {
   const { login } = useAuth();
@@ -154,22 +147,6 @@ function AuthForm() {
                     className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20" 
                     required 
                   />
-                </div>
-
-                {/* Facility Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="facility-type">Facility Type</Label>
-                  <Select required>
-                    <SelectTrigger className="h-11 rounded-lg bg-secondary/30 focus-visible:ring-primary/20">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="university">University</SelectItem>
-                      <SelectItem value="mall">Shopping Mall</SelectItem>
-                      <SelectItem value="hospital">Hospital</SelectItem>
-                      <SelectItem value="other">Other Office/Building</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="space-y-2">
