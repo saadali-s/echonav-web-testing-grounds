@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Production build logs
+build-manifest.json
+react-loadable-manifest.json
+
+# Turbopack cache
+.turbopack/
