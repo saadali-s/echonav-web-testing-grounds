@@ -10,6 +10,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 // Layout Components
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 

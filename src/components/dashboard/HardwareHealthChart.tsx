@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BatteryWarning, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import React from "react";
 
 const data = [
   { name: 'Healthy (>50%)', value: 110, color: '#3b82f6' },

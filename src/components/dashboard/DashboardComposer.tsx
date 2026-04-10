@@ -6,6 +6,7 @@ import { SystemEvent, SystemEventsFeed } from '@/components/dashboard/SystemEven
 import { Button } from '@/components/ui/button';
 import { KeyRound } from 'lucide-react';
 import Link from 'next/link';
+import React from "react";
 
 // --- Mock Data ---
 const mockStats: DashboardStats = { mappedBuildings: { count: 4, subtext: '+1 added this month' }, activeBeacons: { count: 142, subtext: '98.5% online' }, pendingTasks: { count: 12, subtext: 'Requiring field calibration' }};

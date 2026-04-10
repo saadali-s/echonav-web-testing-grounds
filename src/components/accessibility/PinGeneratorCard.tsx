@@ -3,7 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound, ShieldCheck, Timer } from "lucide-react";
+import React from "react";
 import { useEffect, useState } from "react";
+
 
 export function PinGeneratorCard() {
   const [activePin, setActivePin] = useState<string | null>(null);

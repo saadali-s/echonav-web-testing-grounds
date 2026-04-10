@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RadioTower } from 'lucide-react';
-
+import React from "react";
 export interface SystemEvent {
   id: string;
   type: 'HAZARD' | 'CALIBRATION';

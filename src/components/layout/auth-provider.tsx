@@ -21,11 +21,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // If createClient returned null (due to missing keys), stop here
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
       setIsLoggedIn(!!session);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setIsLoggedIn(!!session);
     });
 

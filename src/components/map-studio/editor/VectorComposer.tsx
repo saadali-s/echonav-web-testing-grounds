@@ -9,6 +9,7 @@ import { NodeLayer } from "./vector/NodeLayer";
 import { StatusBar } from "./vector/StatusBar";
 import { EdgeData, NodeData, VectorComposerProps } from "./vector/types";
 import { ZoomControls } from "./vector/ZoomControls";
+import React from "react";
 
 export function VectorComposer({ activeTool }: VectorComposerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,8 +40,11 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
   useEffect(() => { scaleRef.current = scale; }, [scale]);
 
   useEffect(() => {
-    setNodes(history[historyIndex].nodes);
-    setEdges(history[historyIndex].edges);
+    const current = history[historyIndex];
+    if (current) {
+      setNodes(current.nodes);
+      setEdges(current.edges);
+    }
   }, [historyIndex, history]);
 
   const pushHistory = (newNodes: NodeData[], newEdges: EdgeData[]) => {
@@ -209,7 +213,10 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         if (!exists) {
             const newEdges = [...edges, { id: `e${Date.now()}`, source: draftEdge.source, target: dropTarget.id }];
             pushHistory(nodes, newEdges);
-            setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
+            const lastEdge = newEdges[newEdges.length - 1];
+            if (lastEdge) {
+                setSelectedEdgeIds([lastEdge.id]);
+            }
             setSelectedNodeIds([]);
             setSelection("EDGE");
         }

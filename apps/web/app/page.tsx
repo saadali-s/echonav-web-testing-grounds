@@ -1,6 +1,7 @@
 import Nav from "@workspace/ui/nav"
 import Section1 from "@workspace/ui/section1"
 import Section2 from "@workspace/ui/section2"
+import Section3 from "@workspace/ui/section3"
 
 export default function Page() {
   return (
@@ -13,6 +14,9 @@ export default function Page() {
       </div>
       <div className="w-full flex-1 rounded-lg p-10">
         <Section2 />
+      </div>
+      <div className="w-full flex-1 rounded-lg p-10">
+        <Section3 />
       </div>
     </div>
   )

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileType2, Plus, UploadCloud } from "lucide-react";
 import { useState } from "react";
+import React from "react";
 
 export function CreateMapModal() {
   const [certified, setCertified] = useState(false);

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Mail, Send, UserPlus } from "lucide-react";
 import { useState } from "react";
+import React from "react";
 
 export function InviteEngine() {
   const [email, setEmail] = useState("");

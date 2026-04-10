@@ -1,4 +1,5 @@
 import { GraphEditorComposer } from "@/components/map-studio/editor/GraphEditorComposer";
+import React from "react";
 
 export default function EditorPage() {
   // Normally, we would await params.id here and fetch the initial graph data,

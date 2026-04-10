@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound } from "lucide-react";
+import React from "react";
 
 export interface ActivePin {
   id: string;

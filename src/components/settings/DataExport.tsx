@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DownloadCloud, FileJson, ShieldCheck } from "lucide-react";
+import React from "react";
 
 export function DataExport() {
   const handleExport = () => {

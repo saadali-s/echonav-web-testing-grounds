@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, MousePointer2, Route, Save } from "lucide-react";
 import { NodeData } from "./vector/types";
+import React from "react";
 
 export type SelectionType = "NODE" | "EDGE" | null;
 

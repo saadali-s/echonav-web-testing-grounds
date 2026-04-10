@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/carousel";
 import { ArrowRight, Map } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 export interface FloorPlan {
   id: string;

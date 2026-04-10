@@ -1,3 +1,4 @@
+import React from "react";
 import { ActivePin, ActivePinsTable } from "./ActivePinsTable";
 import { PinGeneratorCard } from "./PinGeneratorCard";
 

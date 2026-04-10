@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Bell, Info, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
+import React from "react";
 
 // Mock data for UI review
 const mockNotifications = [

@@ -1,6 +1,7 @@
 import { CreateMapModal } from "@/components/map-studio/CreateMapModal";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { MapCard, MapData } from "./MapCard";
+import React from "react";
 
 // --- Mock Data ---
 const mockMaps: MapData[] = [

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Building2, ClipboardList, RadioTower } from 'lucide-react';
-
+import React from "react";
 export interface DashboardStats {
   mappedBuildings: { count: number; subtext: string };
   activeBeacons: { count: number; subtext: string };

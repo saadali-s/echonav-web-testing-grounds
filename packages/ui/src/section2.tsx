@@ -12,16 +12,16 @@ export default function Section2() {
             <h2 className={styles.h2}>
                 Manage your studio floor designs and routing graphs
             </h2>
-            <div className="flex flex-wrap items-center justify-center gap-6 p-10">
-                <MapCard Title="Science Block - Floor 2" Updated="Updated 2 hours ago" Nodes={42} Edges={68} />
-                <MapCard Title="Engineering Block - Floor 1" Updated="Updated 30 minutes ago" Nodes={50} Edges={75} />
-                <MapCard Title="Main Building - Floor 3" Updated="Updated 1 day ago" Nodes={60} Edges={90} />
+            <div className="flex flex-wrap items-center justify-center gap-6 p-10 border border-black rounded-[1.25rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <MapCard Title="Science Block - Floor 2" Updated="Updated 2 hours ago" Nodes={42} Edges={68} Status="All Hardware Online" BackgroundColor="bg-green-500" Color="text-green-500" />
+                <MapCard Title="Engineering Block - Floor 1" Updated="Updated 30 minutes ago" Nodes={50} Edges={75} Status="All Hardware Online" BackgroundColor="bg-green-500" Color="text-green-500" />
+                <MapCard Title="Main Building - Floor 3" Updated="Updated 1 day ago" Nodes={60} Edges={90} Status="Maintenance Required" BackgroundColor="bg-red-500" Color="text-red-500" />
             </div>
         </section>
     )
 }
 
-export function MapCard({Title = " ", Updated = " ", Nodes = 0, Edges = 0} : {Title?: string, Updated?: string, Nodes?: number, Edges?: number}) {
+export function MapCard({Title = " ", Updated = " ", Nodes = 0, Edges = 0, Status = " ", BackgroundColor = " ", Color = " "} : {Title?: string, Updated?: string, Nodes?: number, Edges?: number, Status?: string, BackgroundColor?: string, Color?: string}) {
   return (
     <Card className="flex flex-col overflow-hidden bg-white border-[2px] border-black rounded-[1.25rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] min-w-[450px]">
       <div className="relative flex items-center justify-center min-h-[180px] bg-[#ffffff] border-b-2 border-black">
@@ -54,9 +54,9 @@ export function MapCard({Title = " ", Updated = " ", Nodes = 0, Edges = 0} : {Ti
         </CardContent>
 
         <CardFooter className="flex items-center gap-2 mb-6 bg-white border-none">
-          <div className="w-3 h-3 rounded-full bg-[#4ADE80] border-[1.5px] border-black" />
-          <span className="text-[10px] font-black text-[#15803D] uppercase tracking-wider">
-            All Hardware Online
+          <div className={`w-3 h-3 rounded-full ${BackgroundColor} border-[1.5px] border-black`} />
+          <span className={`text-[10px] font-black ${Color} uppercase tracking-wider`}>
+            {Status}
           </span>
         </CardFooter>
         <button className="flex items-center justify-center w-full gap-2 p-4 font-black text-white uppercase transition-colors bg-black rounded-xl hover:bg-zinc-800">

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Activity, AlertTriangle, ArrowRight, Map } from "lucide-react";
 import Link from "next/link";
+import React from "react";
 
 export interface MapData {
   id: string;

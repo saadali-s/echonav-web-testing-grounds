@@ -1,5 +1,6 @@
 import { DataExport } from "./DataExport";
 import { InstitutionalProfile } from "./InstitutionalProfile";
+import React from "react";
 
 export function SettingsComposer() {
   return (

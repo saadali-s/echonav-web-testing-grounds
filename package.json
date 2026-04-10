@@ -10,13 +10,13 @@
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
-    "@workspace/eslint-config": "*",
-    "@workspace/typescript-config": "*",
-    "prettier": "^3.8.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
-    "turbo": "^2.8.17",
-    "typescript": "5.9.3"
-  },
+  "@workspace/eslint-config": "file:./packages/eslint-config",
+  "@workspace/typescript-config": "file:./packages/typescript-config",
+  "prettier": "^3.8.1",
+  "prettier-plugin-tailwindcss": "^0.7.2",
+  "turbo": "^2.8.17",
+  "typescript": "5.9.3"
+},
   "packageManager": "npm@11.10.0",
   "engines": {
     "node": ">=20"
@@ -24,5 +24,9 @@
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "overrides": {
+    "@types/react": "18.x.x",
+    "@types/react-dom": "18.x.x"
+  }
 }

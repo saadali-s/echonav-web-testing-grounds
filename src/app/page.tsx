@@ -1,4 +1,5 @@
 import { Geist } from "next/font/google";
+import React from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

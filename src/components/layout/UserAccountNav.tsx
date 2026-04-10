@@ -14,6 +14,7 @@ import { LogOut, Settings, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/auth-provider'; 
+import React from "react";
 
 interface UserAccountNavProps {
   userName?: string;
