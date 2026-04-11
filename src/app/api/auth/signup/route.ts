@@ -32,6 +32,6 @@ export async function POST(request : Request) {
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "An unexpected error occurred";
-        return NextResponse.json({ error: message }, { status: 400 }); // Changed 401 to 400 (Bad Request)
+        return NextResponse.json({ error: message }, { status: 400 }); 
   }
 }
