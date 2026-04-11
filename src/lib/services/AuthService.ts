@@ -180,7 +180,6 @@ export class AuthService {
       password: adminPassword,
     });
 
-    // Log the real error to your VS Code terminal so you can see it
     if (authError) {
       console.error("SUPABASE CLOUD AUTH ERROR:", authError.message);
       throw new Error(`Supabase refused to create user: ${authError.message}`);
