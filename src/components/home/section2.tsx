@@ -1,15 +1,14 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import styles from "./styles/section1.module.css";
 import { Map, ArrowRight, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Section2() {
     return (
         <section className="flex flex-col items-center gap-4">
-            <h1 className={styles.h1}>
+            <h1 className="text-[2.5rem] font-bold tracking-[0.05rem] mb-2 font-[family-name:var(--font-sans)] text-black">
                 A Studio Directory Catered to Your Needs
             </h1>
-            <h2 className={styles.h2}>
+            <h2 className="text-2xl text-[color:var(--muted-foreground)]">
                 Manage your studio floor designs and routing graphs
             </h2>
             <div className="flex flex-wrap items-center justify-center gap-6 p-10 border border-black rounded-[1.25rem] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">

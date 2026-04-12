@@ -1,6 +1,5 @@
 "use client";
-import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart, YAxis } from "recharts";
-import styles from "./styles/section1.module.css"
+import { CartesianGrid, XAxis, Line, LineChart, YAxis } from "recharts";
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const chartData = [
@@ -33,14 +32,14 @@ const chartConfig = {
 export default function Section1() {
     return (
         <section className="flex items-center justify-center flex-col gap-6">
-            <h1 className={styles.h1}>
+            <h1 className="text-[2.5rem] font-bold tracking-[0.05rem] mb-2 font-[family-name:var(--font-sans)] text-black">
                 Your Ultimate Beacon Management Solution
             </h1>
-            <h2 className={styles.h2}>
+            <h2 className="text-2xl text-[color:var(--muted-foreground)]">
                 Keep track of your beacons' efficiency and performance
             </h2>
             <div className="flex flex-row items-center gap-6">
-            <ChartContainer config={chartConfig} className={`h-[400px] w-[800px] ${styles.chartContainer} border border-primary rounded-lg p-10`}>
+            <ChartContainer config={chartConfig} className={`h-[400px] w-[800px] border border-primary rounded-lg p-10`}>
                 <LineChart margin={{ left: 12, right: 12 }} data={chartData}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
                     <XAxis
@@ -70,7 +69,7 @@ export default function Section1() {
                     />
                 </LineChart>
             </ChartContainer>
-            <ChartContainer config={chartConfig} className={`h-[400px] w-[800px] ${styles.chartContainer} border border-primary rounded-lg p-10`}>
+            <ChartContainer config={chartConfig} className={`h-[400px] w-[800px] border border-primary rounded-lg p-10`}>
                 <LineChart margin={{ left: 12, right: 12 }} data={charData2}>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" />
                     <XAxis

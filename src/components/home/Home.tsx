@@ -4,7 +4,7 @@ import Section2 from "./section2"
 import Section3 from "./section3"
 import Footer from "./section4"
 
-export default function Page() {
+export default function Home() {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="w-full flex-1 rounded-lg border bg-muted p-6">
