@@ -43,8 +43,8 @@ export class PathfindingService {
       if (edge.is_hazard) return;
       if (safeNodeIds.has(edge.from_node_id) && safeNodeIds.has(edge.to_node_id)) {
         // We push to both because walking paths are two-way
-        graph[edge.from_node_id].push({ targetNodeId: edge.to_node_id, weight: edge.weight_m });
-        graph[edge.to_node_id].push({ targetNodeId: edge.from_node_id, weight: edge.weight_m });
+        graph[edge.from_node_id]?.push({ targetNodeId: edge.to_node_id, weight: edge.weight_m });
+        graph[edge.to_node_id]?.push({ targetNodeId: edge.from_node_id, weight: edge.weight_m });
       }
     });
 
@@ -66,7 +66,7 @@ export class PathfindingService {
       let currNodeId: string | null = null;
       let minDistance = Infinity;
       unvisited.forEach(id => {
-        if (distances[id] < minDistance) {
+        if (distances[id] !== undefined && distances[id] < minDistance) {
           minDistance = distances[id];
           currNodeId = id;
         }
@@ -83,8 +83,8 @@ export class PathfindingService {
       for (const neighbor of neighbors) {
         if (!unvisited.has(neighbor.targetNodeId)) continue;
 
-        const altDistance = distances[currNodeId] + neighbor.weight;
-        if (altDistance < distances[neighbor.targetNodeId]) {
+        const altDistance = distances[currNodeId]! + neighbor.weight;
+        if (altDistance < distances[neighbor.targetNodeId]!) {
           distances[neighbor.targetNodeId] = altDistance;
           previous[neighbor.targetNodeId] = currNodeId;
         }
@@ -99,7 +99,7 @@ export class PathfindingService {
     if (previous[curr] !== null || curr === startNodeId) {
       while (curr) {
         pathIds.unshift(curr);
-        curr = previous[curr];
+        curr = previous[curr] ?? null;
       }
     }
 
@@ -113,14 +113,14 @@ export class PathfindingService {
 
     for (let i = 0; i < pathIds.length; i++) {
       const nodeId = pathIds[i];
-      const node = nodeMap.get(nodeId)!;
+      const node = nodeMap.get(nodeId as string)!;
 
       // Dynamic Text-To-Speech generation
       let instruction = node.tts_verbal_guidance || `Proceeding past ${node.label}`;
       if (i === pathIds.length - 1) {
         instruction = node.tts_verbal_guidance || `You have arrived at your destination: ${node.label}.`;
       } else if (i === 0) {
-        instruction = `Starting route. ${node.tts_verbal_guidance || `Head towards ${nodeMap.get(pathIds[1])?.label}`}`;
+        instruction = `Starting route. ${node.tts_verbal_guidance || `Head towards ${nodeMap.get(pathIds[1]!)?.label || 'next waypoint'}`}`;
       }
 
       // Calculate distance to the *next* node for the mobile app's proximity trigger
