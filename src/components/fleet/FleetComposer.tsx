@@ -120,7 +120,7 @@ export function FleetComposer() {
         </TabsContent>
 
         <TabsContent value="inventory" className="flex-1 mt-6 min-h-0 pb-8">
-          <HardwareInventory items={inventory} />
+          <HardwareInventory items={inventory} isLoading={isLoading}/>
         </TabsContent>
       </Tabs>
     </div>

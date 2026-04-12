@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioTower } from "lucide-react";
+import { RadioTower, Loader2 } from "lucide-react";
 
 export interface InventoryItem {
   id: string;
@@ -8,15 +8,30 @@ export interface InventoryItem {
   rssi: number;
 }
 
-export function HardwareInventory({ items }: { items: InventoryItem[] }) {
+export function HardwareInventory({ items, isLoading }: { items: InventoryItem[], isLoading?: boolean }) {
   return (
     <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4 p-5">
-        <CardTitle className="font-black uppercase tracking-wider text-sm">Verified Hardware Inventory</CardTitle>
+        <CardTitle className="font-black uppercase tracking-wider text-sm flex items-center gap-2">
+          Verified Hardware Inventory
+          {isLoading && <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />}
+        </CardTitle>
       </CardHeader>
       
       <CardContent className="flex-1 p-0 overflow-y-auto">
-        {items.length === 0 ? (
+        {isLoading ? (
+          // --- THE SKELETON LOADER ---
+          <div className="flex flex-col p-6 space-y-4">
+             {[1, 2, 3].map((skeleton) => (
+               <div key={skeleton} className="flex justify-between items-center animate-pulse border-b-2 border-zinc-100 dark:border-zinc-800 pb-4">
+                 <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-1/3"></div>
+                 <div className="h-6 bg-zinc-200 dark:bg-zinc-800 rounded w-24"></div>
+                 <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-16"></div>
+               </div>
+             ))}
+          </div>
+        ) : items.length === 0 ? (
+          // --- THE EMPTY STATE ---
           <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-zinc-50/50 dark:bg-zinc-950">
             <div className="w-16 h-16 rounded-xl border-2 border-zinc-300 dark:border-zinc-700 flex items-center justify-center bg-white dark:bg-zinc-900 mb-4 rotate-3">
               <RadioTower className="h-8 w-8 text-zinc-400 dark:text-zinc-600" />
@@ -25,6 +40,7 @@ export function HardwareInventory({ items }: { items: InventoryItem[] }) {
             <p className="text-xs font-bold text-zinc-500 mt-2 max-w-sm uppercase tracking-widest leading-relaxed">Assign tasks to staff in the Deployment tab to begin populating your inventory.</p>
           </div>
         ) : (
+          // --- THE ACTUAL DATA ---
           <div className="min-w-150">
             <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-6 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900 text-[11px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-wider sticky top-0">
               <span>Node Label</span>

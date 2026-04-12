@@ -24,39 +24,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     if (!supabase) return;
 
-    // Helper function to fetch the Org ID from your existing profiles table
-    const fetchUserProfile = async (userId: string) => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", userId)
-        .single();
-
-      if (!error && data) {
-        setActiveOrgId(data.organization_id);
-      }
-    };
-
-    // Initial session check
+    // 1. Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setIsLoggedIn(!!session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      }
+
+      // INSTANT READ: No database await required!
+      setActiveOrgId(currentUser?.user_metadata?.organization_id || null);
     });
 
-    // Listen for auth changes (Login, Logout)
+    // 2. Listen for auth changes (Login, Logout)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setIsLoggedIn(!!session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setActiveOrgId(null); 
-      }
+
+      // INSTANT READ
+      setActiveOrgId(currentUser?.user_metadata?.organization_id || null);
     });
 
     return () => subscription.unsubscribe();
@@ -77,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       isLoggedIn,
       user,
-      activeOrgId, 
+      activeOrgId,
       login,
       logout,
     }),

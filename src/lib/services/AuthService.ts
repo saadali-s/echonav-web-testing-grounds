@@ -173,13 +173,14 @@ export class AuthService {
 
     if (orgError) throw new Error(`Failed to create organization: ${orgError.message}`);
 
-    // 2. Register User
+    // 2. Register User + Stamp Metadata
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: adminEmail,
       password: adminPassword,
       options: {
         data: {
           display_name: adminName,
+          organization_id: org.id,
         },
       },
     });
@@ -255,10 +256,16 @@ export class AuthService {
     if (inviteError || !invite)
       throw new Error("Invalid or expired invite code.");
 
-    // 2. Create the Auth User
+    // 2. Create the Auth User + Stamp Metadata
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: invite.email,
       password: password,
+      options: {
+        data: {
+          display_name: displayName,
+          organization_id: invite.organization_id,
+        }
+      }
     });
 
     if (authError || !authData.user)
