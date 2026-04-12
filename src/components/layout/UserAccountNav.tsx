@@ -15,21 +15,24 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/layout/auth-provider'; 
 
-interface UserAccountNavProps {
-  userName?: string;
-  userEmail?: string;
-}
 
-export function UserAccountNav({ userName = "UJ Admin", userEmail = "admin@uj.ac.za" }: UserAccountNavProps) {
-  const { logout } = useAuth();
+export function UserAccountNav() {
+  const { user, logout } = useAuth();
   const router = useRouter();
   
-  // Extract initials for the avatar fallback
-  const initials = userName.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+  const displayName = user?.user_metadata?.display_name || "Admin";
+  const userEmail = user?.email;
 
-  const handleSignOut = () => {
-    logout();
-    router.push('/');
+  // Extract initials for the avatar fallback
+  const initials = displayName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+
+  const handleSignOut= async() => {
+    try{
+      await logout();
+      router.push('/');
+    }catch(error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (
@@ -41,7 +44,7 @@ export function UserAccountNav({ userName = "UJ Admin", userEmail = "admin@uj.ac
           className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
         >
           <Avatar className="h-full w-full rounded-none">
-            <AvatarImage src="" alt={userName} />
+            <AvatarImage src="" alt={displayName} />
             <AvatarFallback className="bg-zinc-100 dark:bg-zinc-900 text-zinc-950 dark:text-white font-black text-xs">
               {initials}
             </AvatarFallback>
@@ -57,7 +60,7 @@ export function UserAccountNav({ userName = "UJ Admin", userEmail = "admin@uj.ac
       >
         <DropdownMenuLabel className="font-normal p-2">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-black uppercase tracking-wider leading-none text-zinc-950 dark:text-zinc-100">{userName}</p>
+            <p className="text-sm font-black uppercase tracking-wider leading-none text-zinc-950 dark:text-zinc-100">{displayName}</p>
             <p className="text-xs font-bold leading-none text-zinc-500">{userEmail}</p>
           </div>
         </DropdownMenuLabel>

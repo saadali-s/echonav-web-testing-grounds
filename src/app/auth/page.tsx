@@ -20,6 +20,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function AuthForm() {
+  const [successMessage, setSuccessMessage] = useState("");
+
   const { login } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -77,15 +79,9 @@ function AuthForm() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-
-    if (signupPassword !== confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+    setSuccessMessage("");
 
     try {
-      // Hit your newly created signup route
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,17 +95,21 @@ function AuthForm() {
       const data = await response.json();
 
       if (response.ok) {
-        login();
-        router.push("/dashboard");
+        if (data.confirmationRequired) {
+          // STAY on page and show message so user can go confirm manually
+          setSuccessMessage(data.message);
+          setIsLoading(false);
+        } else {
+          login();
+          router.push("/dashboard");
+        }
       } else {
-        // Change this line to show the REAL error from the server
         setError(data.error || "Failed to create account");
-        console.log("Full Server Error:", data); // Also log it to the console
       }
     } catch (err) {
       setError("An unexpected error occurred.");
     } finally {
-      setIsLoading(false);
+      if (!successMessage) setIsLoading(false);
     }
   };
 
@@ -214,6 +214,12 @@ function AuthForm() {
             </form>
           </Card>
         </TabsContent>
+
+        {successMessage && (
+          <div className="mt-4 p-3 text-sm text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-center font-bold">
+            {successMessage}
+          </div>
+        )}
 
         <TabsContent value="signup" className="mt-4">
           <Card className="border-border/50 shadow-xl shadow-black/5">
