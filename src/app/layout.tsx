@@ -1,16 +1,8 @@
+import { AuthProvider } from "@/components/layout/auth-provider";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
-// Providers
-import { ThemeProvider } from "@/components/layout/theme-provider";
-import { AuthProvider } from "@/components/layout/auth-provider";
-import { SidebarProvider } from "@/components/ui/sidebar";
-
-// Layout Components
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
-import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,11 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // suppressHydrationWarning is required on the <html> tag when using next-themes
     <html lang="en" suppressHydrationWarning>
+      {/* suppressHydrationWarning here helps with the browser extension error you saw */}
       <body
-        suppressHydrationWarning={true}
-        className={`${inter.className} bg-zinc-50 dark:bg-zinc-900 flex h-screen overflow-hidden antialiased`}
+        suppressHydrationWarning
+        className={`${inter.className} bg-background text-foreground antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -38,20 +30,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <SidebarProvider>
-              {/* Sidebar Component */}
-              <Sidebar />
-
-              {/* Main Content Wrapper */}
-              <div className="flex-1 flex flex-col min-w-0">
-                <Header />
-
-                {/* Scrollable Main Area */}
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
-                  {children}
-                </main>
-              </div>
-            </SidebarProvider>
+            {children}
           </AuthProvider>
         </ThemeProvider>
       </body>

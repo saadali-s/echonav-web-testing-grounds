@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
 import {
   Card,
@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
               Forgot password?
             </CardTitle>
             <CardDescription>
-              Enter your email and we'll send you a reset link.
+              Enter your email and we&apos;ll send you a reset link.
             </CardDescription>
           </CardHeader>
 

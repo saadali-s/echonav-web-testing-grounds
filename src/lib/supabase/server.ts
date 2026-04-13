@@ -4,6 +4,12 @@ import { cookies } from "next/headers";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 
+interface CookieToSet {
+  name: string;
+  value: string;
+  options: Record<string, unknown>;
+}
+
 export const createClient = async () => {
   const cookieStore = await cookies();
   
@@ -15,7 +21,7 @@ export const createClient = async () => {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet: { name: any; value: any; options: any; }[]) {
+        setAll(cookiesToSet: CookieToSet[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
           } catch {

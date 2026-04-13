@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { createClient } from "@/lib/supabase/client"; // Use your central client!
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import * as React from "react";
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -21,11 +22,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // If createClient returned null (due to missing keys), stop here
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       setIsLoggedIn(!!session);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       setIsLoggedIn(!!session);
     });
 
