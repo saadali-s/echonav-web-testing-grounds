@@ -161,7 +161,11 @@ export class AuthService {
     adminEmail: string,
     adminPassword: string,
     adminName: string,
-  ): Promise<{ organizationId: string; adminId: string }> {
+  ): Promise<{
+    organizationId: string;
+    adminId: string;
+    confirmationRequired: boolean;
+  }> {
     const supabase = await createClient();
 
     // 1. Create the Organization
@@ -174,24 +178,23 @@ export class AuthService {
     if (orgError)
       throw new Error(`Failed to create organization: ${orgError.message}`);
 
-    // 2. Register the User in Auth system
+    // 2. Register User + Stamp Metadata
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: adminEmail,
       password: adminPassword,
+      options: {
+        data: {
+          display_name: adminName,
+          organization_id: org.id,
+        },
+      },
     });
 
-    if (authError) {
-      console.error("SUPABASE CLOUD AUTH ERROR:", authError.message);
+    if (authError)
       throw new Error(`Supabase refused to create user: ${authError.message}`);
-    }
+    if (!authData.user) throw new Error("No user data returned.");
 
-    if (!authData.user) {
-      throw new Error(
-        "User creation succeeded, but no user data was returned.",
-      );
-    }
-
-    // 3. Create the Profile linked to the Organization
+    // 3. Create the Profile
     const { error: profileError } = await supabase.from("profiles").insert({
       id: authData.user.id,
       organization_id: org.id,
@@ -201,9 +204,14 @@ export class AuthService {
       status: "ACTIVE",
     });
 
-    if (profileError) throw new Error("Failed to build admin profile.");
+    if (profileError)
+      console.error("Profile creation delay:", profileError.message);
 
-    return { organizationId: org.id, adminId: authData.user.id };
+    return {
+      organizationId: org.id,
+      adminId: authData.user.id,
+      confirmationRequired: !authData.session,
+    };
   }
 
   /**
@@ -255,10 +263,16 @@ export class AuthService {
     if (inviteError || !invite)
       throw new Error("Invalid or expired invite code.");
 
-    // 2. Create the Auth User
+    // 2. Create the Auth User + Stamp Metadata
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: invite.email,
       password: password,
+      options: {
+        data: {
+          display_name: displayName,
+          organization_id: invite.organization_id,
+        },
+      },
     });
 
     if (authError || !authData.user)

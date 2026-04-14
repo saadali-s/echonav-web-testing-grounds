@@ -1,11 +1,13 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client"; // Use your central client!
-import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import * as React from "react";
+import { createClient } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
   isLoggedIn: boolean;
+  user: User | null;
+  activeOrgId: string | null;
   login: () => void;
   logout: () => Promise<void>;
 }
@@ -13,38 +15,60 @@ interface AuthContextType {
 const AuthContext = React.createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = React.useState<User | null>(null);
+  const [activeOrgId, setActiveOrgId] = React.useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
-  // Use your lib's createClient function
   const supabase = React.useMemo(() => createClient(), []);
 
   React.useEffect(() => {
-    // If createClient returned null (due to missing keys), stop here
     if (!supabase) return;
 
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+    // 1. Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setIsLoggedIn(!!session);
+
+      // INSTANT READ: No database await required!
+      setActiveOrgId(currentUser?.user_metadata?.organization_id || null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+    // 2. Listen for auth changes (Login, Logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
       setIsLoggedIn(!!session);
+
+      // INSTANT READ
+      setActiveOrgId(currentUser?.user_metadata?.organization_id || null);
     });
 
     return () => subscription.unsubscribe();
   }, [supabase]);
 
   const login = () => setIsLoggedIn(true);
-  
+
   const logout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
+      setUser(null);
+      setActiveOrgId(null);
       setIsLoggedIn(false);
     }
   };
 
   const value = React.useMemo(
-    () => ({ isLoggedIn, login, logout }),
-    [isLoggedIn, supabase]
+    () => ({
+      isLoggedIn,
+      user,
+      activeOrgId,
+      login,
+      logout,
+    }),
+    [isLoggedIn, user, activeOrgId, supabase],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

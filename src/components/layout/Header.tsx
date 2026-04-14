@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import React from "react";
 
 import { useAuth } from "@/components/layout/auth-provider";
 import { ModeToggle } from "@/components/layout/theme-toggle";
