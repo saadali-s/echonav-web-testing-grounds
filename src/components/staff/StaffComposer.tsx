@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
@@ -15,6 +18,14 @@ const mockActive: ActiveStaff[] = [
 ];
 
 export function StaffComposer() {
+  // 1. Initialize state with mock data
+  const [activeStaff, setActiveStaff] = useState<ActiveStaff[]>(mockActive);
+
+  // 2. Create the delete handler
+  const handleDeleteStaff = (id: string) => {
+    setActiveStaff((currentStaff) => currentStaff.filter((member) => member.id !== id));
+  };
+
   return (
     <div className="space-y-8 pb-12">
       {/* Page Header */}
@@ -28,10 +39,11 @@ export function StaffComposer() {
         <InviteEngine />
       </div>
 
-      {/* Grid for Sections 2 & 3 - Removed h-full to prevent clipping */}
+      {/* Grid for Sections 2 & 3 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
         <InvitationQueue invites={mockPending} />
-        <ActiveStaffRoster staff={mockActive} />
+        {/* Pass the state and the delete handler as props */}
+        <ActiveStaffRoster staff={activeStaff} onDelete={handleDeleteStaff} />
       </div>
     </div>
   );

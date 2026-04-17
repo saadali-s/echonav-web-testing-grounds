@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
   ChevronRight,
+  IdCard,
   LayoutDashboard,
   Map,
   RadioTower,
@@ -22,8 +23,9 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/map-studio", label: "Map Studio", icon: Map },
   { href: "/fleet", label: "Fleet Management", icon: RadioTower },
-  { href: "/staff", label: "Staff Management", icon: Users },
+  { href: "/staff", label: "Staff Management", icon: IdCard },
   { href: "/accessibility", label: "Accessibility Desk", icon: ShieldAlert },
+  { href: "/user-management", label: "User Management", icon: Users},
 ];
 
 export function Sidebar() {
@@ -138,7 +140,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* FOOTER SECTION - Fixed logic and structure */}
+      {/* FOOTER SECTION */}
       <div className={cn(
         "border-t border-chart-3 bg-sidebar/50 shrink-0 transition-all duration-300",
         isCollapsed ? "p-2" : "p-4"
