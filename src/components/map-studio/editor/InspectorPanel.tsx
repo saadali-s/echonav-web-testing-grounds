@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MapPin, MousePointer2, Route, Save } from "lucide-react";
 import { NodeData } from "./vector/types";
-import React from "react";
 
 export type SelectionType = "NODE" | "EDGE" | null;
 
@@ -22,7 +21,7 @@ function EmptyState() {
         <MousePointer2 className="h-8 w-8 text-zinc-950 dark:text-zinc-100" />
       </div>
       <h3 className="text-sm font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest mb-2">Nothing Selected</h3>
-      <p className="text-xs font-bold text-zinc-500 leading-relaxed max-w-[200px]">
+      <p className="text-xs font-bold text-zinc-500 leading-relaxed max-w-50">
         Click a node or edge on the canvas to inspect and edit its properties.
       </p>
     </div>
@@ -46,7 +45,7 @@ function NodeInspector({ node, updateNode, onSave }: { node?: NodeData, updateNo
           />
         </div>
 
-        <div className="h-[2px] w-full bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+        <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full" />
 
         <div className="space-y-3">
           <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Verbal Guidance (TTS)</Label>
@@ -56,7 +55,7 @@ function NodeInspector({ node, updateNode, onSave }: { node?: NodeData, updateNo
           />
         </div>
 
-        <div className="h-[2px] w-full bg-zinc-200 dark:bg-zinc-800 rounded-full" />
+        <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full" />
 
         <div className="space-y-4">
           <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Hardware Binding</Label>
@@ -108,7 +107,7 @@ export function InspectorPanel({ selectionType, selectedNode, updateNode, onSave
       {isNode ? <NodeInspector node={selectedNode} updateNode={updateNode} onSave={onSave} /> : <EdgeInspector />}
 
       <div className="p-5 border-t-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shrink-0">
-        <Button onClick={onSave} className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-black tracking-widest uppercase h-12 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none gap-2">
+        <Button onClick={onSave} className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-black tracking-widest uppercase h-12 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-none gap-2">
           <Save className="h-4 w-4" /> Save Properties
         </Button>
       </div>

@@ -1,7 +1,6 @@
 import { CreateMapModal } from "@/components/map-studio/CreateMapModal";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { MapCard, MapData } from "./MapCard";
-import React from "react";
 
 // --- Mock Data ---
 const mockMaps: MapData[] = [
@@ -17,7 +16,7 @@ export function MapStudioComposer() {
   return (
     <div className="space-y-8">
       {/* Header & Action Bar */}
-      <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50/95 backdrop-blur supports-[backdrop-filter]:bg-zinc-50/75 dark:bg-zinc-900/95 border-b-2 border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5 mb-2">
+      <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50/95 backdrop-blur supports-backdrop-filter:bg-zinc-50/75 dark:bg-zinc-900/95 border-b-2 border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5 mb-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">Map Studio Directory</h1>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mt-1">Manage architectural floor plans and spatial routing graphs.</p>

@@ -62,7 +62,7 @@ export function DashboardComposer({
         <div className="xl:col-span-3 flex flex-col gap-6 min-w-0">
           <StatCards stats={stats} />
 
-          <div className="h-[400px]">
+          <div className="h-100">
             <RoutingActivityChart />
           </div>
 
@@ -75,7 +75,7 @@ export function DashboardComposer({
         <div className="xl:col-span-1 flex flex-col gap-6">
           <HardwareHealthChart healthData={healthData} />
 
-          <div className="flex-1 min-h-[400px]">
+          <div className="flex-1 min-h-100">
             <SystemEventsFeed events={systemEvents} />
           </div>
         </div>

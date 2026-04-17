@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -16,7 +17,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useAuth } from "@/components/layout/auth-provider";
 
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -128,7 +128,7 @@ export function Sidebar() {
             >
               <link.icon
                 className={cn(
-                  "w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  "w-4.5 h-4.5 shrink-0 transition-transform duration-200 group-hover:scale-110",
                   isActive ? "" : "opacity-70 group-hover:opacity-100",
                 )}
               />
@@ -147,7 +147,7 @@ export function Sidebar() {
           href="/settings"
           title={isCollapsed ? "Settings" : undefined}
           className={cn(
-            "group flex items-center rounded-xl transition-all duration-200 font-medium text-sm border transition-all",
+            "group flex items-center rounded-xl transition-all duration-200 font-medium text-sm border",
             isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 py-3 px-4 w-full",
             isSettingsActive
               ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.02]"

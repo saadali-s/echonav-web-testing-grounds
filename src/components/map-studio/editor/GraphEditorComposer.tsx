@@ -5,7 +5,6 @@ import { Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toolbelt, ToolMode } from "./Toolbelt";
 import { VectorComposer } from "./VectorComposer";
-import React from "react";
 
 export function GraphEditorComposer() {
   const [activeTool, setActiveTool] = useState<ToolMode>("SELECT");

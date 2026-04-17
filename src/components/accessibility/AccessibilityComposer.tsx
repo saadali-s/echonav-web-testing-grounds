@@ -1,4 +1,3 @@
-import React from "react";
 import { ActivePin, ActivePinsTable } from "./ActivePinsTable";
 import { PinGeneratorCard } from "./PinGeneratorCard";
 
@@ -20,12 +19,12 @@ export function AccessibilityComposer() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0 pb-8">
         {/* The Generator Card takes up 5 columns on large screens */}
-        <div className="lg:col-span-5 h-[500px] lg:h-full">
+        <div className="lg:col-span-5 h-125 lg:h-full">
           <PinGeneratorCard />
         </div>
         
         {/* The Table takes up the remaining 7 columns */}
-        <div className="lg:col-span-7 h-[400px] lg:h-full">
+        <div className="lg:col-span-7 h-100 lg:h-full">
           <ActivePinsTable pins={mockActivePins} />
         </div>
       </div>

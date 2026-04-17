@@ -22,7 +22,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
         <CardTitle className="font-black uppercase tracking-wider text-sm">Task Control Board</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 p-5 overflow-x-auto">
-        <div className="flex gap-5 h-full min-w-[600px]">
+        <div className="flex gap-5 h-full min-w-150">
           {columns.map(col => {
             const columnTasks = tasks.filter(t => t.status === col.id);
             return (

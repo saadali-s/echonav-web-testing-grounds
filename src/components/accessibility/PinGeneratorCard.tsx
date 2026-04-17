@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound, ShieldCheck, Timer } from "lucide-react";
-import React from "react";
 import { useEffect, useState } from "react";
 
 
@@ -37,7 +36,7 @@ export function PinGeneratorCard() {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px]">
+      <CardContent className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-size-[16px_16px]">
         {!activePin || timeLeft <= 0 ? (
           <div className="bg-white dark:bg-zinc-950 p-6 rounded-xl border-2 border-zinc-200 dark:border-zinc-800 flex flex-col items-center w-full max-w-sm">
             <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rotate-3">

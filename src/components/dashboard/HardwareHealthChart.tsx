@@ -75,7 +75,7 @@ export function HardwareHealthChart({
       </CardHeader>
 
       <CardContent className="relative z-10 p-5 flex flex-col items-center">
-        <div className="h-[160px] w-full relative mb-4">
+        <div className="h-40 w-full relative mb-4">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -147,7 +147,7 @@ export function HardwareHealthChart({
             </div>
           </div>
 
-          <div className="space-y-1.5 min-h-[68px]">
+          <div className="space-y-1.5 min-h-17">
             {currentItems.length > 0 ? (
               currentItems.map((item) => (
                 <div

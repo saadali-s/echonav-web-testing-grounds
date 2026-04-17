@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
 
 import {
   Card,
@@ -22,41 +22,24 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
     setIsSuccess(false);
 
-    try {
-      // Replace this with your actual Supabase / API route call
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        setIsSuccess(true);
-        setEmail(""); // Clear input on success
-      } else {
-        const data = await response.json();
-        setError(data.error || "Failed to send reset link.");
-      }
-    } catch (err) {
-      setError("An unexpected error occurred.");
-    } finally {
+    // Mock API delay to test UI state
+    setTimeout(() => {
+      setIsSuccess(true);
+      setEmail("");
       setIsLoading(false);
-    }
+    }, 1500);
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background to-secondary/20">
-      
-      {/* Main Container matching AuthPage width and animations */}
-      <div className="flex flex-col items-center gap-8 w-full max-w-[420px] animate-in fade-in zoom-in-95 duration-500">
+    <div className="flex min-h-screen items-center justify-center p-4 bg-linear-to-b from-background to-secondary/20">
+      <div className="flex flex-col items-center gap-8 w-full max-w-105 animate-in fade-in zoom-in-95 duration-500">
         
-        {/* Header with Logo */}
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <Image
@@ -73,21 +56,19 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        {/* Status Messages */}
         <div className="w-full empty:hidden">
           {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md text-center mb-[-1rem]">
+            <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md text-center -mb-4">
               {error}
             </div>
           )}
           {isSuccess && (
-            <div className="p-3 text-sm text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-center mb-[-1rem]">
+            <div className="p-3 text-sm text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-center -mb-4">
               If an account exists, a reset link has been sent to that email.
             </div>
           )}
         </div>
 
-        {/* Card */}
         <Card className="w-full border-border/50 shadow-xl shadow-black/5 mt-4">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold tracking-tight">
@@ -136,7 +117,6 @@ export default function ResetPasswordPage() {
           </form>
         </Card>
 
-        {/* Footer matching AuthPage */}
         <p className="text-center text-sm text-muted-foreground px-8">
           Need help? Contact{" "}
           <Link

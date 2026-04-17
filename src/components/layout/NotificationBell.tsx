@@ -2,20 +2,19 @@
 
 import { Button } from '@/components/ui/button';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover';
 import { Bell, Info, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
-import React from "react";
 
 // Mock data for UI review
 const mockNotifications = [
@@ -75,7 +74,7 @@ export function NotificationBell() {
     <Button 
         variant="ghost" 
         size="icon" 
-        className="relative h-10 w-10 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-white transition-all shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-none shrink-0"
+        className="relative h-10 w-10 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-950 dark:text-white transition-all shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-0.5 active:translate-y-0.5 active:shadow-none shrink-0"
     >
         <Bell className="h-5 w-5" /> 
         

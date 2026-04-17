@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/components/layout/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,12 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/layout/auth-provider";
 
 export function UserAccountNav() {
   const { user, logout } = useAuth();
-  const router = useRouter();
 
   const displayName = user?.user_metadata?.display_name || "Admin";
   const userEmail = user?.email;
@@ -33,7 +31,6 @@ export function UserAccountNav() {
   const handleSignOut = async () => {
     try {
       await logout();
-      router.push("/");
     } catch (error) {
       console.error("Error signing out:", error);
     }
@@ -45,7 +42,7 @@ export function UserAccountNav() {
         {/* Brutalist Avatar Button */}
         <Button
           variant="ghost"
-          className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+          className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
         >
           <Avatar className="h-full w-full rounded-none">
             <AvatarImage src="" alt={displayName} />
@@ -99,7 +96,12 @@ export function UserAccountNav() {
 
         <DropdownMenuItem
           className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-500 dark:focus:bg-red-950/30 cursor-pointer font-bold rounded-lg p-3 transition-colors"
-          onClick={handleSignOut}
+          onSelect={(e) => {
+            // PROPER RADIX/SHADCN LOGOUT HANDLING: 
+            // Prevent default to stop the dropdown from destroying itself before the window navigates
+            e.preventDefault(); 
+            handleSignOut();
+          }}
         >
           <LogOut className="mr-3 h-4 w-4" />
           <span>Sign Out</span>

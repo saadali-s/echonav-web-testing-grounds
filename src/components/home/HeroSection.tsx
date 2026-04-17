@@ -8,7 +8,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { motion } from "framer-motion";
-import { ArrowRight, Cpu } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import * as React from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
@@ -44,13 +44,10 @@ export default function HeroSection() {
         transition={{ duration: 0.6 }}
         className="flex-1 space-y-8 text-center lg:text-left"
       >
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 backdrop-blur-md shadow-sm transition-colors">
-          <Cpu className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />{" "}
-          Powered by iBeacons
-        </div>
+        
         <h1 className="text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight text-zinc-950 dark:text-white leading-[1.05] transition-colors">
           Enterprise{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-zinc-600 via-zinc-400 to-zinc-500 dark:from-zinc-100 dark:via-zinc-400 dark:to-zinc-600">
+          <span className="text-transparent bg-clip-text bg-linear-to-r from-zinc-600 via-zinc-400 to-zinc-500 dark:from-zinc-100 dark:via-zinc-400 dark:to-zinc-600">
             Spatial
           </span>{" "}
           <br />
@@ -86,7 +83,7 @@ export default function HeroSection() {
           </CardHeader>
           <CardContent className="p-8">
             {isMounted ? (
-              <ChartContainer config={chartConfig} className="h-[320px] w-full">
+              <ChartContainer config={chartConfig} className="h-80 w-full">
                 <LineChart
                   data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
@@ -133,7 +130,7 @@ export default function HeroSection() {
                 </LineChart>
               </ChartContainer>
             ) : (
-              <div className="h-[320px] w-full flex items-center justify-center">
+              <div className="h-80 w-full flex items-center justify-center">
                 <span className="text-zinc-500 text-sm font-medium">
                   Loading telemetry...
                 </span>

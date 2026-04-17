@@ -74,7 +74,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
-  }, [historyIndex, history.length]);
+  }, [historyIndex, history.length, redo, undo]);
 
   useEffect(() => {
     const container = containerRef.current;

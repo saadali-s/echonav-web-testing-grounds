@@ -96,10 +96,10 @@ function MapCard({
       className="border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950/80 hover:bg-zinc-50 dark:hover:bg-zinc-900/80 shadow-md hover:shadow-xl dark:shadow-lg dark:hover:shadow-2xl hover:border-zinc-300 dark:hover:border-zinc-600 transition-all duration-300 rounded-2xl overflow-hidden flex flex-col h-full group backdrop-blur-sm"
     >
       <div
-        className={`aspect-[16/9] flex items-center justify-center border-b border-zinc-200 dark:border-zinc-800/80 relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 transition-colors`}
+        className={`aspect-video flex items-center justify-center border-b border-zinc-200 dark:border-zinc-800/80 relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 transition-colors`}
       >
         {/* Minimalist Topographical overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-200/60 dark:from-zinc-800/40 to-transparent opacity-50 transition-colors" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-zinc-200/60 dark:from-zinc-800/40 to-transparent opacity-50 transition-colors" />
         <Badge
           variant="secondary"
           className="absolute top-4 left-4 bg-white/80 dark:bg-black/60 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700/50 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest rounded-md px-2.5 py-1 transition-colors"
@@ -121,7 +121,7 @@ function MapCard({
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="py-2 flex-grow">
+      <CardContent className="py-2 grow">
         <div className="flex items-center justify-around p-4 rounded-xl bg-zinc-50 dark:bg-black border border-zinc-100 dark:border-zinc-800/50 shadow-inner transition-colors">
           <div className="flex flex-col items-center gap-1">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">

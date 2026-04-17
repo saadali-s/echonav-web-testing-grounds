@@ -93,7 +93,7 @@ export default function FleetManager() {
               </CardDescription>
             </div>
             <Select defaultValue={mockLocations[0]}>
-              <SelectTrigger className="w-full sm:w-[260px] h-10 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white transition-colors font-medium text-sm rounded-lg focus:ring-zinc-300 dark:focus:ring-zinc-500">
+              <SelectTrigger className="w-full sm:w-65 h-10 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white transition-colors font-medium text-sm rounded-lg focus:ring-zinc-300 dark:focus:ring-zinc-500">
                 <SelectValue placeholder="Select Location" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-lg shadow-xl">
@@ -109,11 +109,11 @@ export default function FleetManager() {
               </SelectContent>
             </Select>
           </CardHeader>
-          <CardContent className="p-0 max-h-[450px] overflow-y-auto bg-transparent scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent">
+          <CardContent className="p-0 max-h-112.5 overflow-y-auto bg-transparent scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-800 scrollbar-track-transparent">
             <Table>
               <TableHeader className="bg-white/90 dark:bg-zinc-950/90 sticky top-0 z-10 backdrop-blur-md transition-colors">
                 <TableRow className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-800 transition-colors">
-                  <TableHead className="w-[60px] pl-8">
+                  <TableHead className="w-15 pl-8">
                     <Checkbox className="rounded-sm border-zinc-300 dark:border-zinc-600 data-[state=checked]:bg-black data-[state=checked]:text-white dark:data-[state=checked]:bg-white dark:data-[state=checked]:text-black dark:data-[state=checked]:border-white" />
                   </TableHead>
                   <TableHead className="text-xs font-bold uppercase tracking-widest text-zinc-500 h-12">
@@ -171,7 +171,7 @@ export default function FleetManager() {
                 <Users className="h-4 w-4 text-zinc-400" />
               </div>
               <Select value={selectedStaff} onValueChange={setSelectedStaff}>
-                <SelectTrigger className="w-full max-w-[280px] h-10 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-black text-zinc-900 dark:text-white font-medium text-sm rounded-lg focus:ring-zinc-300 dark:focus:ring-zinc-500 transition-colors">
+                <SelectTrigger className="w-full max-w-70 h-10 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-black text-zinc-900 dark:text-white font-medium text-sm rounded-lg focus:ring-zinc-300 dark:focus:ring-zinc-500 transition-colors">
                   <SelectValue placeholder="Assign Technician..." />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-lg shadow-xl">

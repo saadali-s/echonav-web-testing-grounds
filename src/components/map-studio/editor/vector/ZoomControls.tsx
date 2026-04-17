@@ -20,7 +20,7 @@ export function ZoomControls({ scale, adjustZoomCentered, resetZoom }: ZoomContr
       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => adjustZoomCentered(1.2)}>
           <ZoomIn className="h-4 w-4" />
       </Button>
-      <div className="w-[2px] h-6 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
+      <div className="w-0.5 h-6 bg-zinc-200 dark:bg-zinc-800 mx-1"></div>
       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={resetZoom}>
           <Maximize className="h-4 w-4" />
       </Button>

@@ -3,7 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { useAuth } from "@/components/layout/auth-provider";
@@ -16,13 +16,15 @@ import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserAccountNav } from "./UserAccountNav";
 
 export function Header() {
-  const { isLoggedIn, logout } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const pathname = usePathname();
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const closeMenu = () => setIsMobileMenuOpen(false);
+
+  const isPublicRoute = pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/reset-password");
+  const showDashboardHeader = isLoggedIn && !isPublicRoute;
 
   return (
     <header className="sticky top-0 z-50 w-full shrink-0 border-b border-white/10 bg-transparent backdrop-blur-md">
@@ -31,14 +33,11 @@ export function Header() {
         {/* =========================================
             LOGGED IN VIEW (Dashboard Style)
             ========================================= */}
-        {isLoggedIn ? (
+        {showDashboardHeader ? (
           <>
-            {/* LEFT: Mobile Trigger + Logo Link */}
             <div className="flex items-center gap-4">
               {isMobile && <SidebarTrigger className="md:hidden" />}
               
-              {/* Logo - Same as logged out view */}
-              <Link href="/" className="flex items-center" onClick={closeMenu}>
                 <Image
                   src="./EchonavLogo.svg"
                   alt="EchoNav Logo"
@@ -47,15 +46,12 @@ export function Header() {
                   className="mr-2 dark:invert"
                 />
                 <span className="text-xl font-bold tracking-tight">EchoNav</span>
-              </Link>
             </div>
 
-            {/* RIGHT: Notifications, Theme, User Profile */}
             <div className="flex items-center gap-3 sm:gap-5">
               <NotificationBell />
               <ModeToggle />
-              {/* Separator Line */}
-              <div className="h-6 w-[2px] bg-border mx-1 hidden sm:block"></div>
+              <div className="h-6 w-0.5 bg-border mx-1 hidden sm:block"></div>
               <UserAccountNav />
             </div>
           </>
@@ -64,9 +60,7 @@ export function Header() {
              LOGGED OUT VIEW (Landing Page Style)
              ========================================= */
           <>
-            {/* LEFT: Logo + Desktop Nav */}
             <div className="flex items-center gap-8">
-              {/* Logo */}
               <Link href="/" className="flex items-center" onClick={closeMenu}>
                 <Image
                   src="EchonavLogo.svg"
@@ -78,7 +72,6 @@ export function Header() {
                 <span className="text-xl font-bold tracking-tight">EchoNav</span>
               </Link>
 
-              {/* Desktop Navigation */}
               <nav className="hidden md:flex items-center gap-6">
                 {["Services", "Solutions", "About", "Contact"].map((item) => (
                   <Link
@@ -92,9 +85,7 @@ export function Header() {
               </nav>
             </div>
 
-            {/* RIGHT: Actions */}
             <div className="flex items-center gap-3">
-              {/* Desktop Auth Buttons */}
               <div className="hidden md:flex items-center gap-2">
                 <Link href="/auth?tab=login">
                   <Button variant="outline">Log in</Button>
@@ -104,10 +95,8 @@ export function Header() {
                 </Link>
               </div>
 
-              {/* Theme Toggle */}
               <ModeToggle />
 
-              {/* Mobile Menu Toggle */}
               {isMobile && (
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -125,7 +114,7 @@ export function Header() {
       {/* =========================================
           MOBILE DROPDOWN MENU (Logged out only)
           ========================================= */}
-      {isMobileMenuOpen && isMobile && !isLoggedIn && (
+      {isMobileMenuOpen && isMobile && !showDashboardHeader && (
         <div className="md:hidden border-t bg-background px-6 py-6 shadow-lg">
           <div className="flex flex-col space-y-5">
             <nav className="flex flex-col items-center gap-4">

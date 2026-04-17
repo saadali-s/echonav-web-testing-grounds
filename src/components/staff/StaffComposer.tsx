@@ -1,7 +1,6 @@
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
-import React from "react";
 
 // --- Mock Data ---
 const mockPending: PendingInvite[] = [

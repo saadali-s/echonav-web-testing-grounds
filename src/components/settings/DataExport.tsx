@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DownloadCloud, FileJson, ShieldCheck } from "lucide-react";
-import React from "react";
 
 export function DataExport() {
   const handleExport = () => {
@@ -11,7 +10,7 @@ export function DataExport() {
   };
 
   return (
-    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden border-l-[12px] border-l-zinc-950 dark:border-l-zinc-100">
+    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden border-l-12 border-l-zinc-950 dark:border-l-zinc-100">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-5">
         <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2.5">
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
@@ -23,7 +22,7 @@ export function DataExport() {
       </CardHeader>
       
       <CardContent className="p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
           
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 flex items-center justify-center shrink-0 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
