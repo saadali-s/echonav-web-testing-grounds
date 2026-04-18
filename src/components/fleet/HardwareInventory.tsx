@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioTower, Loader2 } from "lucide-react";
 
@@ -16,17 +18,20 @@ export function HardwareInventory({
   isLoading?: boolean;
 }) {
   return (
-    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
-      <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 pb-4 p-5">
-        <CardTitle className="font-black uppercase tracking-wider text-sm flex items-center gap-2">
+    <Card className="relative h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none" />
+
+      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 pb-4 p-5 rounded-t-lg">
+        <CardTitle className="font-black uppercase tracking-wider text-sm flex items-center gap-2 text-emerald-1050 dark:text-emerald-100">
+          <RadioTower className="h-5 w-5" />
           Verified Hardware Inventory
           {isLoading && (
-            <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />
+            <Loader2 className="h-4 w-4 animate-spin text-emerald-800 dark:text-emerald-200 ml-auto" />
           )}
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 p-0 overflow-y-auto">
+      <CardContent className="relative z-10 flex-1 p-0 overflow-y-auto bg-white dark:bg-zinc-950">
         {isLoading ? (
           // --- THE SKELETON LOADER ---
           <div className="flex flex-col p-6 space-y-4">
@@ -58,7 +63,7 @@ export function HardwareInventory({
         ) : (
           // --- THE ACTUAL DATA ---
           <div className="min-w-150">
-            <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-6 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-100/50 dark:bg-zinc-900 text-[11px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-wider sticky top-0">
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-4 px-6 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-[11px] font-black text-zinc-600 dark:text-zinc-400 uppercase tracking-wider sticky top-0">
               <span>Node Label</span>
               <span>Physical Beacon ID</span>
               <span className="text-right">Calibrated RSSI</span>

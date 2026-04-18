@@ -23,13 +23,15 @@ export function Header() {
 
   const closeMenu = () => setIsMobileMenuOpen(false);
 
-  const isPublicRoute = pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/reset-password");
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/reset-password");
   const showDashboardHeader = isLoggedIn && !isPublicRoute;
 
   return (
     <header className="sticky top-0 z-50 w-full shrink-0 border-b border-white/10 bg-transparent backdrop-blur-md">
       <div className="mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-        
         {/* =========================================
             LOGGED IN VIEW (Dashboard Style)
             ========================================= */}
@@ -37,15 +39,15 @@ export function Header() {
           <>
             <div className="flex items-center gap-4">
               {isMobile && <SidebarTrigger className="md:hidden" />}
-              
-                <Image
-                  src="./EchonavLogo.svg"
-                  alt="EchoNav Logo"
-                  width={30}
-                  height={20}
-                  className="mr-2 dark:invert"
-                />
-                <span className="text-xl font-bold tracking-tight">EchoNav</span>
+
+              <Image
+                src="./EchonavLogo.svg"
+                alt="EchoNav Logo"
+                width={30}
+                height={20}
+                className="mr-2 dark:invert"
+              />
+              <span className="text-xl font-bold tracking-tight">EchoNav</span>
             </div>
 
             <div className="flex items-center gap-3 sm:gap-5">
@@ -69,14 +71,16 @@ export function Header() {
                   height={20}
                   className="mr-2 dark:invert"
                 />
-                <span className="text-xl font-bold tracking-tight">EchoNav</span>
+                <span className="text-xl font-bold tracking-tight">
+                  EchoNav
+                </span>
               </Link>
 
               <nav className="hidden md:flex items-center gap-6">
                 {["Services", "Solutions", "About", "Contact"].map((item) => (
                   <Link
                     key={item}
-                    href={`/${item.toLowerCase()}`}
+                    href={`#`}
                     className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {item}

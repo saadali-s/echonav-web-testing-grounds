@@ -68,8 +68,8 @@ export function HardwareHealthChart({
         style={textureStyle}
       />
 
-      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-sky-100 dark:bg-sky-900 px-5 py-3 shrink-0">
-        <CardTitle className="font-black uppercase tracking-wider text-sm text-sky-950 dark:text-sky-100">
+      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-sky-300 dark:bg-sky-900 px-5 py-3 shrink-0">
+        <CardTitle className="font-black uppercase tracking-wider text-sm text-sky-1050 dark:text-sky-100">
           Hardware Health
         </CardTitle>
       </CardHeader>

@@ -24,8 +24,7 @@ const navLinks = [
   { href: "/map-studio", label: "Map Studio", icon: Map },
   { href: "/fleet", label: "Fleet Management", icon: RadioTower },
   { href: "/staff", label: "Staff Management", icon: IdCard },
-  { href: "/accessibility", label: "Accessibility Desk", icon: ShieldAlert },
-  { href: "/user-management", label: "User Management", icon: Users},
+  { href: "/user-management", label: "User Management", icon: Users },
 ];
 
 export function Sidebar() {
@@ -49,10 +48,10 @@ export function Sidebar() {
       )}
     >
       {/* HEADER SECTION */}
-      <div 
+      <div
         className={cn(
           "h-20 flex items-center border-b border-chart-3 shrink-0 overflow-hidden transition-all duration-300",
-          isCollapsed ? "justify-center px-0" : "justify-between px-6"
+          isCollapsed ? "justify-center px-0" : "justify-between px-6",
         )}
       >
         <div className="flex items-center gap-3">
@@ -103,10 +102,10 @@ export function Sidebar() {
       )}
 
       {/* NAVIGATION SECTION */}
-      <nav 
+      <nav
         className={cn(
           "flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden transition-all duration-300",
-          isCollapsed ? "px-2" : "px-4"
+          isCollapsed ? "px-2" : "px-4",
         )}
       >
         {navLinks.map((link) => {
@@ -122,7 +121,9 @@ export function Sidebar() {
               title={isCollapsed ? link.label : undefined}
               className={cn(
                 "group flex items-center rounded-xl transition-all duration-200 font-medium text-sm border",
-                isCollapsed ? "justify-center h-12 w-12 mx-auto gap-0" : "gap-3 py-3 px-4",
+                isCollapsed
+                  ? "justify-center h-12 w-12 mx-auto gap-0"
+                  : "gap-3 py-3 px-4",
                 isActive
                   ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.02]"
                   : "bg-transparent text-muted-foreground border-transparent hover:bg-primary hover:text-secondary hover:border-border/50",
@@ -141,27 +142,31 @@ export function Sidebar() {
       </nav>
 
       {/* FOOTER SECTION */}
-      <div className={cn(
-        "border-t border-chart-3 bg-sidebar/50 shrink-0 transition-all duration-300",
-        isCollapsed ? "p-2" : "p-4"
-      )}>
+      <div
+        className={cn(
+          "border-t border-chart-3 bg-sidebar/50 shrink-0 transition-all duration-300",
+          isCollapsed ? "p-2" : "p-4",
+        )}
+      >
         <Link
           href="/settings"
           title={isCollapsed ? "Settings" : undefined}
           className={cn(
             "group flex items-center rounded-xl transition-all duration-200 font-medium text-sm border",
-            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "gap-3 py-3 px-4 w-full",
+            isCollapsed
+              ? "justify-center h-12 w-12 mx-auto"
+              : "gap-3 py-3 px-4 w-full",
             isSettingsActive
               ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20 scale-[1.02]"
               : "bg-transparent text-muted-foreground border-transparent hover:bg-primary hover:text-secondary hover:border-border/50",
           )}
         >
-          <Settings 
-            size={18} 
+          <Settings
+            size={18}
             className={cn(
               "shrink-0 transition-transform duration-200 group-hover:scale-110",
-              isSettingsActive ? "" : "opacity-70 group-hover:opacity-100"
-            )} 
+              isSettingsActive ? "" : "opacity-70 group-hover:opacity-100",
+            )}
           />
           {!isCollapsed && <span>Settings</span>}
         </Link>

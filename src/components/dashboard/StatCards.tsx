@@ -21,8 +21,8 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
           className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
           style={textureStyle}
         />
-        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-100 dark:bg-indigo-900 rounded-t-lg px-5 py-3">
-          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-indigo-950 dark:text-indigo-100">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-indigo-1050 dark:text-indigo-100">
             Mapped Buildings
           </CardTitle>
           <Building2 className="h-4 w-4 text-indigo-950 dark:text-indigo-100" />
@@ -43,8 +43,8 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
           className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
           style={textureStyle}
         />
-        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-100 dark:bg-emerald-900 rounded-t-lg px-5 py-3">
-          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-emerald-950 dark:text-emerald-100">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-emerald-1050 dark:text-emerald-100">
             Active Beacons
           </CardTitle>
           <RadioTower className="h-4 w-4 text-emerald-950 dark:text-emerald-100" />
@@ -65,8 +65,8 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
           className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
           style={textureStyle}
         />
-        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-100 dark:bg-amber-900 rounded-t-lg px-5 py-3">
-          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-100">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-amber-1050 dark:text-amber-100">
             Pending Tasks
           </CardTitle>
           <ClipboardList className="h-4 w-4 text-amber-950 dark:text-amber-100" />

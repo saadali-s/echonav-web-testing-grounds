@@ -42,7 +42,7 @@ export function UserAccountNav() {
         {/* Brutalist Avatar Button */}
         <Button
           variant="ghost"
-          className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 shadow-[3px_3px_0px_0px_rgba(24,24,27,1)] dark:shadow-none active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
+          className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 dark:shadow-none active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
         >
           <Avatar className="h-full w-full rounded-none">
             <AvatarImage src="" alt={displayName} />
@@ -55,7 +55,7 @@ export function UserAccountNav() {
 
       {/* Brutalist Dropdown Content */}
       <DropdownMenuContent
-        className="w-64 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none p-2 bg-white dark:bg-zinc-950"
+        className="w-64 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl dark:shadow-none p-2 bg-white dark:bg-zinc-950"
         align="end"
         forceMount
       >
@@ -97,9 +97,9 @@ export function UserAccountNav() {
         <DropdownMenuItem
           className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-500 dark:focus:bg-red-950/30 cursor-pointer font-bold rounded-lg p-3 transition-colors"
           onSelect={(e) => {
-            // PROPER RADIX/SHADCN LOGOUT HANDLING: 
+            // PROPER RADIX/SHADCN LOGOUT HANDLING:
             // Prevent default to stop the dropdown from destroying itself before the window navigates
-            e.preventDefault(); 
+            e.preventDefault();
             handleSignOut();
           }}
         >

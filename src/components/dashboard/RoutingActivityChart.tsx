@@ -13,12 +13,12 @@ import {
 } from "recharts";
 
 const data = [
-  { time: "08:00", routes: 120, reroutes: 12 },
-  { time: "10:00", routes: 340, reroutes: 45 },
-  { time: "12:00", routes: 450, reroutes: 80 },
-  { time: "14:00", routes: 380, reroutes: 62 },
-  { time: "16:00", routes: 210, reroutes: 18 },
-  { time: "18:00", routes: 90, reroutes: 5 },
+  { date: "04/13", users: 22, Hazards: 4 },
+  { date: "04/14", users: 20, Hazards: 4 },
+  { date: "04/15", users: 16, Hazards: 6 },
+  { date: "04/16", users: 27, Hazards: 7 },
+  { date: "04/17", users: 30, Hazards: 5 },
+  { date: "04/18", users: 8, Hazards: 6 },
 ];
 
 const textureStyle = {
@@ -34,8 +34,8 @@ export function RoutingActivityChart() {
         style={textureStyle}
       />
 
-      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-violet-100 dark:bg-violet-900 px-5 py-3 shrink-0">
-        <CardTitle className="font-black uppercase text-sm tracking-wider text-violet-950 dark:text-violet-100">
+      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-violet-400 dark:bg-violet-900 px-5 py-3 shrink-0">
+        <CardTitle className="font-black uppercase text-sm tracking-wider text-violet-1050 dark:text-violet-100">
           Routing Engine Activity
         </CardTitle>
       </CardHeader>
@@ -51,7 +51,7 @@ export function RoutingActivityChart() {
                 opacity={0.4}
               />
               <XAxis
-                dataKey="time"
+                dataKey="date"
                 tick={{ fill: "#71717a", fontWeight: "bold", fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
@@ -79,8 +79,8 @@ export function RoutingActivityChart() {
               />
               <Line
                 type="monotone"
-                dataKey="routes"
-                name="Successful Routes"
+                dataKey="users"
+                name="Active Users"
                 stroke="#8b5cf6"
                 strokeWidth={4}
                 dot={{ strokeWidth: 2, r: 4 }}
@@ -88,8 +88,8 @@ export function RoutingActivityChart() {
               />
               <Line
                 type="step"
-                dataKey="reroutes"
-                name="Reroutes (Hazards)"
+                dataKey="Hazards"
+                name="Hazards"
                 stroke="#f43f5e"
                 strokeWidth={3}
                 dot={{ strokeWidth: 2, r: 4 }}
