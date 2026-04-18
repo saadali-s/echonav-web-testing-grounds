@@ -67,7 +67,7 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
                   </div>
 
                   <Button
-                    className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 font-black tracking-widest uppercase h-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-x-0.5 active:translate-y-0.5 active:shadow-none gap-2 text-[10px]"
+                    className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
                     asChild
                   >
                     <Link href={`/map-studio/${plan.id}`}>

@@ -73,7 +73,7 @@ export function MapCard({ map }: { map: MapData }) {
       </CardContent>
 
       <CardFooter className="p-5 pt-0 mt-auto">
-        <Button className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-widest rounded-lg h-10 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none" asChild>
+        <Button className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0" asChild>
           <Link href={`/map-studio/${map.id}`}>
             OPEN ARCHITECT <ArrowRight className="w-4 h-4 ml-2" />
           </Link>

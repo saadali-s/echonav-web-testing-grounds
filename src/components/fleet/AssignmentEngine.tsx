@@ -139,7 +139,7 @@ export function AssignmentEngine({ nodes, staff }: AssignmentProps) {
         </div>
         <Button
           disabled={selectedNodes.size === 0}
-          className="w-full sm:w-auto bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black uppercase tracking-wider h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
+          className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
         >
           <Send className="h-4 w-4 mr-2" />
           Create Tasks ({selectedNodes.size})
