@@ -57,7 +57,7 @@ export function UserComposer() {
   const [activeUsers, setActiveUsers] = useState<ActiveUsers[]>(mockActive);
   const [invitedUsers, setInvitedUsers] = useState<InvitedUsers[]>(mockInvited);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const handleDeleteActiveUser = (id: string) => {
     setActiveUsers((currentUsers) =>
@@ -89,7 +89,7 @@ export function UserComposer() {
           </div>
 
           <Button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsInviteOpen(true)}
             className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
           >
             <KeyRound className="w-5 h-5 mr-2" />
@@ -110,8 +110,8 @@ export function UserComposer() {
       </div>
 
       <InviteNewUser
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isInviteOpen}
+        onClose={() => setIsInviteOpen(false)}
         onSendInvite={handleAddInvitedUser}
       />
     </div>
