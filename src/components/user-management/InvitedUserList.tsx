@@ -49,7 +49,7 @@ export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
                 return (
                   <div
                     key={member.id}
-                    className={`grid grid-cols-[1.2fr_1.5fr_1fr_1.5fr_1fr_80px] gap-4 px-6 py-5 items-center hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition-colors ${
+                    className={`grid grid-cols-[1.2fr_1.5fr_1fr_1.5fr_1fr_80px] gap-4 px-6 py-5 items-center hover:bg-blue-400/20 dark:hover:bg-blue-950/20 transition-colors ${
                       !isLast
                         ? "border-b border-zinc-200 dark:border-zinc-800"
                         : ""
