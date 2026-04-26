@@ -35,7 +35,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
       {/* Local Error Display */}
       {error && (
         <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md text-center">
