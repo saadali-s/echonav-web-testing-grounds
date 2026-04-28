@@ -3,22 +3,37 @@ package tasks;
 import datastructures.ArrayList;
 import datastructures.Matrix;
 import datastructures.MatrixException;
+import datastructures.AdjacencyListGraph;
+import datastructures.INode;
+import datastructures.MinHeap;
 import imageprocessing.RegionData;
 
 public class SimilarityDetector {
 
+    // Define the rigid constant for k in the k-NN clustering logic
+    private static final int K_NEIGHBORS = 3;
+
     /**
-     * PIPELINE 2: Pigmental Anomaly Detection
-     * Operates entirely independently of the vascular structure.
-     * Uses Red/Green multi-channel intensity and local contrast windows to isolate lesions.
+     * Internal helper methodology to architect a synthetic diagnostic prototype node.
+     * The gridX integer is co-opted as a formal class label: 
+     * 0 = Healthy Tissue, 1 = Red Lesion Pathology, 2 = Bright Lesion Pathology
+     * The F1 (Green) metric is stored in averageBrightness.
+     * The F2 (Red) metric is stored in gradientIntensity.
      */
+    private static INode<RegionData> createPrototype(AdjacencyListGraph<RegionData> graph, 
+                                                     int classLabel, double f1Green, double f2Red, boolean isAnomaly) {
+        RegionData protoData = new RegionData(classLabel, -1, f1Green);
+        protoData.setGradientIntensity(f2Red);
+        protoData.setAnomaly(isAnomaly);
+        return graph.addNode(protoData);
+    }
+
     public static ArrayList<RegionData> scanForAnomalies(Matrix greenChannel, Matrix redChannel, int blockSize) {
         ArrayList<RegionData> anomalies = new ArrayList<>();
         
         int gridRows = greenChannel.numberRows() / blockSize;
         int gridCols = greenChannel.numberCols() / blockSize;
         
-        // 1. First pass: calculate block averages to build a low-res map
         double[][] greenBlocks = new double[gridRows][gridCols];
         double[][] redBlocks = new double[gridRows][gridCols];
         
@@ -32,7 +47,7 @@ public class SimilarityDetector {
                             gSum += greenChannel.getElement(y, x);
                             rSum += redChannel.getElement(y, x);
                             count++;
-                        } catch (MatrixException e) {}
+                        } catch (MatrixException e) { }
                     }
                 }
                 greenBlocks[r][c] = gSum / count;
@@ -40,50 +55,121 @@ public class SimilarityDetector {
             }
         }
 
-        // 2. Second pass: Local Contrast Heuristic (5x5 Window)
-        int radius = 2; // Scans the surrounding 5x5 blocks
+        double globalGreenSum = 0, globalRedSum = 0;
+        int validBlocks = 0;
+        int radius = 2; 
+        
+        // Calculate FOV Center and Radius for Blocks
+        double centerX = gridCols / 2.0;
+        double centerY = gridRows / 2.0;
+        double maxRadius = Math.min(centerX, centerY) * 0.90;
+        
+        for (int r = radius; r < gridRows - radius; r++) {
+            for (int c = radius; c < gridCols - radius; c++) {
+                double dist = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
+                if (dist < maxRadius && greenBlocks[r][c] > 35.0 && greenBlocks[r][c] < 170.0) {
+                    globalGreenSum += greenBlocks[r][c];
+                    globalRedSum += redBlocks[r][c];
+                    validBlocks++;
+                }
+            }
+        }
+        
+        double baseG = validBlocks > 0 ? globalGreenSum / validBlocks : 90.0;
+        double baseR = validBlocks > 0 ? globalRedSum / validBlocks : 150.0;
+
+        AdjacencyListGraph<RegionData> knnGraph = new AdjacencyListGraph<>();
+        ArrayList<INode<RegionData>> prototypes = new ArrayList<>();
+        double[] protoF3 = new double[6]; 
+
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 0, baseG, baseR, false));
+        protoF3[0] = 0.0;
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 0, baseG + 10.0, baseR + 10.0, false));
+        protoF3[1] = 0.0;
+
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 1, baseG - 40.0, baseR - 40.0, true));
+        protoF3[2] = +35.0;
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 1, baseG - 60.0, baseR - 60.0, true));
+        protoF3[3] = +50.0;
+
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 2, baseG + 60.0, baseR + 60.0, true));
+        protoF3[4] = -45.0;
+        prototypes.add(prototypes.size(), createPrototype(knnGraph, 2, baseG + 80.0, baseR + 80.0, true));
+        protoF3[5] = -60.0;
+        
+        MinHeap<RegionData> pq = new MinHeap<>(); 
         
         for (int r = radius; r < gridRows - radius; r++) {
             for (int c = radius; c < gridCols - radius; c++) {
                 
-                double currentGreen = greenBlocks[r][c];
-                double currentRed = redBlocks[r][c];
-                
-                // VOID MASK: Ignore the black area outside the eye
-                if (currentGreen < 20.0) continue;
-                
-                // OPTIC DISC MASK: Ignore the massive bright blowout where the nerve enters
-                if (currentRed > 220.0 && currentGreen > 200.0) continue;
+                // GEOMETRIC FOV MASK: Kill edge artifacts
+                double dist = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
+                if (dist > maxRadius) continue;
 
-                // Calculate the local neighborhood average (lighting baseline)
+                double currentGreen = greenBlocks[r][c]; 
+                double currentRed = redBlocks[r][c];     
+                
+                // MASKING: 35 prevents dark edge shadows. 170 prevents the bright Optic Disc from flagging as exudates.
+                if (currentGreen < 35.0 || currentGreen > 170.0) continue; 
+
                 double localGreenSum = 0;
                 int neighborCount = 0;
+                
                 for (int dy = -radius; dy <= radius; dy++) {
                     for (int dx = -radius; dx <= radius; dx++) {
-                        if (dx == 0 && dy == 0) continue; // Skip the center block
+                        if (dx == 0 && dy == 0) continue; 
                         localGreenSum += greenBlocks[r + dy][c + dx];
                         neighborCount++;
                     }
                 }
+                
                 double localGreenAvg = localGreenSum / neighborCount;
+                double localContrast = localGreenAvg - currentGreen; 
+
+                for (int i = 0; i < prototypes.size(); i++) {
+                    INode<RegionData> pNode = prototypes.get(i);
+                    RegionData pData = pNode.getData();
+                    
+                    double d1 = Math.pow(currentGreen - pData.getAverageBrightness(), 2);
+                    double d2 = Math.pow(currentRed - pData.getGradientIntensity(), 2);
+                    double d3 = Math.pow(localContrast - protoF3[i], 2);
+                    
+                    double euclideanDistance = Math.sqrt(d1 + d2 + d3);
+                    pq.insert(pNode, euclideanDistance);
+                }
+
+                int anomalyVotes = 0;
+                ArrayList<INode<RegionData>> nearestNeighbors = new ArrayList<>();
                 
-                // HEURISTIC 1: Microaneurysms / Hemorrhages (Red/Dark Lesions)
-                // A sharp drop in contrast compared to the local neighborhood.
-                boolean isDarkLesion = (localGreenAvg - currentGreen) > 25.0; 
+                for (int k = 0; k < K_NEIGHBORS; k++) {
+                    MinHeap.HeapElement<RegionData> minElement = pq.extractMin();
+                    if (minElement != null) {
+                        nearestNeighbors.add(nearestNeighbors.size(), minElement.node);
+                        if (minElement.node.getData().isAnomaly()) {
+                            anomalyVotes++;
+                        }
+                    }
+                }
                 
-                // HEURISTIC 2: Hard Exudates (Bright Lesions)
-                // Lipid deposits are significantly brighter than the surrounding retina.
-                boolean isBrightLesion = (currentGreen - localGreenAvg) > 35.0 && currentRed > 150.0;
-                
-                if (isDarkLesion || isBrightLesion) {
+                while (!pq.isEmpty()) {
+                    pq.extractMin();
+                }
+
+                if (anomalyVotes > (K_NEIGHBORS / 2)) {
                     RegionData lesion = new RegionData(c, r, currentGreen);
                     lesion.setAnomaly(true);
+                    
+                    INode<RegionData> blockNode = knnGraph.addNode(lesion);
+                    
+                    for (int n = 0; n < nearestNeighbors.size(); n++) {
+                        knnGraph.addEdge(blockNode, nearestNeighbors.get(n), 1.0);
+                    }
                     anomalies.add(anomalies.size(), lesion);
                 }
             }
         }
         
-        System.out.println("Pigmental Pipeline Complete: Found " + anomalies.size() + " isolated lesions.");
+        System.out.println("k-NN Similarity Graph Generation Complete: Extracted " + anomalies.size() + " pathological lesions.");
         return anomalies;
     }
 }

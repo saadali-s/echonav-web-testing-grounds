@@ -14,6 +14,7 @@ import tasks.SimilarityDetector;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -21,41 +22,45 @@ import java.io.File;
 public class MainFrame extends JFrame {
 
     private MapPanel mapPanel;
+    private JTextArea consoleOutput;
     
-    // Parallel Pipeline Matrices
     private Matrix greenChannelMatrix;
     private Matrix redChannelMatrix;
-    private Matrix sobelEdgeMatrix;
+    private Matrix binaryVesselMask;
     
     private AdjacencyListGraph<RegionData> vascularGraph;
     private INode<RegionData>[][] nodeGrid;
     
     private final int BLOCK_SIZE = 4; 
-    private final double DARKNESS_THRESHOLD = 70.0; 
-    private final double EDGE_THRESHOLD = 30.0;     
 
-    private JLabel lblInstructions;
-    private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex;
+    private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex, lblPdrCycles;
+    private JButton btnLoadImage, btnExtractNetwork, btnScanAnomalies, btnMeasureTortuosity, btnBatchProcess, btnRunML;
 
     public MainFrame() {
-        setTitle("RetinaGraph Diagnostics");
+        setTitle("RetinaGraph Diagnostics & ML Pipeline");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1350, 900);
+        setSize(1400, 950);
         setLayout(new BorderLayout());
         getContentPane().setBackground(new Color(24, 24, 27));
 
         mapPanel = new MapPanel();
         JScrollPane scrollPane = new JScrollPane(mapPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Sidebar
+        setupSidebar();
+        setupConsole();
+        setupEventHandlers();
+
+        setLocationRelativeTo(null);
+    }
+
+    private void setupSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(360, getHeight()));
         sidebar.setBackground(new Color(9, 9, 11)); 
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setBorder(new EmptyBorder(30, 25, 30, 25));
+        sidebar.setBorder(new EmptyBorder(25, 25, 25, 25));
 
         JLabel title = new JLabel("RetinaGraph");
         title.setForeground(Color.WHITE);
@@ -63,82 +68,130 @@ public class MainFrame extends JFrame {
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
         
         sidebar.add(title);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
-
-        // Instruction Panel
-        JPanel instructionPanel = new JPanel(new BorderLayout());
-        instructionPanel.setBackground(new Color(30, 58, 138)); // Deep blue background
-        instructionPanel.setBorder(new EmptyBorder(15, 15, 15, 15));
-        instructionPanel.setMaximumSize(new Dimension(320, 80));
-        
-        lblInstructions = new JLabel("<html><b>Awaiting Input:</b><br>Load a Fundus Scan to begin.</html>");
-        lblInstructions.setForeground(Color.WHITE);
-        lblInstructions.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        instructionPanel.add(lblInstructions, BorderLayout.CENTER);
-        
-        sidebar.add(instructionPanel);
         sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
-        
-        mapPanel.setInstructionHook(lblInstructions);
 
-        JButton btnLoadImage = createModernButton("1. Load Fundus Scan", new Color(37, 99, 235));
-        JButton btnExtractNetwork = createModernButton("2. Extract Network", new Color(16, 185, 129));
-        JButton btnScanAnomalies = createModernButton("3. Auto-Scan Anomalies", new Color(245, 158, 11));
-        JButton btnMeasureTortuosity = createModernButton("4. Measure Tortuosity", new Color(139, 92, 246));
+        btnLoadImage = createModernButton("1. Load Single Scan", new Color(37, 99, 235));
+        btnExtractNetwork = createModernButton("2. Extract Network", new Color(16, 185, 129));
+        btnScanAnomalies = createModernButton("3. k-NN Anomaly Scan", new Color(245, 158, 11));
+        btnMeasureTortuosity = createModernButton("4. Auto-Measure Chaos", new Color(139, 92, 246));
+
+        btnBatchProcess = createModernButton("5. Batch Extract to CSV", new Color(71, 85, 105));
+        btnRunML = createModernButton("6. Execute Weka ML", new Color(225, 29, 72));
 
         btnExtractNetwork.setEnabled(false);
         btnScanAnomalies.setEnabled(false);
         btnMeasureTortuosity.setEnabled(false);
+        btnBatchProcess.setEnabled(true); 
+        btnRunML.setEnabled(false);
 
         sidebar.add(btnLoadImage);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 15)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnExtractNetwork);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 15)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnScanAnomalies);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 15)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnMeasureTortuosity);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 40)));
+        
+        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
+        JLabel mlLabel = new JLabel("MACHINE LEARNING");
+        mlLabel.setForeground(new Color(161, 161, 170));
+        mlLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sidebar.add(mlLabel);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        
+        sidebar.add(btnBatchProcess);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidebar.add(btnRunML);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
 
         lblNodesExtracted = new JLabel("--");
         lblAnomaliesFound = new JLabel("--");
         lblTortuosityIndex = new JLabel("--");
+        lblPdrCycles = new JLabel("--");
 
         sidebar.add(createTelemetryCard("Vascular Nodes", lblNodesExtracted));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 12)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(createTelemetryCard("Identified Lesions", lblAnomaliesFound));
-        sidebar.add(Box.createRigidArea(new Dimension(0, 12)));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidebar.add(createTelemetryCard("PDR Cycle Nets", lblPdrCycles));
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(createTelemetryCard("Dijkstra TI Score", lblTortuosityIndex));
 
         add(sidebar, BorderLayout.WEST);
+    }
 
-        // --- BUTTON EVENTS (Parallel Execution) ---
+    private void setupConsole() {
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        bottomPanel.setPreferredSize(new Dimension(getWidth(), 150));
+        bottomPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        bottomPanel.setBackground(new Color(9, 9, 11));
 
+        consoleOutput = new JTextArea();
+        consoleOutput.setEditable(false);
+        consoleOutput.setBackground(new Color(24, 24, 27));
+        consoleOutput.setForeground(new Color(16, 185, 129));
+        consoleOutput.setFont(new Font("Consolas", Font.PLAIN, 13));
+        
+        DefaultCaret caret = (DefaultCaret)consoleOutput.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+
+        JScrollPane consoleScroll = new JScrollPane(consoleOutput);
+        consoleScroll.setBorder(BorderFactory.createLineBorder(new Color(63, 63, 70)));
+        bottomPanel.add(consoleScroll, BorderLayout.CENTER);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+        logToConsole("System Initialized. Awaiting user input...");
+    }
+
+    public void logToConsole(String message) {
+        SwingUtilities.invokeLater(() -> {
+            consoleOutput.append("> " + message + "\n");
+        });
+    }
+
+    private void setupEventHandlers() {
         btnLoadImage.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                File file = fileChooser.getSelectedFile();
+            FileDialog fileDialog = new FileDialog(this, "Select Fundus Scan", FileDialog.LOAD);
+            fileDialog.setVisible(true);
+            
+            if (fileDialog.getFile() != null) {
+                File file = new File(fileDialog.getDirectory(), fileDialog.getFile());
                 try {
+                    logToConsole("Loading Image: " + file.getName() + "...");
                     BufferedImage img = ImageIO.read(file);
                     mapPanel.setPreferredSize(new Dimension(img.getWidth(), img.getHeight()));
                     mapPanel.loadScan(img);
                     
-                    // Run initial Optical Split
                     greenChannelMatrix = ImageToGraphConverter.extractGreenChannel(file.getAbsolutePath());
                     redChannelMatrix = ImageToGraphConverter.extractRedChannel(file.getAbsolutePath());
                     
-                    lblInstructions.setText("<html><b>Image Loaded:</b><br>Extract the network to visualize vessels.</html>");
+                    logToConsole("Matrix extraction complete.");
                     btnExtractNetwork.setEnabled(true);
-                } catch (Exception ex) {}
+                } catch (Exception ex) {
+                    logToConsole("ERROR: Failed to load image.");
+                }
             }
         });
 
         btnExtractNetwork.addActionListener(e -> {
             try {
-                // Pipeline 1: Structural Extraction
-                sobelEdgeMatrix = ImageToGraphConverter.applySobelEdgeDetection(greenChannelMatrix);
-                vascularGraph = GraphBuilder.buildVascularGraph(
-                    greenChannelMatrix, sobelEdgeMatrix, BLOCK_SIZE, EDGE_THRESHOLD, DARKNESS_THRESHOLD
-                );
+                logToConsole("Executing Sauvola Thresholding...");
+                Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannelMatrix);
+                
+                logToConsole("Bridging fragmented vessels (Morphological Dilation)...");
+                Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
+                
+                logToConsole("Downscaling to Blocks...");
+                Matrix blockMask = ImageToGraphConverter.downscaleToBlocks(healedMask, BLOCK_SIZE);
+                
+                logToConsole("Executing Block-Level Skeletonization...");
+                Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
+                
+                // THE FIX: Route the skeleton through the topological sanitizer to remove 2x2 meshes
+                binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
+                
+                logToConsole("Building Topological Graph...");
+                vascularGraph = GraphBuilder.buildVascularGraph(greenChannelMatrix, binaryVesselMask, BLOCK_SIZE);
                 
                 int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
                 int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
@@ -153,46 +206,55 @@ public class MainFrame extends JFrame {
                 mapPanel.setGraphData(vascularGraph, nodeGrid, rows, cols, BLOCK_SIZE);
                 lblNodesExtracted.setText(String.valueOf(nodes.size()));
                 
-                lblInstructions.setText("<html><b>Network Ready:</b><br>Auto-Scan for lesions or click vessels to measure tortuosity.</html>");
+                logToConsole("Graph Topology Built. Total Nodes: " + nodes.size());
                 btnScanAnomalies.setEnabled(true);
                 btnMeasureTortuosity.setEnabled(true);
-            } catch (Exception ex) {}
+            } catch (Exception ex) {
+                logToConsole("ERROR: Matrix operation failed.");
+            }
         });
 
         btnScanAnomalies.addActionListener(e -> {
-            // Pipeline 2: Anomaly Extraction (Parallel Math)
+            logToConsole("Executing k-NN Graph Similarity search...");
             ArrayList<RegionData> isolatedAnomalies = SimilarityDetector.scanForAnomalies(greenChannelMatrix, redChannelMatrix, BLOCK_SIZE);
             
-            // The Merge
             GraphBuilder.mergeDiagnosticData(vascularGraph, nodeGrid, isolatedAnomalies);
             
             mapPanel.repaint(); 
             lblAnomaliesFound.setText(String.valueOf(isolatedAnomalies.size()));
-            lblInstructions.setText("<html><b>Anomalies Found:</b><br>Lesions are marked in red.</html>");
+            logToConsole("k-NN Search Complete. Isolated " + isolatedAnomalies.size() + " pathological lesions.");
         });
 
         btnMeasureTortuosity.addActionListener(e -> {
-            INode<RegionData> start = mapPanel.getStartNode();
-            INode<RegionData> end = mapPanel.getEndNode();
+            if (vascularGraph == null || vascularGraph.getNodes().size() < 2) {
+                logToConsole("ERROR: Not enough nodes in graph.");
+                return;
+            }
             
-            if (start == null || end == null) return;
-
+            logToConsole("Automating Chaos Measurement...");
+            
             int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
             int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
             
-            List<INode<RegionData>> path = PathFinder.calculateTortuosity(vascularGraph, start, end, rows, cols);
-            mapPanel.setActivePath(path);
+            int pdrCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
+            lblPdrCycles.setText(String.valueOf(pdrCycles));
+            logToConsole("Topological Euler Analysis: Found " + pdrCycles + " true vascular loops.");
             
-            double actualPathLength = path.size(); 
-            double euclid = Math.sqrt(Math.pow(end.getData().getGridX() - start.getData().getGridX(), 2) 
-                                    + Math.pow(end.getData().getGridY() - start.getData().getGridY(), 2));
-            double ti = actualPathLength / (euclid == 0 ? 1 : euclid);
+            ArrayList<List<INode<RegionData>>> pathContainer = new ArrayList<>();
+            double globalTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
             
-            lblTortuosityIndex.setText(String.format("%.2f", ti));
-            lblInstructions.setText("<html><b>Tortuosity Mapped:</b><br>Path rendered in cyan. Index calculated.</html>");
+            lblTortuosityIndex.setText(String.format("%.2f", globalTI));
+            
+            if (pathContainer.size() > 0) {
+                mapPanel.setActivePath(pathContainer.get(0));
+            }
+            
+            logToConsole("Exhaustive Trace Complete. Global TI: " + String.format("%.2f", globalTI));
         });
-
-        setLocationRelativeTo(null);
+        
+        btnBatchProcess.addActionListener(e -> {
+            logToConsole("Batch Processor must be run separately via pipeline.BatchProcessor main().");
+        });
     }
 
     private JButton createModernButton(String text, Color color) {
@@ -206,10 +268,10 @@ public class MainFrame extends JFrame {
                 super.paintComponent(g2);
             }
         };
-        btn.setMaximumSize(new Dimension(320, 45));
+        btn.setMaximumSize(new Dimension(320, 40));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
         btn.setForeground(Color.WHITE);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 14));
+        btn.setFont(new Font("SansSerif", Font.BOLD, 13));
         btn.setFocusPainted(false);
         btn.setContentAreaFilled(false);
         btn.setBorderPainted(false);
@@ -223,9 +285,9 @@ public class MainFrame extends JFrame {
         card.setBackground(new Color(24, 24, 27)); 
         card.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(new Color(63, 63, 70), 1),
-            new EmptyBorder(15, 20, 15, 20)
+            new EmptyBorder(10, 15, 10, 15)
         ));
-        card.setMaximumSize(new Dimension(320, 80));
+        card.setMaximumSize(new Dimension(320, 65));
 
         JLabel title = new JLabel(titleText.toUpperCase());
         title.setForeground(new Color(161, 161, 170));
