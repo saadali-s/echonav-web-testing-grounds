@@ -10,6 +10,7 @@ import imageprocessing.ImageToGraphConverter;
 import imageprocessing.RegionData;
 import tasks.PathFinder;
 import tasks.SimilarityDetector;
+import pipeline.RetinaClassifier;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -32,6 +33,13 @@ public class MainFrame extends JFrame {
     private INode<RegionData>[][] nodeGrid;
     
     private final int BLOCK_SIZE = 4; 
+
+    // Live State Trackers for the Weka Handoff
+    private int lastNodes = 0;
+    private int lastLesions = 0;
+    private int lastCycles = 0;
+    private double lastTI = 1.0;
+    private RetinaClassifier wekaClassifier;
 
     private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex, lblPdrCycles;
     private JButton btnLoadImage, btnExtractNetwork, btnScanAnomalies, btnMeasureTortuosity, btnBatchProcess, btnRunML;
@@ -167,6 +175,9 @@ public class MainFrame extends JFrame {
                     
                     logToConsole("Matrix extraction complete.");
                     btnExtractNetwork.setEnabled(true);
+                    btnScanAnomalies.setEnabled(false);
+                    btnMeasureTortuosity.setEnabled(false);
+                    btnRunML.setEnabled(false);
                 } catch (Exception ex) {
                     logToConsole("ERROR: Failed to load image.");
                 }
@@ -187,7 +198,6 @@ public class MainFrame extends JFrame {
                 logToConsole("Executing Block-Level Skeletonization...");
                 Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
                 
-                // THE FIX: Route the skeleton through the topological sanitizer to remove 2x2 meshes
                 binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
                 
                 logToConsole("Building Topological Graph...");
@@ -204,9 +214,12 @@ public class MainFrame extends JFrame {
                 }
                 
                 mapPanel.setGraphData(vascularGraph, nodeGrid, rows, cols, BLOCK_SIZE);
-                lblNodesExtracted.setText(String.valueOf(nodes.size()));
                 
-                logToConsole("Graph Topology Built. Total Nodes: " + nodes.size());
+                // Store State
+                lastNodes = nodes.size();
+                lblNodesExtracted.setText(String.valueOf(lastNodes));
+                
+                logToConsole("Graph Topology Built. Total Nodes: " + lastNodes);
                 btnScanAnomalies.setEnabled(true);
                 btnMeasureTortuosity.setEnabled(true);
             } catch (Exception ex) {
@@ -219,10 +232,13 @@ public class MainFrame extends JFrame {
             ArrayList<RegionData> isolatedAnomalies = SimilarityDetector.scanForAnomalies(greenChannelMatrix, redChannelMatrix, BLOCK_SIZE);
             
             GraphBuilder.mergeDiagnosticData(vascularGraph, nodeGrid, isolatedAnomalies);
-            
             mapPanel.repaint(); 
-            lblAnomaliesFound.setText(String.valueOf(isolatedAnomalies.size()));
-            logToConsole("k-NN Search Complete. Isolated " + isolatedAnomalies.size() + " pathological lesions.");
+            
+            // Store State
+            lastLesions = isolatedAnomalies.size();
+            lblAnomaliesFound.setText(String.valueOf(lastLesions));
+            
+            logToConsole("k-NN Search Complete. Isolated " + lastLesions + " pathological lesions.");
         });
 
         btnMeasureTortuosity.addActionListener(e -> {
@@ -232,28 +248,63 @@ public class MainFrame extends JFrame {
             }
             
             logToConsole("Automating Chaos Measurement...");
-            
             int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
             int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
             
-            int pdrCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
-            lblPdrCycles.setText(String.valueOf(pdrCycles));
-            logToConsole("Topological Euler Analysis: Found " + pdrCycles + " true vascular loops.");
+            // Store State
+            lastCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
+            lblPdrCycles.setText(String.valueOf(lastCycles));
+            logToConsole("Topological Euler Analysis: Found " + lastCycles + " true vascular loops.");
             
             ArrayList<List<INode<RegionData>>> pathContainer = new ArrayList<>();
-            double globalTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
-            
-            lblTortuosityIndex.setText(String.format("%.2f", globalTI));
+            lastTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
+            lblTortuosityIndex.setText(String.format("%.2f", lastTI));
             
             if (pathContainer.size() > 0) {
                 mapPanel.setActivePath(pathContainer.get(0));
             }
             
-            logToConsole("Exhaustive Trace Complete. Global TI: " + String.format("%.2f", globalTI));
+            logToConsole("Exhaustive Trace Complete. Global TI: " + String.format("%.2f", lastTI));
+            
+            // Activate the Weka Handoff Button
+            btnRunML.setEnabled(true);
         });
         
         btnBatchProcess.addActionListener(e -> {
             logToConsole("Batch Processor must be run separately via pipeline.BatchProcessor main().");
+        });
+
+        btnRunML.addActionListener(e -> {
+            // Lazy load the model so the app boots instantly
+            if (wekaClassifier == null) {
+                wekaClassifier = new RetinaClassifier("retina_model.model");
+            }
+            
+            logToConsole("Executing Weka Random Forest classification...");
+            String resultIndex = wekaClassifier.predictDiagnosis(lastNodes, lastLesions, lastCycles, lastTI);
+            
+            String clinicalDiagnosis = "";
+            switch(resultIndex) {
+                case "0": clinicalDiagnosis = "Grade 0: No Diabetic Retinopathy"; break;
+                case "1": clinicalDiagnosis = "Grade 1: Mild Non-Proliferative DR"; break;
+                case "2": clinicalDiagnosis = "Grade 2: Moderate Non-Proliferative DR"; break;
+                case "3": clinicalDiagnosis = "Grade 3: Severe Non-Proliferative DR"; break;
+                case "4": clinicalDiagnosis = "Grade 4: Proliferative DR (Critical)"; break;
+                default: clinicalDiagnosis = "Unknown (" + resultIndex + ")";
+            }
+            
+            logToConsole("Diagnosis Complete: " + clinicalDiagnosis);
+            
+            // Medical UI Dialog Box
+            JOptionPane.showMessageDialog(MainFrame.this, 
+                "Predicted Diagnosis:\n" + clinicalDiagnosis + "\n\n" +
+                "Extracted Biomarkers:\n" +
+                " - Vascular Nodes: " + lastNodes + "\n" +
+                " - k-NN Lesions: " + lastLesions + "\n" +
+                " - PDR Cycle Nets: " + lastCycles + "\n" +
+                " - Tortuosity Index: " + String.format("%.2f", lastTI),
+                "Weka ML Diagnostic Results", 
+                JOptionPane.INFORMATION_MESSAGE);
         });
     }
 
