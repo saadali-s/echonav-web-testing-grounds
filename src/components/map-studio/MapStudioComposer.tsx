@@ -67,6 +67,10 @@ export function MapStudioComposer() {
             Manage architectural floor plans and spatial routing graphs.
           </p>
         </div>
+        
+        {/* ADDED: The Modal Trigger Button aligned to the right */}
+        <CreateMapModal />
+        
       </div>
 
       {/* Grid Layout (Removed flex-1 min-h-0 to prevent squishing) */}

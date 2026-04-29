@@ -16,22 +16,25 @@ export function CreateMapModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none gap-2">
-          <Plus className="h-5 w-5" /> INITIALIZE NEW MAP
+        {/* UPDATED: Changed text to ADD NEW BUILDING */}
+        <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0">
+          <Plus className="h-4 w-4 mr-3" />
+          ADD NEW BUILDING
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden">
         <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
-          <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">Initialize New Map</DialogTitle>
+          <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">Add New Building</DialogTitle>
           <DialogDescription className="font-bold text-zinc-500 text-xs mt-1">
-            Upload architectural floor plans to begin spatial vectorization.
+            Register a new building profile before uploading individual floor plans.
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6 p-6">
           <div className="grid gap-2">
-            <Label htmlFor="name" className="font-black uppercase text-[11px] tracking-wider text-zinc-600 dark:text-zinc-400">Map Name</Label>
-            <Input id="name" placeholder="e.g., Science Block - Floor 2" className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium" />
+            {/* UPDATED: Changed from Map Name to Building Name */}
+            <Label htmlFor="name" className="font-black uppercase text-[11px] tracking-wider text-zinc-600 dark:text-zinc-400">Building Name</Label>
+            <Input id="name" placeholder="e.g., Science Block" className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium" />
           </div>
 
           <div className="grid gap-2">

@@ -13,8 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { Switch } from "@/components/ui/switch"; // ADDED: Imported Switch
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Shield, ShieldAlert } from "lucide-react"; // ADDED: Shield icons for visual polish
 import { cn } from "@/lib/utils";
 import {
   Command,
@@ -45,6 +46,10 @@ export function SignupForm() {
   const [stateProvince, setStateProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  
+  // ADDED: State for default institution privacy
+  const [defaultPrivacy, setDefaultPrivacy] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
+  
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +72,7 @@ export function SignupForm() {
 
     // Simulate network request
     setTimeout(() => {
+      // In the real app, you will pass `defaultPrivacy` to your backend here!
       login(); 
       setIsLoading(false);
     }, 1200);
@@ -269,6 +275,38 @@ export function SignupForm() {
                 />
               </div>
             </div>
+            </div>
+
+            {/* ADDED: Divider for Privacy Preferences */}
+            <div className="md:col-span-2 pt-2 border-t border-border/50 mt-1">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Privacy Settings
+              </h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 mt-2 rounded-xl border border-border/50 bg-secondary/10">
+                <div className="space-y-1">
+                  <Label className="text-sm font-bold flex items-center gap-2">
+                    {defaultPrivacy === "PUBLIC" ? <Shield className="w-4 h-4 text-emerald-500" /> : <ShieldAlert className="w-4 h-4 text-amber-500" />}
+                    Default Network Privacy
+                  </Label>
+                  <p className="text-[13px] text-muted-foreground">
+                    Automatically set newly created buildings and maps to <span className="font-semibold text-foreground">{defaultPrivacy.toLowerCase()}</span>.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0 bg-background px-3 py-2 rounded-lg border border-border/50 shadow-sm">
+                  <span className={cn(
+                    "text-[11px] font-black tracking-widest uppercase",
+                    defaultPrivacy === "PUBLIC" ? "text-emerald-500" : "text-amber-500"
+                  )}>
+                    {defaultPrivacy}
+                  </span>
+                  <Switch
+                    checked={defaultPrivacy === "PUBLIC"}
+                    onCheckedChange={(checked) => setDefaultPrivacy(checked ? "PUBLIC" : "PRIVATE")}
+                    disabled={isLoading}
+                    className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Divider for Security */}

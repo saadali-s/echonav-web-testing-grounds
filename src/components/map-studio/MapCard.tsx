@@ -1,9 +1,12 @@
+"use client"; // Added because we are now using useState
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Activity, AlertTriangle, ArrowRight, Map } from "lucide-react";
+import { Switch } from "@/components/ui/switch"; // Import the Switch component
+import { Activity, AlertTriangle, ArrowRight, Map, Shield, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 export interface MapData {
   id: string;
@@ -16,19 +19,24 @@ export interface MapData {
 
 export function MapCard({ map }: { map: MapData }) {
   const isHealthy = map.health === "ONLINE";
+  
+  // Local state for prototyping the toggle effect
+  const [privacy, setPrivacy] = useState<"PUBLIC" | "PRIVATE">(map.privacy);
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group">
+    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
       {/* Thumbnail Area */}
-      <div className="h-40 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800 relative">
+      <div className="h-40 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800 relative overflow-hidden">
         <Map className="h-12 w-12 text-zinc-950 dark:text-zinc-100 group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
         
-        {/* Privacy Badge */}
+        {/* Privacy Badge (Now reactive to the state) */}
         <Badge 
-          variant={map.privacy === "PUBLIC" ? "default" : "secondary"} 
-          className="absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md"
+          variant={privacy === "PUBLIC" ? "default" : "secondary"} 
+          className={`absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md transition-colors ${privacy === "PRIVATE" ? "bg-amber-100 text-amber-900 hover:bg-amber-200" : ""}`}
         >
-          {map.privacy}
+          {privacy === "PRIVATE" && <ShieldAlert className="w-3 h-3 mr-1.5" />}
+          {privacy === "PUBLIC" && <Shield className="w-3 h-3 mr-1.5" />}
+          {privacy}
         </Badge>
       </div>
 
@@ -51,24 +59,39 @@ export function MapCard({ map }: { map: MapData }) {
           </div>
         </div>
 
-        {/* Hardware Health Indicator */}
-        <div className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-wider">
-          {isHealthy ? (
-            <>
-              <span className="relative flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-zinc-950"></span>
-              </span>
-              <span className="text-emerald-700 dark:text-emerald-500">All Hardware Online</span>
-            </>
-          ) : (
-            <>
-              <div className="h-5 w-5 bg-amber-100 border-2 border-amber-900 text-amber-900 flex items-center justify-center rounded-md shrink-0">
-                <AlertTriangle className="h-3 w-3" />
-              </div>
-              <span className="text-amber-700 dark:text-amber-500">Maintenance Required</span>
-            </>
-          )}
+        {/* Status Footer Area: Health + Toggle */}
+        <div className="flex items-center justify-between pt-1">
+          {/* Hardware Health Indicator */}
+          <div className="flex items-center gap-2.5 text-[11px] font-black uppercase tracking-wider">
+            {isHealthy ? (
+              <>
+                <span className="relative flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-zinc-950"></span>
+                </span>
+                <span className="text-emerald-700 dark:text-emerald-500">All Hardware Online</span>
+              </>
+            ) : (
+              <>
+                <div className="h-5 w-5 bg-amber-100 border-2 border-amber-900 text-amber-900 flex items-center justify-center rounded-md shrink-0">
+                  <AlertTriangle className="h-3 w-3" />
+                </div>
+                <span className="text-amber-700 dark:text-amber-500">Maintenance Required</span>
+              </>
+            )}
+          </div>
+
+          {/* ADDED: Privacy Toggle */}
+          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 rounded-lg border-2 border-zinc-950 dark:border-zinc-800">
+            <span className={`text-[10px] font-black tracking-widest uppercase ${privacy === "PUBLIC" ? "text-emerald-600" : "text-amber-600"}`}>
+              {privacy}
+            </span>
+            <Switch 
+              checked={privacy === "PUBLIC"}
+              onCheckedChange={(checked) => setPrivacy(checked ? "PUBLIC" : "PRIVATE")}
+              className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500 border-2 border-zinc-950 scale-75 m-0"
+            />
+          </div>
         </div>
       </CardContent>
 

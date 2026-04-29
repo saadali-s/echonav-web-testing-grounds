@@ -1,11 +1,9 @@
-import { GraphEditorComposer } from "@/components/map-studio/editor/GraphEditorComposer";
+import { BuildingMapsComposer } from "@/components/map-studio/BuildingMapsComposer";
 
-export default function EditorPage() {
-
+export default function BuildingDirectoryPage() {
   return (
-    <div className="h-full -m-6 md:-m-8"> 
-    
-      <GraphEditorComposer />
+    <div className="h-full">
+      <BuildingMapsComposer />
     </div>
   );
-}
+}  
