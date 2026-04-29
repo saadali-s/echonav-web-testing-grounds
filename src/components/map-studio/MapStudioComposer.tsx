@@ -1,9 +1,9 @@
-import { CreateMapModal } from "@/components/map-studio/CreateMapModal";
+import { CreateMapModal } from "@/components/map-studio/CreateBuildingModal";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { MapCard, MapData } from "./MapCard";
+import { BuildingCard, BuildingData } from "./BuildingCard";
 
 
-const mockMaps: MapData[] = [
+const mockBuilding: BuildingData[] = [
   { id: "b-1", name: "Science Block", address: "123 University Rd, Johannesburg, 2092", privacy: "PUBLIC", stats: { nodes: 42, edges: 68 }, health: "ONLINE", updatedAt: "2 hours ago" },
   { id: "b-2", name: "Main Library", address: "45 Academic Ave, Johannesburg, 2092", privacy: "PUBLIC", stats: { nodes: 156, edges: 210 }, health: "MAINTENANCE", updatedAt: "Yesterday" },
   { id: "b-3", name: "Engineering Wing", address: "78 Tech Blvd, Johannesburg, 2092", privacy: "PRIVATE", stats: { nodes: 12, edges: 11 }, health: "ONLINE", updatedAt: "1 week ago" },
@@ -23,8 +23,8 @@ export function MapStudioComposer() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-4">
-        {mockMaps.map((map) => (
-          <MapCard key={map.id} map={map} />
+        {mockBuilding.map((building) => (
+          <BuildingCard key={building.id} building={building} />
         ))}
       </div>
 

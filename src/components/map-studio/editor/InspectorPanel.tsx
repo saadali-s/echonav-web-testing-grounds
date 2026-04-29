@@ -33,7 +33,7 @@ function NodeInspector({ node, updateNode, onSave }: { node?: NodeData, updateNo
     <div className="flex-1 flex flex-col min-h-0">
       <div className="p-5 space-y-6 flex-1 overflow-y-auto">
         
-        {/* THE FIX: Added Node Label Editor */}
+        {/* Added Node Label Editor */}
         <div className="space-y-3">
           <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Node Label (Name)</Label>
           <Input 
