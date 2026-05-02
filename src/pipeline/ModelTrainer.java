@@ -8,6 +8,7 @@ import weka.core.converters.CSVLoader;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.NumericToNominal;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.supervised.instance.ClassBalancer;
 
 import java.io.File;
 import java.util.Random;
@@ -32,7 +33,7 @@ public class ModelTrainer {
             // After removing ImageID, Diagnosis shifts from column 6 to column 5
             System.out.println("3. Converting Diagnoses to Nominal Classes...");
             NumericToNominal nomFilter = new NumericToNominal();
-            nomFilter.setAttributeIndices("5"); 
+            nomFilter.setAttributeIndices("6");
             nomFilter.setInputFormat(data);
             data = Filter.useFilter(data, nomFilter);
 
@@ -51,7 +52,7 @@ public class ModelTrainer {
             // 5. Build the Random Forest
             System.out.println("5. Training Random Forest (100 Decision Trees)...");
             RandomForest rf = new RandomForest();
-            rf.setNumIterations(100);
+            rf.setNumIterations(260);
             rf.buildClassifier(trainData);
 
             // 6. Administer the Hidden Test
