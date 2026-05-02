@@ -113,7 +113,7 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
       </CardContent>
 
       <CardFooter className="p-5 pt-0 mt-auto">
-        <Button className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0" asChild>
+        <Button className="mt-5 w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0" asChild>
           <Link href={`/map-studio/${building.id}`}>View Floor Plans <ArrowRight className="w-4 h-4 ml-2" /></Link>
         </Button>
       </CardFooter>
