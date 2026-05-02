@@ -12,10 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { Switch } from "@/components/ui/switch"; // ADDED: Imported Switch
+import { useState, useRef } from "react";
 
-import { Check, ChevronsUpDown, Shield, ShieldAlert } from "lucide-react"; // ADDED: Shield icons for visual polish
+import { Check, ChevronsUpDown, Shield, ShieldAlert } from "lucide-react"; 
 import { cn } from "@/lib/utils";
 import {
   Command,
@@ -32,32 +31,60 @@ import {
 } from "@/components/ui/popover";
 
 import { COUNTRIES } from "@/lib/countries";
+import { useGooglePlacesAutocomplete } from "@/hooks/AutoAddressGoogleMaps";
 
 export function SignupForm() {
   const { login } = useAuth();
-  
+
   const [instName, setInstName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
   const [openCountrySelect, setOpenCountrySelect] = useState(false);
-  const [selectedCountryCode, setSelectedCountryCode] = useState(COUNTRIES[0].code); 
+  const [selectedCountryCode, setSelectedCountryCode] = useState(
+    COUNTRIES[0].code,
+  );
   const [streetAddress, setStreetAddress] = useState("");
   const [city, setCity] = useState("");
   const [stateProvince, setStateProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
-  
-  // ADDED: State for default institution privacy
-  const [defaultPrivacy, setDefaultPrivacy] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
-  
+
+  const [defaultPrivacy, setDefaultPrivacy] = useState<"PUBLIC" | "PRIVATE">(
+    "PUBLIC",
+  );
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const currentCountry = COUNTRIES.find(c => c.code === selectedCountryCode);
-  const currentDialCode = currentCountry?.dialCode || '';
+  const currentCountry = COUNTRIES.find((c) => c.code === selectedCountryCode);
+  const currentDialCode = currentCountry?.dialCode || "";
+
+  // Reference for the street address input
+  const streetInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize the Autocomplete Hook
+  useGooglePlacesAutocomplete(
+    streetInputRef,
+    selectedCountryCode,
+    (details) => {
+      // Update state when the user selects a Google Maps prediction
+      setStreetAddress(details.streetAddress);
+      setCity(details.city);
+      setStateProvince(details.stateProvince);
+      setPostalCode(details.postalCode);
+      
+      // Keep the country dropdown in sync if needed
+      if (details.countryCode) {
+        const matchedCountry = COUNTRIES.find((c) => c.code === details.countryCode);
+        if (matchedCountry) {
+          setSelectedCountryCode(matchedCountry.code);
+        }
+      }
+    }
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,15 +92,14 @@ export function SignupForm() {
     setError("");
 
     if (password !== confirmPassword) {
-        setError("Passwords do not match.");
-        setIsLoading(false);
-        return;
+      setError("Passwords do not match.");
+      setIsLoading(false);
+      return;
     }
 
     // Simulate network request
     setTimeout(() => {
-      // In the real app, you will pass `defaultPrivacy` to your backend here!
-      login(); 
+      login();
       setIsLoading(false);
     }, 1200);
   };
@@ -103,7 +129,6 @@ export function SignupForm() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pt-6">
-            
             {/* Account Details */}
             <div className="space-y-2">
               <Label htmlFor="inst-name">Institution Name</Label>
@@ -155,7 +180,10 @@ export function SignupForm() {
 
             <div className="space-y-2 flex flex-col">
               <Label htmlFor="signup-region">Country / Region</Label>
-              <Popover open={openCountrySelect} onOpenChange={setOpenCountrySelect}>
+              <Popover
+                open={openCountrySelect}
+                onOpenChange={setOpenCountrySelect}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     id="signup-region"
@@ -169,7 +197,10 @@ export function SignupForm() {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+                <PopoverContent
+                  className="w-[var(--radix-popover-trigger-width)] p-0"
+                  align="start"
+                >
                   <Command>
                     <CommandInput placeholder="Search country..." />
                     <CommandList>
@@ -188,10 +219,15 @@ export function SignupForm() {
                             <Check
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                selectedCountryCode === country.code ? "opacity-100 text-primary" : "opacity-0"
+                                selectedCountryCode === country.code
+                                  ? "opacity-100 text-primary"
+                                  : "opacity-0",
                               )}
                             />
-                            {country.name} <span className="ml-1 text-muted-foreground aria-[selected=true]:text-primary/70">({country.dialCode})</span>
+                            {country.name}{" "}
+                            <span className="ml-1 text-muted-foreground aria-[selected=true]:text-primary/70">
+                              ({country.dialCode})
+                            </span>
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -201,17 +237,22 @@ export function SignupForm() {
               </Popover>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="signup-street">Street Address</Label>
+            {/* Address */}
+            <div className="space-y-2 relative">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="signup-street">Street Address</Label>
+              </div>
               <Input
+                ref={streetInputRef} 
                 id="signup-street"
                 type="text"
-                placeholder="123 Main St, Suite 100"
+                placeholder="Start typing your street..."
                 className="h-10 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
                 required
-                value={streetAddress}
-                onChange={(e) => setStreetAddress(e.target.value)}
                 disabled={isLoading}
+                value={streetAddress}
+                onChange={(e) => setStreetAddress(e.target.value)} 
+                autoComplete="off"
               />
             </div>
 
@@ -256,25 +297,25 @@ export function SignupForm() {
                   disabled={isLoading}
                 />
               </div>
-              
-            <div className="space-y-2">
-              <Label htmlFor="signup-contact">Contact No</Label>
-              <div className="flex items-center space-x-2">
-                <div className="flex h-10 w-[72px] shrink-0 items-center justify-center rounded-lg bg-secondary/50 text-sm font-medium text-muted-foreground border border-input/50">
-                  {currentDialCode}
+
+              <div className="space-y-2">
+                <Label htmlFor="signup-contact">Contact No</Label>
+                <div className="flex items-center space-x-2">
+                  <div className="flex h-10 w-[72px] shrink-0 items-center justify-center rounded-lg bg-secondary/50 text-sm font-medium text-muted-foreground border border-input/50">
+                    {currentDialCode}
+                  </div>
+                  <Input
+                    id="signup-contact"
+                    type="tel"
+                    placeholder="000 000 0000"
+                    className="h-10 flex-1 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
+                    required
+                    value={contactNumber}
+                    onChange={(e) => setContactNumber(e.target.value)}
+                    disabled={isLoading}
+                  />
                 </div>
-                <Input
-                  id="signup-contact"
-                  type="tel"
-                  placeholder="000 000 0000"
-                  className="h-10 flex-1 rounded-lg bg-secondary/30 focus-visible:ring-primary/20"
-                  required
-                  value={contactNumber}
-                  onChange={(e) => setContactNumber(e.target.value)}
-                  disabled={isLoading}
-                />
               </div>
-            </div>
             </div>
 
             {/* Divider for Security */}
@@ -296,7 +337,7 @@ export function SignupForm() {
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="confirm-password">Confirm Password</Label>
               <Input
@@ -309,7 +350,6 @@ export function SignupForm() {
                 disabled={isLoading}
               />
             </div>
-
           </CardContent>
           <CardFooter className="bg-secondary/5 pt-4 pb-6 mt-4 border-t border-border/50">
             <Button
