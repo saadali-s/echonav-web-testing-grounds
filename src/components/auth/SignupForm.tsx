@@ -49,10 +49,6 @@ export function SignupForm() {
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
 
-  const [defaultPrivacy, setDefaultPrivacy] = useState<"PUBLIC" | "PRIVATE">(
-    "PUBLIC",
-  );
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);

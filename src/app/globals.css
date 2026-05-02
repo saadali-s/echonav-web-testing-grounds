@@ -130,18 +130,21 @@
 }
 
 .pac-container {
-  background-color: var(--popover, #09090b) !important; 
+  background-color: var(--popover, #09090b) !important;
   color: var(--popover-foreground, #fafafa) !important;
   border: 1px solid var(--border, #27272a) !important;
   border-radius: var(--radius) !important;
-  
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 0, 0, 0.5) !important;
-  
   font-family: var(--font-sans), inherit !important;
   margin-top: 4px !important;
-  z-index: 999999 !important; 
-  opacity: 1 !important; 
-  backdrop-filter: none !important; 
+  z-index: 999999 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  pointer-events: auto !important;
+}
+
+body[style*="pointer-events: none"] .pac-container {
+  pointer-events: auto !important;
 }
 
 .pac-item {

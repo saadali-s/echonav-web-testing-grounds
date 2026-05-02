@@ -1,4 +1,4 @@
-import { CreateMapModal } from "@/components/map-studio/CreateBuildingModal";
+import { CreateBuilding } from "@/components/map-studio/CreateBuilding";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { BuildingCard, BuildingData } from "./BuildingCard";
 
@@ -19,7 +19,7 @@ export function MapStudioComposer() {
           <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">Map Studio Directory</h1>
           <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mt-1">Manage architectural floor plans and spatial routing graphs.</p>
         </div>
-        <CreateMapModal />
+        <CreateBuilding />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-4">

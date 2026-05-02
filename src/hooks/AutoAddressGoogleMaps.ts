@@ -13,21 +13,24 @@ export interface AddressDetails {
 
 export function useGooglePlacesAutocomplete(
   inputRef: RefObject<HTMLInputElement | null>,
-  countryCode: string,
+  countryCode: string | undefined | null,
   onAddressSelect: (details: AddressDetails) => void
 ) {
   const [isLoaded, setIsLoaded] = useState(false);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  
+  const onAddressSelectRef = useRef(onAddressSelect);
+  useEffect(() => {
+    onAddressSelectRef.current = onAddressSelect;
+  }, [onAddressSelect]);
 
   useEffect(() => {
     if (window.google?.maps?.places) {
       setIsLoaded(true);
       return;
     }
-
     const scriptId = "google-maps-script";
     let script = document.getElementById(scriptId) as HTMLScriptElement;
-
     if (!script) {
       script = document.createElement("script");
       script.id = scriptId;
@@ -44,13 +47,18 @@ export function useGooglePlacesAutocomplete(
   useEffect(() => {
     if (!isLoaded || !inputRef.current) return;
 
+    const options: any = {
+      fields: ["address_components", "formatted_address", "name"],
+      types: ["address"],
+    };
+
+    if (countryCode && countryCode.trim().length > 0) {
+      options.componentRestrictions = { country: countryCode.toLowerCase() };
+    }
+
     autocompleteRef.current = new window.google.maps.places.Autocomplete(
       inputRef.current,
-      {
-        fields: ["address_components", "formatted_address"],
-        types: ["address"],
-        componentRestrictions: { country: countryCode.toLowerCase() },
-      }
+      options
     );
 
     const listener = autocompleteRef.current.addListener("place_changed", () => {
@@ -69,7 +77,15 @@ export function useGooglePlacesAutocomplete(
         const types = component.types;
         if (types.includes("street_number")) streetNumber = component.long_name;
         if (types.includes("route")) route = component.long_name;
-        if (types.includes("locality") || types.includes("postal_town")) city = component.long_name;
+        
+        if (types.includes("locality")) {
+          city = component.long_name;
+        } else if (!city && types.includes("sublocality_level_1")) {
+          city = component.long_name;
+        } else if (!city && types.includes("administrative_area_level_2")) {
+          city = component.long_name;
+        }
+
         if (types.includes("administrative_area_level_1")) stateProvince = component.long_name;
         if (types.includes("postal_code")) postalCode = component.long_name;
         if (types.includes("country")) {
@@ -78,10 +94,8 @@ export function useGooglePlacesAutocomplete(
         }
       }
 
-      const formattedStreet = `${streetNumber} ${route}`.trim();
-
-      onAddressSelect({
-        streetAddress: formattedStreet,
+      onAddressSelectRef.current({
+        streetAddress: streetNumber || route ? `${streetNumber} ${route}`.trim() : (place.name || ""),
         city,
         stateProvince,
         postalCode,
@@ -91,18 +105,21 @@ export function useGooglePlacesAutocomplete(
     });
 
     return () => {
-      window.google.maps.event.removeListener(listener);
-      const pacContainers = document.querySelectorAll(".pac-container");
-      pacContainers.forEach((node) => node.remove());
+      if (window.google?.maps?.event && listener) {
+        window.google.maps.event.removeListener(listener);
+      }
+      document.querySelectorAll(".pac-container").forEach((node) => node.remove());
     };
+  }, [isLoaded, inputRef]);
 
-  }, [isLoaded, inputRef]); 
-
+  // Handle dynamic country updates
   useEffect(() => {
-    if (autocompleteRef.current && countryCode) {
-      autocompleteRef.current.setComponentRestrictions({
-        country: countryCode.toLowerCase(),
-      });
+    if (autocompleteRef.current) {
+      if (countryCode && countryCode.trim().length > 0) {
+        autocompleteRef.current.setComponentRestrictions({ country: countryCode.toLowerCase() });
+      } else {
+        autocompleteRef.current.setComponentRestrictions(null as any);
+      }
     }
   }, [countryCode]);
 
