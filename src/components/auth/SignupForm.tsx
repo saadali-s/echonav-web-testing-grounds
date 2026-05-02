@@ -277,38 +277,6 @@ export function SignupForm() {
             </div>
             </div>
 
-            {/* ADDED: Divider for Privacy Preferences */}
-            <div className="md:col-span-2 pt-2 border-t border-border/50 mt-1">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Privacy Settings
-              </h3>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 mt-2 rounded-xl border border-border/50 bg-secondary/10">
-                <div className="space-y-1">
-                  <Label className="text-sm font-bold flex items-center gap-2">
-                    {defaultPrivacy === "PUBLIC" ? <Shield className="w-4 h-4 text-emerald-500" /> : <ShieldAlert className="w-4 h-4 text-amber-500" />}
-                    Default Network Privacy
-                  </Label>
-                  <p className="text-[13px] text-muted-foreground">
-                    Automatically set newly created buildings and maps to <span className="font-semibold text-foreground">{defaultPrivacy.toLowerCase()}</span>.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3 shrink-0 bg-background px-3 py-2 rounded-lg border border-border/50 shadow-sm">
-                  <span className={cn(
-                    "text-[11px] font-black tracking-widest uppercase",
-                    defaultPrivacy === "PUBLIC" ? "text-emerald-500" : "text-amber-500"
-                  )}>
-                    {defaultPrivacy}
-                  </span>
-                  <Switch
-                    checked={defaultPrivacy === "PUBLIC"}
-                    onCheckedChange={(checked) => setDefaultPrivacy(checked ? "PUBLIC" : "PRIVATE")}
-                    disabled={isLoading}
-                    className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Divider for Security */}
             <div className="md:col-span-2 pt-2 border-t border-border/50 mt-1">
               <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
