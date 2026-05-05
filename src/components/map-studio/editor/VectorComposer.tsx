@@ -13,12 +13,14 @@ import { ZoomControls } from "./vector/ZoomControls";
 export function VectorComposer({ activeTool }: VectorComposerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [history, setHistory] = useState<
-    { nodes: NodeData[]; edges: EdgeData[] }[]
-  >([{ nodes: [], edges: [] }]);
+  // The single source of truth for the canvas data
+  const [history, setHistory] = useState<{ nodes: NodeData[]; edges: EdgeData[] }[]>([{ nodes: [], edges: [] }]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  const [nodes, setNodes] = useState<NodeData[]>([]);
-  const [edges, setEdges] = useState<EdgeData[]>([]);
+
+  // DERIVED STATE: No more useEffect. We simply read from the history.
+  const currentHistory = history[historyIndex] || { nodes: [], edges: [] };
+  const nodes = currentHistory.nodes;
+  const edges = currentHistory.edges;
 
   const [selection, setSelection] = useState<SelectionType>(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
@@ -31,41 +33,25 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
   const [isSpacePressed, setIsSpacePressed] = useState(false);
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const [dragStartPos, setDragStartPos] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [dragStartNodes, setDragStartNodes] = useState<
-    { id: string; startX: number; startY: number }[] | null
-  >(null);
-  const [draftEdge, setDraftEdge] = useState<{
-    source: string;
-    currentX: number;
-    currentY: number;
-  } | null>(null);
-  const [selectionBox, setSelectionBox] = useState<{
-    startX: number;
-    startY: number;
-    currentX: number;
-    currentY: number;
-  } | null>(null);
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragStartNodes, setDragStartNodes] = useState<{ id: string; startX: number; startY: number }[] | null>(null);
+  
+  // We keep a temporary state for nodes actively being dragged so we don't spam the history array
+  const [activeDragNodes, setActiveDragNodes] = useState<NodeData[] | null>(null);
+
+  const [draftEdge, setDraftEdge] = useState<{ source: string; currentX: number; currentY: number } | null>(null);
+  const [selectionBox, setSelectionBox] = useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null);
 
   const panRef = useRef(pan);
   const scaleRef = useRef(scale);
+  
   useEffect(() => {
     panRef.current = pan;
   }, [pan]);
+  
   useEffect(() => {
     scaleRef.current = scale;
   }, [scale]);
-
-  useEffect(() => {
-    const current = history[historyIndex];
-    if (current) {
-      setNodes(current.nodes);
-      setEdges(current.edges);
-    }
-  }, [historyIndex, history]);
 
   const pushHistory = (newNodes: NodeData[], newEdges: EdgeData[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -77,6 +63,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
   const undo = () => {
     if (historyIndex > 0) setHistoryIndex(historyIndex - 1);
   };
+  
   const redo = () => {
     if (historyIndex < history.length - 1) setHistoryIndex(historyIndex + 1);
   };
@@ -94,9 +81,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
     if (selection === "NODE" && selectedNodeIds.length > 0) {
       const newNodes = nodes.filter((n) => !selectedNodeIds.includes(n.id));
       const newEdges = edges.filter(
-        (e) =>
-          !selectedNodeIds.includes(e.source) &&
-          !selectedNodeIds.includes(e.target),
+        (e) => !selectedNodeIds.includes(e.source) && !selectedNodeIds.includes(e.target)
       );
       pushHistory(newNodes, newEdges);
       setSelectedNodeIds([]);
@@ -126,21 +111,14 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === "Space") setIsSpacePressed(false);
     };
+    
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [
-    nodes,
-    edges,
-    selectedNodeIds,
-    selectedEdgeIds,
-    selection,
-    historyIndex,
-    history,
-  ]);
+  }, [nodes, edges, selectedNodeIds, selectedEdgeIds, selection, historyIndex, history]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -149,10 +127,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
       e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
         const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(
-          0.1,
-          Math.min(scaleRef.current * zoomFactor, 5),
-        );
+        const newScale = Math.max(0.1, Math.min(scaleRef.current * zoomFactor, 5));
         const rect = container.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -203,15 +178,16 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
 
     if (clickedNode) {
       if (activeTool === "SELECT") {
-        let newSelection = [clickedNode.id];
+        const newSelection = [clickedNode.id];
         setSelectedNodeIds(newSelection);
         setSelectedEdgeIds([]);
         setSelection("NODE");
         setDragStartNodes(
           nodes
             .filter((n) => newSelection.includes(n.id))
-            .map((n) => ({ id: n.id, startX: n.x, startY: n.y })),
+            .map((n) => ({ id: n.id, startX: n.x, startY: n.y }))
         );
+        setActiveDragNodes(nodes); // Initialize temp drag state
         setDragStartPos({ x: logical.x, y: logical.y });
       } else if (activeTool === "EDGE") {
         setDraftEdge({
@@ -221,10 +197,8 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         });
       } else if (activeTool === "HAZARD") {
         pushHistory(
-          nodes.map((n) =>
-            n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n,
-          ),
-          edges,
+          nodes.map((n) => (n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n)),
+          edges
         );
       }
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -252,19 +226,23 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const logical = getLogicalCoords(e.clientX, e.clientY);
-    if (isPanning)
-      return setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
-    if (selectionBox)
+    
+    if (isPanning) return setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+    
+    if (selectionBox) {
       return setSelectionBox({
         ...selectionBox,
         currentX: logical.x,
         currentY: logical.y,
       });
+    }
 
+    // Dragging updates the temporary activeDragNodes, NOT the main history
     if (dragStartNodes && dragStartPos) {
       const deltaX = logical.x - dragStartPos.x;
       const deltaY = logical.y - dragStartPos.y;
-      setNodes(
+      
+      setActiveDragNodes(
         nodes.map((n) => {
           const startNode = dragStartNodes.find((d) => d.id === n.id);
           return startNode
@@ -274,11 +252,13 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
                 y: startNode.startY + deltaY,
               }
             : n;
-        }),
+        })
       );
     }
-    if (draftEdge)
-      setDraftEdge({ ...draftEdge, currentX: logical.x, currentY: logical.y });
+    
+    if (draftEdge) {
+        setDraftEdge({ ...draftEdge, currentX: logical.x, currentY: logical.y });
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -294,15 +274,17 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         .map((n) => n.id);
       setSelectedNodeIds(insideNodes);
       setSelectedEdgeIds([]);
-      setSelection(insideNodes.length === 1 ? "NODE" : null);
+      setSelection(insideNodes.length === 1 ? "NODE" : insideNodes.length > 1 ? "NODE" : null);
       setSelectionBox(null);
       return;
     }
 
-    if (dragStartNodes) {
-      pushHistory(nodes, edges);
+    // When drag ends, push the final temporary drag state to history
+    if (dragStartNodes && activeDragNodes) {
+      pushHistory(activeDragNodes, edges);
       setDragStartNodes(null);
       setDragStartPos(null);
+      setActiveDragNodes(null);
     }
 
     if (draftEdge) {
@@ -316,18 +298,13 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
       if (dropTarget && dropTarget.id !== draftEdge.source) {
         const exists = edges.some(
           (edge) =>
-            (edge.source === draftEdge.source &&
-              edge.target === dropTarget.id) ||
-            (edge.target === draftEdge.source && edge.source === dropTarget.id),
+            (edge.source === draftEdge.source && edge.target === dropTarget.id) ||
+            (edge.target === draftEdge.source && edge.source === dropTarget.id)
         );
         if (!exists) {
           const newEdges = [
             ...edges,
-            {
-              id: `e${Date.now()}`,
-              source: draftEdge.source,
-              target: dropTarget.id,
-            },
+            { id: `e${Date.now()}`, source: draftEdge.source, target: dropTarget.id },
           ];
           pushHistory(nodes, newEdges);
           setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
@@ -344,9 +321,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
     if (activeTool === "HAZARD") {
       pushHistory(
         nodes,
-        edges.map((ed) =>
-          ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed,
-        ),
+        edges.map((ed) => (ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed))
       );
     } else {
       setSelectedEdgeIds([edgeId]);
@@ -365,6 +340,9 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
     });
     setScale(newScale);
   };
+  
+  // Use the temporary drag nodes if actively dragging, otherwise use the derived history nodes
+  const displayNodes = activeDragNodes || nodes;
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -406,7 +384,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         >
           <BlueprintLayer />
           <EdgeLayer
-            nodes={nodes}
+            nodes={displayNodes}
             edges={edges}
             selectedEdgeIds={selectedEdgeIds}
             selection={selection}
@@ -415,7 +393,7 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
             scale={scale}
             onEdgeClick={handleEdgeClick}
           />
-          <NodeLayer nodes={nodes} selectedNodeIds={selectedNodeIds} />
+          <NodeLayer nodes={displayNodes} selectedNodeIds={selectedNodeIds} />
         </div>
       </div>
 
@@ -430,11 +408,10 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         }
         updateNode={(updates) => {
           if (selectedNodeIds.length === 1) {
-            setNodes(
-              nodes.map((n) =>
-                n.id === selectedNodeIds[0] ? { ...n, ...updates } : n,
-              ),
-            );
+             const newNodes = nodes.map((n) =>
+                n.id === selectedNodeIds[0] ? { ...n, ...updates } : n
+             );
+             pushHistory(newNodes, edges);
           }
         }}
         onSave={() => pushHistory(nodes, edges)}

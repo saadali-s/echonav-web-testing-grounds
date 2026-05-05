@@ -25,9 +25,9 @@ export default async function BuildingDirectoryPage({
       <div className="flex items-center justify-center h-[70vh]">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-black uppercase tracking-tighter">Building Not Found</h1>
-          <p className="font-bold text-zinc-500">The ID "{id}" does not exist.</p>
+          <p className="font-bold text-zinc-500">The ID &quot;{id}&quot; does not exist.</p>
           <div className="pt-4">
-             <a href="/map-studio" className="text-xs font-black uppercase underline">Return to Directory</a>
+             <link href="/map-studio" className="text-xs font-black uppercase underline">Return to Directory</link>
           </div>
         </div>
       </div>
