@@ -10,9 +10,11 @@ import imageprocessing.RegionData;
 import imageprocessing.GraphBuilder;
 import tasks.SimilarityDetector;
 import tasks.PathFinder;
+import tasks.GraphMetrics;
 
 import javax.swing.*;
 import java.io.*;
+import java.util.Locale;
 
 public class BatchProcessor {
 
@@ -35,7 +37,7 @@ public class BatchProcessor {
         if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
         File trainCsv = fileChooser.getSelectedFile();
 
-        // 3. Setup the Output File in the Eclipse project root
+        // 3. Setup the Output File
         File outputFile = new File("training_features.csv");
 
         System.out.println("Starting Batch Extraction...");
@@ -45,8 +47,10 @@ public class BatchProcessor {
         try (BufferedReader br = new BufferedReader(new FileReader(trainCsv));
              FileWriter fw = new FileWriter(outputFile)) {
 
-            // Write the FULL CSV Headers (4 Features + Kaggle Diagnosis)
-            fw.write("ImageID,VascularNodes,LesionCount,PDRCycles,TortuosityIndex,Diagnosis\n");
+            // =========================================================================
+            // THE NEW 10-FEATURE HYBRID SCHEMA
+            // =========================================================================
+            fw.write("ImageID,VascularNodes,HemorrhageArea,ExudateArea,PDRCycles,TortuosityIndex,Endpoints,BranchPoints,LargestComponent,VesselDensity,Diagnosis\n");
 
             String line;
             boolean isHeader = true;
@@ -56,17 +60,15 @@ public class BatchProcessor {
             while ((line = br.readLine()) != null) {
                 if (isHeader) {
                     isHeader = false;
-                    continue; // Skip the Kaggle CSV header row
+                    continue; 
                 }
 
-                // Kaggle format: "0005cfc8afb6,0"
                 String[] columns = line.split(",");
                 if (columns.length < 2) continue;
                 
                 String idCode = columns[0];
                 String diagnosis = columns[1];
 
-                // APTOS 2019 dataset uses .png, but fallback to .jpg just in case
                 File imgFile = new File(imagesFolder, idCode + ".png");
                 if (!imgFile.exists()) {
                     imgFile = new File(imagesFolder, idCode + ".jpg");
@@ -87,48 +89,70 @@ public class BatchProcessor {
                 ArrayList<RegionData> anomalies = null;
 
                 try {
-                    // --- FEATURE EXTRACTION PIPELINE ---
+                    // --- 1. CHANNEL EXTRACTION ---
                     greenChannel = ImageToGraphConverter.extractGreenChannel(imgFile.getAbsolutePath());
                     redChannel = ImageToGraphConverter.extractRedChannel(imgFile.getAbsolutePath());
 
-                    // 1. Lesion Count (k-NN)
+                    // --- 2. UTHMAAN'S SPLIT LESION DETECTOR ---
                     anomalies = SimilarityDetector.scanForAnomalies(greenChannel, redChannel, blockSize);
-                    int lesionCount = anomalies.size();
+                    int hemorrhageArea = 0;
+                    int exudateArea = 0;
+                    for (int i = 0; i < anomalies.size(); i++) {
+                        if (anomalies.get(i).getGradientIntensity() == 1.0) {
+                            hemorrhageArea++;
+                        } else {
+                            exudateArea++;
+                        }
+                    }
 
-                    // 2. Vascular Skeletonization & Sanitization
+                    // --- 3. VESSEL SKELETONIZATION & DENSITY ---
                     Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannel);
+                    
+                    ImageToGraphConverter.DensityMetrics densityData = ImageToGraphConverter.calculateVesselDensity(rawMask);
+                    double vesselDensity = densityData.densityRatio;
+
                     Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
                     Matrix blockMask = ImageToGraphConverter.downscaleToBlocks(healedMask, blockSize);
                     Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
                     binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
                     
-                    // 3. Topology Construction
+                    // --- 4. TOPOLOGY CONSTRUCTION (Unhealed Graph) ---
                     vascularGraph = GraphBuilder.buildVascularGraph(greenChannel, binaryVesselMask, blockSize);
                     
                     int rows = greenChannel.numberRows() / blockSize;
                     int cols = greenChannel.numberCols() / blockSize;
                     
-                    // Feature: Vascular Node Count
+                    // --- 5. YOUR TOPOLOGICAL MATH ---
                     int vascularNodes = vascularGraph.getNodes().size();
-
-                    // Feature: PDR Cycles (Euler Characteristic)
                     int pdrCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
-
-                    // Feature: Dijkstra Tortuosity Index (Exhaustive Trace)
+                    
                     ArrayList<List<INode<RegionData>>> dummyContainer = new ArrayList<>();
                     double chaosScore = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, dummyContainer);
 
-                    // Write exactly to our dataset specification
-                    fw.write(idCode + "," + vascularNodes + "," + lesionCount + "," + pdrCycles + "," + String.format("%.4f", chaosScore) + "," + diagnosis + "\n");
-                    System.out.println("SUCCESS (Nodes: " + vascularNodes + ", Lesions: " + lesionCount + ", Cycles: " + pdrCycles + ", TI: " + String.format("%.2f", chaosScore) + ")");
+                    int endpoints = GraphMetrics.countEndpoints(vascularGraph);
+                    int branchPoints = GraphMetrics.countBranchPoints(vascularGraph);
+                    int largestComponent = GraphMetrics.calculateLargestComponentSize(vascularGraph, rows, cols);
+
+                    // Write all 10 features to the CSV
+                    fw.write(idCode + "," + 
+                             vascularNodes + "," + 
+                             hemorrhageArea + "," + 
+                             exudateArea + "," + 
+                             pdrCycles + "," + 
+                             String.format(Locale.US, "%.4f", chaosScore) + "," + 
+                             endpoints + "," + 
+                             branchPoints + "," + 
+                             largestComponent + "," + 
+                             String.format(Locale.US, "%.4f", vesselDensity) + "," + 
+                             diagnosis + "\n");
+                    
+                    System.out.println("SUCCESS (10 Features Extracted)");
                 
                 } catch (Exception ex) {
-                    System.out.println("FAILED (Corrupted Image or Matrix Error). Defaulting to baseline.");
-                    // In a fail state, output baseline metrics so Weka doesn't crash on nulls
-                    fw.write(idCode + ",0,0,0,1.0000," + diagnosis + "\n");
+                    System.out.println("FAILED. Defaulting to baseline.");
+                    // Fail state outputs 9 baseline features instead of 8
+                    fw.write(idCode + ",0,0,0,0,1.0000,0,0,0,0.0000," + diagnosis + "\n");
                 } finally {
-                    // CRITICAL: Force Java to dump the massive image matrices and graphs from memory
-                    // Without this, processing 3600 high-res images will cause a Heap Space OutOfMemoryError
                     greenChannel = null;
                     redChannel = null;
                     binaryVesselMask = null;

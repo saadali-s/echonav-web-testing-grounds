@@ -10,6 +10,7 @@ import imageprocessing.ImageToGraphConverter;
 import imageprocessing.RegionData;
 import tasks.PathFinder;
 import tasks.SimilarityDetector;
+import tasks.GraphMetrics;
 import pipeline.RetinaClassifier;
 
 import javax.imageio.ImageIO;
@@ -24,25 +25,32 @@ public class MainFrame extends JFrame {
 
     private MapPanel mapPanel;
     private JTextArea consoleOutput;
-    
+
     private Matrix greenChannelMatrix;
     private Matrix redChannelMatrix;
     private Matrix binaryVesselMask;
-    
+
     private AdjacencyListGraph<RegionData> vascularGraph;
     private INode<RegionData>[][] nodeGrid;
-    
-    private final int BLOCK_SIZE = 4; 
 
-    // Live State Trackers for the Weka Handoff
+    private final int BLOCK_SIZE = 4;
+
+    // The 9 Live State Trackers
     private int lastNodes = 0;
     private int lastLesions = 0;
+    private int lastHemorrhages = 0;
+    private int lastExudates = 0;
     private int lastCycles = 0;
     private double lastTI = 1.0;
+    private int lastEndpoints = 0;
+    private int lastBranchPoints = 0;
+    private int lastLargestComponent = 0;
+    private double lastVesselDensity = 0.0;
+    
     private RetinaClassifier wekaClassifier;
 
     private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex, lblPdrCycles;
-    private JButton btnLoadImage, btnExtractNetwork, btnScanAnomalies, btnMeasureTortuosity, btnBatchProcess, btnRunML;
+    private JButton btnLoadImage,btnClear, btnExtractNetwork, btnScanAnomalies, btnMeasureTortuosity, btnBatchProcess, btnRunML;
 
     public MainFrame() {
         setTitle("RetinaGraph Diagnostics & ML Pipeline");
@@ -66,7 +74,7 @@ public class MainFrame extends JFrame {
     private void setupSidebar() {
         JPanel sidebar = new JPanel();
         sidebar.setPreferredSize(new Dimension(360, getHeight()));
-        sidebar.setBackground(new Color(9, 9, 11)); 
+        sidebar.setBackground(new Color(9, 9, 11));
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBorder(new EmptyBorder(25, 25, 25, 25));
 
@@ -74,7 +82,7 @@ public class MainFrame extends JFrame {
         title.setForeground(Color.WHITE);
         title.setFont(new Font("SansSerif", Font.BOLD, 26));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+
         sidebar.add(title);
         sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
 
@@ -85,11 +93,12 @@ public class MainFrame extends JFrame {
 
         btnBatchProcess = createModernButton("5. Batch Extract to CSV", new Color(71, 85, 105));
         btnRunML = createModernButton("6. Execute Weka ML", new Color(225, 29, 72));
+        btnClear = createModernButton("Clear Workspace", new Color(100, 116, 139));
 
         btnExtractNetwork.setEnabled(false);
         btnScanAnomalies.setEnabled(false);
         btnMeasureTortuosity.setEnabled(false);
-        btnBatchProcess.setEnabled(true); 
+        btnBatchProcess.setEnabled(true);
         btnRunML.setEnabled(false);
 
         sidebar.add(btnLoadImage);
@@ -99,18 +108,20 @@ public class MainFrame extends JFrame {
         sidebar.add(btnScanAnomalies);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnMeasureTortuosity);
-        
+
         sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
         JLabel mlLabel = new JLabel("MACHINE LEARNING");
         mlLabel.setForeground(new Color(161, 161, 170));
         mlLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         sidebar.add(mlLabel);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        
+
         sidebar.add(btnBatchProcess);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnRunML);
         sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
+        sidebar.add(btnClear);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
 
         lblNodesExtracted = new JLabel("--");
         lblAnomaliesFound = new JLabel("--");
@@ -139,7 +150,7 @@ public class MainFrame extends JFrame {
         consoleOutput.setBackground(new Color(24, 24, 27));
         consoleOutput.setForeground(new Color(16, 185, 129));
         consoleOutput.setFont(new Font("Consolas", Font.PLAIN, 13));
-        
+
         DefaultCaret caret = (DefaultCaret)consoleOutput.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
@@ -161,7 +172,7 @@ public class MainFrame extends JFrame {
         btnLoadImage.addActionListener(e -> {
             FileDialog fileDialog = new FileDialog(this, "Select Fundus Scan", FileDialog.LOAD);
             fileDialog.setVisible(true);
-            
+
             if (fileDialog.getFile() != null) {
                 File file = new File(fileDialog.getDirectory(), fileDialog.getFile());
                 try {
@@ -169,10 +180,10 @@ public class MainFrame extends JFrame {
                     BufferedImage img = ImageIO.read(file);
                     mapPanel.setPreferredSize(new Dimension(img.getWidth(), img.getHeight()));
                     mapPanel.loadScan(img);
-                    
+
                     greenChannelMatrix = ImageToGraphConverter.extractGreenChannel(file.getAbsolutePath());
                     redChannelMatrix = ImageToGraphConverter.extractRedChannel(file.getAbsolutePath());
-                    
+
                     logToConsole("Matrix extraction complete.");
                     btnExtractNetwork.setEnabled(true);
                     btnScanAnomalies.setEnabled(false);
@@ -188,37 +199,40 @@ public class MainFrame extends JFrame {
             try {
                 logToConsole("Executing Sauvola Thresholding...");
                 Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannelMatrix);
-                
+
+                ImageToGraphConverter.DensityMetrics densityData = ImageToGraphConverter.calculateVesselDensity(rawMask);
+                lastVesselDensity = densityData.densityRatio;
+                logToConsole(String.format("Density Extracted: %.2f%% of FOV", lastVesselDensity * 100));
+
                 logToConsole("Bridging fragmented vessels (Morphological Dilation)...");
                 Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
-                
+
                 logToConsole("Downscaling to Blocks...");
                 Matrix blockMask = ImageToGraphConverter.downscaleToBlocks(healedMask, BLOCK_SIZE);
-                
+
                 logToConsole("Executing Block-Level Skeletonization...");
                 Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
-                
+
                 binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
-                
+
                 logToConsole("Building Topological Graph...");
                 vascularGraph = GraphBuilder.buildVascularGraph(greenChannelMatrix, binaryVesselMask, BLOCK_SIZE);
-                
+
                 int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
                 int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
                 nodeGrid = new INode[rows][cols];
-                
+
                 List<INode<RegionData>> nodes = vascularGraph.getNodes();
                 for (int i = 0; i < nodes.size(); i++) {
                     INode<RegionData> n = nodes.get(i);
                     nodeGrid[n.getData().getGridY()][n.getData().getGridX()] = n;
                 }
-                
+
                 mapPanel.setGraphData(vascularGraph, nodeGrid, rows, cols, BLOCK_SIZE);
-                
-                // Store State
+
                 lastNodes = nodes.size();
                 lblNodesExtracted.setText(String.valueOf(lastNodes));
-                
+
                 logToConsole("Graph Topology Built. Total Nodes: " + lastNodes);
                 btnScanAnomalies.setEnabled(true);
                 btnMeasureTortuosity.setEnabled(true);
@@ -230,15 +244,24 @@ public class MainFrame extends JFrame {
         btnScanAnomalies.addActionListener(e -> {
             logToConsole("Executing k-NN Graph Similarity search...");
             ArrayList<RegionData> isolatedAnomalies = SimilarityDetector.scanForAnomalies(greenChannelMatrix, redChannelMatrix, BLOCK_SIZE);
-            
+
             GraphBuilder.mergeDiagnosticData(vascularGraph, nodeGrid, isolatedAnomalies);
-            mapPanel.repaint(); 
-            
-            // Store State
+            mapPanel.repaint();
+
             lastLesions = isolatedAnomalies.size();
             lblAnomaliesFound.setText(String.valueOf(lastLesions));
-            
-            logToConsole("k-NN Search Complete. Isolated " + lastLesions + " pathological lesions.");
+
+            lastHemorrhages = 0;
+            lastExudates = 0;
+            for (int i = 0; i < isolatedAnomalies.size(); i++) {
+                if (isolatedAnomalies.get(i).getGradientIntensity() == 1.0) {
+                    lastHemorrhages++;
+                } else {
+                    lastExudates++;
+                }
+            }
+
+            logToConsole("k-NN Search Complete. Extracted " + lastLesions + " lesions (" + lastHemorrhages + " hemorrhages, " + lastExudates + " exudates).");
         });
 
         btnMeasureTortuosity.addActionListener(e -> {
@@ -246,43 +269,48 @@ public class MainFrame extends JFrame {
                 logToConsole("ERROR: Not enough nodes in graph.");
                 return;
             }
-            
-            logToConsole("Automating Chaos Measurement...");
+
+            logToConsole("Automating Chaos Measurement & Topology Scan...");
             int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
             int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
+
+            lastEndpoints = GraphMetrics.countEndpoints(vascularGraph);
+            lastBranchPoints = GraphMetrics.countBranchPoints(vascularGraph);
+            lastLargestComponent = GraphMetrics.calculateLargestComponentSize(vascularGraph, rows, cols);
             
-            // Store State
+            logToConsole("Topology: " + lastEndpoints + " Endpoints | " + lastBranchPoints + " Branch Points | Max Component: " + lastLargestComponent);
+
             lastCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
             lblPdrCycles.setText(String.valueOf(lastCycles));
-            logToConsole("Topological Euler Analysis: Found " + lastCycles + " true vascular loops.");
             
             ArrayList<List<INode<RegionData>>> pathContainer = new ArrayList<>();
             lastTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
             lblTortuosityIndex.setText(String.format("%.2f", lastTI));
-            
+
             if (pathContainer.size() > 0) {
                 mapPanel.setActivePath(pathContainer.get(0));
             }
-            
-            logToConsole("Exhaustive Trace Complete. Global TI: " + String.format("%.2f", lastTI));
-            
-            // Activate the Weka Handoff Button
+
             btnRunML.setEnabled(true);
         });
-        
+
         btnBatchProcess.addActionListener(e -> {
             logToConsole("Batch Processor must be run separately via pipeline.BatchProcessor main().");
         });
 
         btnRunML.addActionListener(e -> {
-            // Lazy load the model so the app boots instantly
             if (wekaClassifier == null) {
                 wekaClassifier = new RetinaClassifier("retina_model.model");
             }
-            
+
             logToConsole("Executing Weka Random Forest classification...");
-            String resultIndex = wekaClassifier.predictDiagnosis(lastNodes, lastLesions, lastCycles, lastTI);
-            
+
+            // Pass all 9 features
+            String resultIndex = wekaClassifier.predictDiagnosis(
+                lastNodes, lastHemorrhages, lastExudates, lastCycles, lastTI, 
+                lastEndpoints, lastBranchPoints, lastLargestComponent, lastVesselDensity
+            );
+
             String clinicalDiagnosis = "";
             switch(resultIndex) {
                 case "0": clinicalDiagnosis = "Grade 0: No Diabetic Retinopathy"; break;
@@ -292,19 +320,55 @@ public class MainFrame extends JFrame {
                 case "4": clinicalDiagnosis = "Grade 4: Proliferative DR (Critical)"; break;
                 default: clinicalDiagnosis = "Unknown (" + resultIndex + ")";
             }
-            
+
             logToConsole("Diagnosis Complete: " + clinicalDiagnosis);
-            
-            // Medical UI Dialog Box
-            JOptionPane.showMessageDialog(MainFrame.this, 
-                "Predicted Diagnosis:\n" + clinicalDiagnosis + "\n\n" +
-                "Extracted Biomarkers:\n" +
-                " - Vascular Nodes: " + lastNodes + "\n" +
-                " - k-NN Lesions: " + lastLesions + "\n" +
-                " - PDR Cycle Nets: " + lastCycles + "\n" +
-                " - Tortuosity Index: " + String.format("%.2f", lastTI),
-                "Weka ML Diagnostic Results", 
-                JOptionPane.INFORMATION_MESSAGE);
+
+            JOptionPane.showMessageDialog(MainFrame.this,
+                    "Predicted Diagnosis:\n" + clinicalDiagnosis + "\n\n" +
+                            "Extracted Biomarkers:\n" +
+                            " - Vascular Nodes: " + lastNodes + "\n" +
+                            " - Hemorrhages (Red): " + lastHemorrhages + "\n" +
+                            " - Exudates (Bright): " + lastExudates + "\n" +
+                            " - PDR Cycle Nets: " + lastCycles + "\n" +
+                            " - Tortuosity Index: " + String.format("%.2f", lastTI) + "\n" +
+                            " - Endpoints (Dead-Ends): " + lastEndpoints + "\n" +
+                            " - Branch Points (Splits): " + lastBranchPoints + "\n" +
+                            " - Largest Vessel Network: " + lastLargestComponent + " nodes\n" +
+                            " - Vessel Density: " + String.format("%.2f%%", lastVesselDensity * 100),
+                    "Weka ML Diagnostic Results",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        btnClear.addActionListener(e -> {
+            mapPanel.loadScan(null);
+            greenChannelMatrix = null;
+            redChannelMatrix = null;
+            binaryVesselMask = null;
+            vascularGraph = null;
+            nodeGrid = null;
+
+            lastNodes = 0;
+            lastLesions = 0;
+            lastHemorrhages = 0;
+            lastExudates = 0;
+            lastCycles = 0;
+            lastTI = 1.0;
+            lastEndpoints = 0;
+            lastBranchPoints = 0;
+            lastLargestComponent = 0;
+            lastVesselDensity = 0.0;
+
+            lblNodesExtracted.setText("--");
+            lblAnomaliesFound.setText("--");
+            lblPdrCycles.setText("--");
+            lblTortuosityIndex.setText("--");
+
+            btnExtractNetwork.setEnabled(false);
+            btnScanAnomalies.setEnabled(false);
+            btnMeasureTortuosity.setEnabled(false);
+            btnRunML.setEnabled(false);
+
+            logToConsole("Workspace cleared. Memory freed and ready for a new scan.");
         });
     }
 
@@ -333,10 +397,10 @@ public class MainFrame extends JFrame {
     private JPanel createTelemetryCard(String titleText, JLabel valueLabel) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(24, 24, 27)); 
+        card.setBackground(new Color(24, 24, 27));
         card.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(63, 63, 70), 1),
-            new EmptyBorder(10, 15, 10, 15)
+                BorderFactory.createLineBorder(new Color(63, 63, 70), 1),
+                new EmptyBorder(10, 15, 10, 15)
         ));
         card.setMaximumSize(new Dimension(320, 65));
 

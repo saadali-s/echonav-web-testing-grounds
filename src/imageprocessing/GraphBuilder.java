@@ -36,13 +36,11 @@ public class GraphBuilder {
         }
 
         // PASS 2: SMART 8-WAY NETWORKING
-        // Prevents intersecting diagonals that cause 11,000+ false PDR cycles
         for (int r = 0; r < gridRows; r++) {
             for (int c = 0; c < gridCols; c++) {
                 INode<RegionData> currentNode = nodeGrid[r][c];
                 if (currentNode == null) continue;
 
-                // 1. Orthogonal Connections
                 if (c < gridCols - 1 && nodeGrid[r][c + 1] != null) {
                     graph.addEdge(currentNode, nodeGrid[r][c + 1], 1.0); 
                 }
@@ -50,8 +48,6 @@ public class GraphBuilder {
                     graph.addEdge(currentNode, nodeGrid[r + 1][c], 1.0);
                 }
 
-                // 2. Diagonal Connections (Only added if mutual orthogonal path is missing)
-                // Down-Right Diagonal
                 if (r < gridRows - 1 && c < gridCols - 1 && nodeGrid[r + 1][c + 1] != null) {
                     boolean rightEmpty = (nodeGrid[r][c + 1] == null);
                     boolean downEmpty = (nodeGrid[r + 1][c] == null);
@@ -59,7 +55,6 @@ public class GraphBuilder {
                         graph.addEdge(currentNode, nodeGrid[r + 1][c + 1], 1.414);
                     }
                 }
-                // Down-Left Diagonal
                 if (r < gridRows - 1 && c > 0 && nodeGrid[r + 1][c - 1] != null) {
                     boolean leftEmpty = (nodeGrid[r][c - 1] == null);
                     boolean downEmpty = (nodeGrid[r + 1][c] == null);
@@ -69,44 +64,10 @@ public class GraphBuilder {
                 }
             }
         }
-
-        // PASS 3: GRAPH ENDPOINT BRIDGING
-        datastructures.List<INode<RegionData>> allNodes = graph.getNodes();
-        ArrayList<INode<RegionData>> endpoints = new ArrayList<>();
-        
-        for (int i = 0; i < allNodes.size(); i++) {
-            if (graph.getNeighbors(allNodes.get(i)).size() == 1) {
-                endpoints.add(endpoints.size(), allNodes.get(i));
-            }
-        }
-
-        double bridgeThreshold = 4.0; 
-
-        for (int i = 0; i < endpoints.size(); i++) {
-            INode<RegionData> endA = endpoints.get(i);
-            RegionData dataA = endA.getData();
-            
-            for (int j = i + 1; j < endpoints.size(); j++) {
-                INode<RegionData> endB = endpoints.get(j);
-                RegionData dataB = endB.getData();
-                
-                double dist = Math.sqrt(Math.pow(dataA.getGridX() - dataB.getGridX(), 2) 
-                                      + Math.pow(dataA.getGridY() - dataB.getGridY(), 2));
-                
-                if (dist <= bridgeThreshold) {
-                    graph.addEdge(endA, endB, dist);
-                }
-            }
-        }
-
         return graph;
     }
 
-    public static void mergeDiagnosticData(
-            AdjacencyListGraph<RegionData> graph, 
-            INode<RegionData>[][] nodeGrid, 
-            ArrayList<RegionData> anomalies) {
-        
+    public static void mergeDiagnosticData(AdjacencyListGraph<RegionData> graph, INode<RegionData>[][] nodeGrid, ArrayList<RegionData> anomalies) {
         for (int i = 0; i < anomalies.size(); i++) {
             RegionData lesion = anomalies.get(i);
             int r = lesion.getGridY();
