@@ -22,9 +22,7 @@ public class MapPanel extends JPanel {
         setBackground(new Color(24, 24, 27)); 
     }
 
-    // Kept for backward compatibility if MainFrame still calls it with null
     public void setInstructionHook(JLabel label) {
-        // No-op: Automated pipeline no longer requires UI instructions for clicks
     }
 
     public void loadScan(BufferedImage image) {
@@ -69,7 +67,7 @@ public class MapPanel extends JPanel {
         }
         if (graph == null || nodeGrid == null) return;
 
-        // 1. Draw Vessels and Anomalies
+        // Draw Vessels and Anomalies
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f)); 
         for (int r = 0; r < gridRows; r++) {
             for (int c = 0; c < gridCols; c++) {
@@ -81,20 +79,19 @@ public class MapPanel extends JPanel {
 
                 if (node.getData().isAnomaly()) {
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
-                    g2d.setColor(new Color(239, 68, 68)); // Crimson
+                    g2d.setColor(new Color(239, 68, 68));
                     g2d.fillOval(x - (blockSize/2), y - (blockSize/2), blockSize * 2, blockSize * 2); 
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
                 } else if (node.getData().isVessel()) {
-                    g2d.setColor(new Color(16, 185, 129)); // Teal
+                    g2d.setColor(new Color(16, 185, 129));
                     g2d.fillRect(x, y, blockSize, blockSize);
                 }
             }
         }
 
-        // 2. Draw Dijkstra Path (Automated)
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         if (activePath != null && activePath.size() > 0) {
-            g2d.setColor(new Color(56, 189, 248)); // Neon Cyan
+            g2d.setColor(new Color(56, 189, 248));
             g2d.setStroke(new BasicStroke(3));
             for (int i = 0; i < activePath.size() - 1; i++) {
                 RegionData d1 = activePath.get(i).getData();

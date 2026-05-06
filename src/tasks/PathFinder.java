@@ -9,9 +9,6 @@ import imageprocessing.RegionData;
 
 public class PathFinder {
 
-    // =========================================================================
-    // 1. DIJKSTRA'S ALGORITHM
-    // =========================================================================
     public static List<INode<RegionData>> calculateTortuosity(
             IGraph<RegionData> graph, INode<RegionData> startNode, INode<RegionData> endNode, 
             int gridRows, int gridCols) {
@@ -80,9 +77,6 @@ public class PathFinder {
         return finalPath;
     }
 
-    // =========================================================================
-    // 2. EXHAUSTIVE TRACER (O(1) Matrix Lookup Fix)
-    // =========================================================================
     public static double calculateGlobalChaos(IGraph<RegionData> graph, int gridRows, int gridCols, ArrayList<List<INode<RegionData>>> longestPathOut) {
         List<INode<RegionData>> nodes = graph.getNodes();
         if (nodes.size() < 2) return 1.0;
@@ -100,9 +94,7 @@ public class PathFinder {
         }
 
         List<INode<RegionData>> longestPath = null;
-        
-        // CRITICAL FIX: Use a 2D boolean array for O(1) instant lookup instead of scanning an ArrayList.
-        // Prevents the system from freezing on massive graphs.
+
         boolean[][] processedEnds = new boolean[gridRows][gridCols];
 
         for (int i = 0; i < endpoints.size(); i++) {
@@ -156,9 +148,6 @@ public class PathFinder {
         return totalActual / totalEuclid;
     }
 
-    // =========================================================================
-    // 3. NEOVASCULARIZATION DETECTOR (Euler Characteristic)
-    // =========================================================================
     public static int countNeovascularLoops(IGraph<RegionData> graph, int gridRows, int gridCols) {
         List<INode<RegionData>> nodes = graph.getNodes();
         if (nodes.size() == 0) return 0;
@@ -201,11 +190,9 @@ public class PathFinder {
         return Math.max(0, cycles);
     }
 
-    // Helper: BFS Radar (Optimized with O(1) Matrix Lookup)
     private static INode<RegionData> findFurthestNode(IGraph<RegionData> graph, INode<RegionData> start, int gridRows, int gridCols) {
         ArrayList<INode<RegionData>> queue = new ArrayList<>();
-        
-        // CRITICAL FIX: O(1) Matrix Lookup instead of O(V) list scanning
+
         boolean[][] visited = new boolean[gridRows][gridCols];
         
         queue.add(queue.size(), start);

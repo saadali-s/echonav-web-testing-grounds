@@ -18,7 +18,6 @@ public class GraphBuilder {
         @SuppressWarnings("unchecked")
         INode<RegionData>[][] nodeGrid = new INode[gridRows][gridCols];
 
-        // PASS 1: Build nodes directly from the Block-Scaled Skeleton
         for (int r = 0; r < gridRows; r++) {
             for (int c = 0; c < gridCols; c++) {
                 try {
@@ -35,7 +34,6 @@ public class GraphBuilder {
             }
         }
 
-        // PASS 2: SMART 8-WAY NETWORKING
         for (int r = 0; r < gridRows; r++) {
             for (int c = 0; c < gridCols; c++) {
                 INode<RegionData> currentNode = nodeGrid[r][c];

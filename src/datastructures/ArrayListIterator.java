@@ -31,6 +31,5 @@ public class ArrayListIterator<T> implements Iterator<T> {
 
 	@Override
 	public void remove() {
-		//do nothing - keep java happy
 	}
 }

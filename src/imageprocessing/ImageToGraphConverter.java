@@ -59,12 +59,10 @@ public class ImageToGraphConverter {
         Matrix binaryMatrix = new Matrix(height, width);
         Matrix normalized = new Matrix(height, width);
 
-        // 1. Geometric FOV Boundaries
         double centerX = width / 2.0;
         double centerY = height / 2.0;
         double maxRadius = Math.min(centerX, centerY) * 0.90;
 
-        // 2. DYNAMIC CONTRAST STRETCHING
         double minG = 255.0;
         double maxG = 0.0;
         
@@ -73,7 +71,7 @@ public class ImageToGraphConverter {
                 double distFromCenter = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
                 if (distFromCenter <= maxRadius) {
                     double val = greenChannel.getElement(r, c);
-                    if (val > 20.0) { // Ignore pitch black edges
+                    if (val > 20.0) {
                         if (val < minG) minG = val;
                         if (val > maxG) maxG = val;
                     }
@@ -100,10 +98,8 @@ public class ImageToGraphConverter {
             }
         }
 
-        // 3. Integral Images computed on the NORMALIZED matrix
         int W = 45; 
-        
-        // INCRESAED k: Normalized images have high contrast, so we demand stricter thresholding
+
         double k = 0.20; 
         double R = 128.0; 
 
@@ -127,8 +123,7 @@ public class ImageToGraphConverter {
         }
 
         int offset = W / 2;
-        
-        // 4. Final Thresholding
+
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 
@@ -159,11 +154,6 @@ public class ImageToGraphConverter {
                 double variance = (sqSum / area) - (mean * mean);
                 double stdDev = Math.sqrt(Math.max(0, variance));
 
-                // =========================================================
-                // NOISE GATES (Recalibrated for 0-255 Stretched Matrix)
-                // Stretching contrast also amplifies the noise variance.
-                // We must use a stricter 15.0 gate to prevent spiderwebs.
-                // =========================================================
                 if (stdDev < 15.0) {
                     binaryMatrix.setElement(r, c, 0.0);
                     continue;
@@ -382,14 +372,11 @@ public class ImageToGraphConverter {
         }
         return processed;
     }
- // =========================================================================
-    // MACRO METRIC: TRUE VESSEL DENSITY (Raw Area)
-    // =========================================================================
+
     public static DensityMetrics calculateVesselDensity(Matrix rawBinaryMask) throws MatrixException {
         int height = rawBinaryMask.numberRows();
         int width = rawBinaryMask.numberCols();
-        
-        // Match the exact FOV boundaries from the Sauvola step
+
         double centerX = width / 2.0;
         double centerY = height / 2.0;
         double maxRadius = Math.min(centerX, centerY) * 0.90;
@@ -400,8 +387,7 @@ public class ImageToGraphConverter {
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
                 double distFromCenter = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
-                
-                // Only count pixels strictly inside the retinal circle
+
                 if (distFromCenter <= maxRadius) {
                     fovPixels++;
                     if (rawBinaryMask.getElement(r, c) == 1.0) {
@@ -411,13 +397,10 @@ public class ImageToGraphConverter {
             }
         }
 
-        // Prevent division by zero if an empty mask is passed
         double ratio = (fovPixels == 0) ? 0.0 : (double) vesselPixels / fovPixels;
         return new DensityMetrics(vesselPixels, fovPixels, ratio);
     }
- // =========================================================================
-    // HELPER CLASS: DENSITY METRICS
-    // =========================================================================
+
     public static class DensityMetrics {
         public int vesselPixels;
         public int fovPixels;

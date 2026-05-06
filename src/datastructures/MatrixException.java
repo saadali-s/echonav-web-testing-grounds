@@ -3,12 +3,6 @@
  */
 package datastructures;
 
-/**
- * An exception that will be thrown by the Matrix class.
- * 
- * This is a checked exception and must be handled.
- * @author Saad Ali
- */
 public class MatrixException extends Exception {
     public MatrixException() {
         super();

@@ -10,7 +10,6 @@ import imageprocessing.RegionData;
 
 public class SimilarityDetector {
 
-    // Define the rigid constant for k in the k-NN clustering logic
     private static final int K_NEIGHBORS = 3;
 
     /**
@@ -81,7 +80,6 @@ public class SimilarityDetector {
         ArrayList<INode<RegionData>> prototypes = new ArrayList<>();
         double[] protoF3 = new double[8];
 
-        // --- 4 HEALTHY PROTOTYPES (Class 0) ---
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 0, baseG, baseR, false));
         protoF3[0] = 0.0;
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 0, baseG + 10.0, baseR + 10.0, false));
@@ -91,13 +89,11 @@ public class SimilarityDetector {
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 0, baseG + 20.0, baseR + 20.0, false));
         protoF3[3] = 0.0;
 
-        // --- 2 RED LESION PROTOTYPES (Class 1) ---
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 1, baseG - 40.0, baseR - 40.0, true));
         protoF3[4] = +35.0;
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 1, baseG - 60.0, baseR - 60.0, true));
         protoF3[5] = +50.0;
 
-        // --- 2 BRIGHT LESION PROTOTYPES (Class 2) ---
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 2, baseG + 60.0, baseR + 60.0, true));
         protoF3[6] = -45.0;
         prototypes.add(prototypes.size(), createPrototype(knnGraph, 2, baseG + 80.0, baseR + 80.0, true));
@@ -108,14 +104,12 @@ public class SimilarityDetector {
         for (int r = radius; r < gridRows - radius; r++) {
             for (int c = radius; c < gridCols - radius; c++) {
 
-                // GEOMETRIC FOV MASK: Kill edge artifacts
                 double dist = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
                 if (dist > maxRadius) continue;
 
                 double currentGreen = greenBlocks[r][c];
                 double currentRed = redBlocks[r][c];
 
-                // MASKING: 35 prevents dark edge shadows. 170 prevents the bright Optic Disc from flagging as exudates.
                 if (currentGreen < 35.0 || currentGreen > 170.0) continue;
 
                 double localGreenSum = 0;
@@ -154,7 +148,6 @@ public class SimilarityDetector {
                     if (minElement != null) {
                         nearestNeighbors.add(nearestNeighbors.size(), minElement.node);
 
-                        // Extract the class label secretly stored in gridX during createPrototype
                         int classLabel = minElement.node.getData().getGridX();
                         if (classLabel == 1) {
                             redVotes++;
@@ -168,17 +161,14 @@ public class SimilarityDetector {
                     pq.extractMin();
                 }
 
-                // If the majority of the 3 neighbors are anomalies (Red + Bright > 1)
                 if ((redVotes + brightVotes) > (K_NEIGHBORS / 2)) {
                     RegionData lesion = new RegionData(c, r, currentGreen);
                     lesion.setAnomaly(true);
 
-                    // Reusing the gradientIntensity field to store the specific anomaly type
-                    // This prevents us from needing to alter the RegionData.java file.
                     if (redVotes >= brightVotes) {
-                        lesion.setGradientIntensity(1.0); // 1.0 = Red Hemorrhage
+                        lesion.setGradientIntensity(1.0);
                     } else {
-                        lesion.setGradientIntensity(2.0); // 2.0 = Bright Exudate
+                        lesion.setGradientIntensity(2.0);
                     }
 
                     INode<RegionData> blockNode = knnGraph.addNode(lesion);

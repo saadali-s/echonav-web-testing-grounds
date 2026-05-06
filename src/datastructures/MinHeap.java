@@ -1,8 +1,7 @@
 package datastructures;
 
 public class MinHeap<T> {
-    
-    // An internal class to hold a node and its current distance priority
+
     public static class HeapElement<T> {
         public INode<T> node;
         public double priority;

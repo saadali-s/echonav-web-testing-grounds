@@ -35,7 +35,6 @@ public class RetinaClassifier {
             classValues.add("4");
             attributes.add(new Attribute("Diagnosis", classValues));
 
-            // Create template with 10 total attributes (9 features + 1 class)
             datasetStructure = new Instances("LivePrediction", attributes, 0);
             datasetStructure.setClassIndex(datasetStructure.numAttributes() - 1);
 
