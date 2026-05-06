@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Dependencies
@@ -34,3 +35,15 @@ npm-debug.log*
 # Misc
 .DS_Store
 *.pem
+=======
+bin/ 
+.settings/ 
+.classpath 
+.project
+
+.idea/
+out/
+*.iml
+*.model
+*.csv
+>>>>>>> 4ea8958ccadb14d53779967fecf6ce45b0e46df1
