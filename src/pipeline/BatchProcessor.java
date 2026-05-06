@@ -10,6 +10,7 @@ import imageprocessing.RegionData;
 import imageprocessing.GraphBuilder;
 import tasks.SimilarityDetector;
 import tasks.PathFinder;
+import tasks.GraphMetrics;
 
 import javax.swing.*;
 import java.io.*;
@@ -18,21 +19,25 @@ import java.util.Locale;
 public class BatchProcessor {
 
     public static void main(String[] args) {
+        // Enforce system look and feel for the file choosers
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {}
 
+        // 1. Select the train_images folder
         JFileChooser folderChooser = new JFileChooser();
         folderChooser.setDialogTitle("1. Select the Kaggle 'train_images' FOLDER");
         folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (folderChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
         File imagesFolder = folderChooser.getSelectedFile();
 
+        // 2. Select the train.csv file
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("2. Select the Kaggle 'train.csv' FILE");
         if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return;
         File trainCsv = fileChooser.getSelectedFile();
 
+        // 3. Setup the Output File
         File outputFile = new File("training_features.csv");
 
         System.out.println("Starting Batch Extraction...");
@@ -42,8 +47,10 @@ public class BatchProcessor {
         try (BufferedReader br = new BufferedReader(new FileReader(trainCsv));
              FileWriter fw = new FileWriter(outputFile)) {
 
-            // Write the headers ONCE at the top of the file
-            fw.write("ImageID,VascularNodes,HemorrhageArea,ExudateArea,PDRCycles,TortuosityIndex,Diagnosis\n");
+            // =========================================================================
+            // THE NEW 10-FEATURE HYBRID SCHEMA
+            // =========================================================================
+            fw.write("ImageID,VascularNodes,HemorrhageArea,ExudateArea,PDRCycles,TortuosityIndex,Endpoints,BranchPoints,LargestComponent,VesselDensity,Diagnosis\n");
 
             String line;
             boolean isHeader = true;
@@ -53,12 +60,12 @@ public class BatchProcessor {
             while ((line = br.readLine()) != null) {
                 if (isHeader) {
                     isHeader = false;
-                    continue;
+                    continue; 
                 }
 
                 String[] columns = line.split(",");
                 if (columns.length < 2) continue;
-
+                
                 String idCode = columns[0];
                 String diagnosis = columns[1];
 
@@ -66,7 +73,7 @@ public class BatchProcessor {
                 if (!imgFile.exists()) {
                     imgFile = new File(imagesFolder, idCode + ".jpg");
                 }
-
+                
                 if (!imgFile.exists()) {
                     System.out.println("Missing image: " + idCode);
                     continue;
@@ -82,11 +89,12 @@ public class BatchProcessor {
                 ArrayList<RegionData> anomalies = null;
 
                 try {
+                    // --- 1. CHANNEL EXTRACTION ---
                     greenChannel = ImageToGraphConverter.extractGreenChannel(imgFile.getAbsolutePath());
                     redChannel = ImageToGraphConverter.extractRedChannel(imgFile.getAbsolutePath());
 
+                    // --- 2. UTHMAAN'S SPLIT LESION DETECTOR ---
                     anomalies = SimilarityDetector.scanForAnomalies(greenChannel, redChannel, blockSize);
-
                     int hemorrhageArea = 0;
                     int exudateArea = 0;
                     for (int i = 0; i < anomalies.size(); i++) {
@@ -97,37 +105,60 @@ public class BatchProcessor {
                         }
                     }
 
+                    // --- 3. VESSEL SKELETONIZATION & DENSITY ---
                     Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannel);
+                    
+                    ImageToGraphConverter.DensityMetrics densityData = ImageToGraphConverter.calculateVesselDensity(rawMask);
+                    double vesselDensity = densityData.densityRatio;
+
                     Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
                     Matrix blockMask = ImageToGraphConverter.downscaleToBlocks(healedMask, blockSize);
                     Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
                     binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
                     
-                    // 3. Topology Construction
+                    // --- 4. TOPOLOGY CONSTRUCTION (Unhealed Graph) ---
                     vascularGraph = GraphBuilder.buildVascularGraph(greenChannel, binaryVesselMask, blockSize);
                     
                     int rows = greenChannel.numberRows() / blockSize;
                     int cols = greenChannel.numberCols() / blockSize;
                     
-                    // Feature: Vascular Node Count
+                    // --- 5. YOUR TOPOLOGICAL MATH ---
                     int vascularNodes = vascularGraph.getNodes().size();
                     int pdrCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
-
+                    
                     ArrayList<List<INode<RegionData>>> dummyContainer = new ArrayList<>();
                     double chaosScore = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, dummyContainer);
 
-                    fw.write(idCode + "," + vascularNodes + "," + hemorrhageArea + "," + exudateArea + "," + pdrCycles + "," + String.format(Locale.US,"%.4f", chaosScore) + "," + diagnosis + "\n");
-                    System.out.println("OK");
+                    int endpoints = GraphMetrics.countEndpoints(vascularGraph);
+                    int branchPoints = GraphMetrics.countBranchPoints(vascularGraph);
+                    int largestComponent = GraphMetrics.calculateLargestComponentSize(vascularGraph, rows, cols);
 
+                    // Write all 10 features to the CSV
+                    fw.write(idCode + "," + 
+                             vascularNodes + "," + 
+                             hemorrhageArea + "," + 
+                             exudateArea + "," + 
+                             pdrCycles + "," + 
+                             String.format(Locale.US, "%.4f", chaosScore) + "," + 
+                             endpoints + "," + 
+                             branchPoints + "," + 
+                             largestComponent + "," + 
+                             String.format(Locale.US, "%.4f", vesselDensity) + "," + 
+                             diagnosis + "\n");
+                    
+                    System.out.println("SUCCESS (10 Features Extracted)");
+                
                 } catch (Exception ex) {
-                    System.out.println("FAILED. Skipping image to protect model training.");
+                    System.out.println("FAILED. Defaulting to baseline.");
+                    // Fail state outputs 9 baseline features instead of 8
+                    fw.write(idCode + ",0,0,0,0,1.0000,0,0,0,0.0000," + diagnosis + "\n");
                 } finally {
                     greenChannel = null;
                     redChannel = null;
                     binaryVesselMask = null;
                     vascularGraph = null;
                     anomalies = null;
-                    System.gc();
+                    System.gc(); 
                 }
             }
 

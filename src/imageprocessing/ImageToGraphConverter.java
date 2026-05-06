@@ -382,4 +382,51 @@ public class ImageToGraphConverter {
         }
         return processed;
     }
+ // =========================================================================
+    // MACRO METRIC: TRUE VESSEL DENSITY (Raw Area)
+    // =========================================================================
+    public static DensityMetrics calculateVesselDensity(Matrix rawBinaryMask) throws MatrixException {
+        int height = rawBinaryMask.numberRows();
+        int width = rawBinaryMask.numberCols();
+        
+        // Match the exact FOV boundaries from the Sauvola step
+        double centerX = width / 2.0;
+        double centerY = height / 2.0;
+        double maxRadius = Math.min(centerX, centerY) * 0.90;
+
+        int fovPixels = 0;
+        int vesselPixels = 0;
+
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                double distFromCenter = Math.sqrt(Math.pow(c - centerX, 2) + Math.pow(r - centerY, 2));
+                
+                // Only count pixels strictly inside the retinal circle
+                if (distFromCenter <= maxRadius) {
+                    fovPixels++;
+                    if (rawBinaryMask.getElement(r, c) == 1.0) {
+                        vesselPixels++;
+                    }
+                }
+            }
+        }
+
+        // Prevent division by zero if an empty mask is passed
+        double ratio = (fovPixels == 0) ? 0.0 : (double) vesselPixels / fovPixels;
+        return new DensityMetrics(vesselPixels, fovPixels, ratio);
+    }
+ // =========================================================================
+    // HELPER CLASS: DENSITY METRICS
+    // =========================================================================
+    public static class DensityMetrics {
+        public int vesselPixels;
+        public int fovPixels;
+        public double densityRatio;
+
+        public DensityMetrics(int vesselPixels, int fovPixels, double densityRatio) {
+            this.vesselPixels = vesselPixels;
+            this.fovPixels = fovPixels;
+            this.densityRatio = densityRatio;
+        }
+    }
 }

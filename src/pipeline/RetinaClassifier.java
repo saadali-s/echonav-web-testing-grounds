@@ -22,6 +22,10 @@ public class RetinaClassifier {
             attributes.add(new Attribute("ExudateArea"));
             attributes.add(new Attribute("PDRCycles"));
             attributes.add(new Attribute("TortuosityIndex"));
+            attributes.add(new Attribute("Endpoints"));
+            attributes.add(new Attribute("BranchPoints"));
+            attributes.add(new Attribute("LargestComponent"));
+            attributes.add(new Attribute("VesselDensity"));
 
             ArrayList<String> classValues = new ArrayList<>();
             classValues.add("0");
@@ -31,7 +35,7 @@ public class RetinaClassifier {
             classValues.add("4");
             attributes.add(new Attribute("Diagnosis", classValues));
 
-            // Create template with 6 total attributes
+            // Create template with 10 total attributes (9 features + 1 class)
             datasetStructure = new Instances("LivePrediction", attributes, 0);
             datasetStructure.setClassIndex(datasetStructure.numAttributes() - 1);
 
@@ -41,9 +45,9 @@ public class RetinaClassifier {
         }
     }
 
-    public String predictDiagnosis(int nodes, int hemorrhages, int exudates, int cycles, double ti) {
+    public String predictDiagnosis(int nodes, int hemorrhages, int exudates, int cycles, double ti, 
+                                   int endpoints, int branchPoints, int largestComponent, double density) {
         try {
-            // Must equal 6 to align with the datasetStructure
             DenseInstance instance = new DenseInstance(datasetStructure.numAttributes());
             instance.setDataset(datasetStructure);
 
@@ -52,6 +56,10 @@ public class RetinaClassifier {
             instance.setValue(2, exudates);
             instance.setValue(3, cycles);
             instance.setValue(4, ti);
+            instance.setValue(5, endpoints);
+            instance.setValue(6, branchPoints);
+            instance.setValue(7, largestComponent);
+            instance.setValue(8, density);
 
             double predictionIndex = randomForest.classifyInstance(instance);
             return datasetStructure.classAttribute().value((int) predictionIndex);

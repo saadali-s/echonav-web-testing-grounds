@@ -10,6 +10,7 @@ import imageprocessing.ImageToGraphConverter;
 import imageprocessing.RegionData;
 import tasks.PathFinder;
 import tasks.SimilarityDetector;
+import tasks.GraphMetrics;
 import pipeline.RetinaClassifier;
 
 import javax.imageio.ImageIO;
@@ -34,13 +35,18 @@ public class MainFrame extends JFrame {
 
     private final int BLOCK_SIZE = 4;
 
-    // Live State Trackers for the Weka Handoff
+    // The 9 Live State Trackers
     private int lastNodes = 0;
     private int lastLesions = 0;
     private int lastHemorrhages = 0;
     private int lastExudates = 0;
     private int lastCycles = 0;
     private double lastTI = 1.0;
+    private int lastEndpoints = 0;
+    private int lastBranchPoints = 0;
+    private int lastLargestComponent = 0;
+    private double lastVesselDensity = 0.0;
+    
     private RetinaClassifier wekaClassifier;
 
     private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex, lblPdrCycles;
@@ -87,7 +93,6 @@ public class MainFrame extends JFrame {
 
         btnBatchProcess = createModernButton("5. Batch Extract to CSV", new Color(71, 85, 105));
         btnRunML = createModernButton("6. Execute Weka ML", new Color(225, 29, 72));
-
         btnClear = createModernButton("Clear Workspace", new Color(100, 116, 139));
 
         btnExtractNetwork.setEnabled(false);
@@ -195,6 +200,10 @@ public class MainFrame extends JFrame {
                 logToConsole("Executing Sauvola Thresholding...");
                 Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannelMatrix);
 
+                ImageToGraphConverter.DensityMetrics densityData = ImageToGraphConverter.calculateVesselDensity(rawMask);
+                lastVesselDensity = densityData.densityRatio;
+                logToConsole(String.format("Density Extracted: %.2f%% of FOV", lastVesselDensity * 100));
+
                 logToConsole("Bridging fragmented vessels (Morphological Dilation)...");
                 Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
 
@@ -221,7 +230,6 @@ public class MainFrame extends JFrame {
 
                 mapPanel.setGraphData(vascularGraph, nodeGrid, rows, cols, BLOCK_SIZE);
 
-                // Store State
                 lastNodes = nodes.size();
                 lblNodesExtracted.setText(String.valueOf(lastNodes));
 
@@ -240,11 +248,9 @@ public class MainFrame extends JFrame {
             GraphBuilder.mergeDiagnosticData(vascularGraph, nodeGrid, isolatedAnomalies);
             mapPanel.repaint();
 
-            // Store State
             lastLesions = isolatedAnomalies.size();
             lblAnomaliesFound.setText(String.valueOf(lastLesions));
 
-            // Tally Hemorrhages vs Exudates for the ML model
             lastHemorrhages = 0;
             lastExudates = 0;
             for (int i = 0; i < isolatedAnomalies.size(); i++) {
@@ -255,7 +261,7 @@ public class MainFrame extends JFrame {
                 }
             }
 
-            logToConsole("k-NN Search Complete. Isolated " + lastLesions + " pathological lesions (" + lastHemorrhages + " hemorrhages, " + lastExudates + " exudates).");
+            logToConsole("k-NN Search Complete. Extracted " + lastLesions + " lesions (" + lastHemorrhages + " hemorrhages, " + lastExudates + " exudates).");
         });
 
         btnMeasureTortuosity.addActionListener(e -> {
@@ -264,15 +270,19 @@ public class MainFrame extends JFrame {
                 return;
             }
 
-            logToConsole("Automating Chaos Measurement...");
+            logToConsole("Automating Chaos Measurement & Topology Scan...");
             int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
             int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
 
-            // Store State
+            lastEndpoints = GraphMetrics.countEndpoints(vascularGraph);
+            lastBranchPoints = GraphMetrics.countBranchPoints(vascularGraph);
+            lastLargestComponent = GraphMetrics.calculateLargestComponentSize(vascularGraph, rows, cols);
+            
+            logToConsole("Topology: " + lastEndpoints + " Endpoints | " + lastBranchPoints + " Branch Points | Max Component: " + lastLargestComponent);
+
             lastCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
             lblPdrCycles.setText(String.valueOf(lastCycles));
-            logToConsole("Topological Euler Analysis: Found " + lastCycles + " true vascular loops.");
-
+            
             ArrayList<List<INode<RegionData>>> pathContainer = new ArrayList<>();
             lastTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
             lblTortuosityIndex.setText(String.format("%.2f", lastTI));
@@ -281,9 +291,6 @@ public class MainFrame extends JFrame {
                 mapPanel.setActivePath(pathContainer.get(0));
             }
 
-            logToConsole("Exhaustive Trace Complete. Global TI: " + String.format("%.2f", lastTI));
-
-            // Activate the Weka Handoff Button
             btnRunML.setEnabled(true);
         });
 
@@ -292,15 +299,17 @@ public class MainFrame extends JFrame {
         });
 
         btnRunML.addActionListener(e -> {
-            // Lazy load the model so the app boots instantly
             if (wekaClassifier == null) {
                 wekaClassifier = new RetinaClassifier("retina_model.model");
             }
 
             logToConsole("Executing Weka Random Forest classification...");
 
-            // Pass the 5 separated arguments to match the Weka dataset structure
-            String resultIndex = wekaClassifier.predictDiagnosis(lastNodes, lastHemorrhages, lastExudates, lastCycles, lastTI);
+            // Pass all 9 features
+            String resultIndex = wekaClassifier.predictDiagnosis(
+                lastNodes, lastHemorrhages, lastExudates, lastCycles, lastTI, 
+                lastEndpoints, lastBranchPoints, lastLargestComponent, lastVesselDensity
+            );
 
             String clinicalDiagnosis = "";
             switch(resultIndex) {
@@ -314,7 +323,6 @@ public class MainFrame extends JFrame {
 
             logToConsole("Diagnosis Complete: " + clinicalDiagnosis);
 
-            // Medical UI Dialog Box updated to reflect separated lesions
             JOptionPane.showMessageDialog(MainFrame.this,
                     "Predicted Diagnosis:\n" + clinicalDiagnosis + "\n\n" +
                             "Extracted Biomarkers:\n" +
@@ -322,37 +330,39 @@ public class MainFrame extends JFrame {
                             " - Hemorrhages (Red): " + lastHemorrhages + "\n" +
                             " - Exudates (Bright): " + lastExudates + "\n" +
                             " - PDR Cycle Nets: " + lastCycles + "\n" +
-                            " - Tortuosity Index: " + String.format("%.2f", lastTI),
+                            " - Tortuosity Index: " + String.format("%.2f", lastTI) + "\n" +
+                            " - Endpoints (Dead-Ends): " + lastEndpoints + "\n" +
+                            " - Branch Points (Splits): " + lastBranchPoints + "\n" +
+                            " - Largest Vessel Network: " + lastLargestComponent + " nodes\n" +
+                            " - Vessel Density: " + String.format("%.2f%%", lastVesselDensity * 100),
                     "Weka ML Diagnostic Results",
                     JOptionPane.INFORMATION_MESSAGE);
         });
 
         btnClear.addActionListener(e -> {
-            // 1. Clear the visual canvas
             mapPanel.loadScan(null);
-
-            // 2. Erase heavy data structures from memory
             greenChannelMatrix = null;
             redChannelMatrix = null;
             binaryVesselMask = null;
             vascularGraph = null;
             nodeGrid = null;
 
-            // 3. Reset ML state variables
             lastNodes = 0;
             lastLesions = 0;
             lastHemorrhages = 0;
             lastExudates = 0;
             lastCycles = 0;
             lastTI = 1.0;
+            lastEndpoints = 0;
+            lastBranchPoints = 0;
+            lastLargestComponent = 0;
+            lastVesselDensity = 0.0;
 
-            // 4. Reset UI Telemetry Labels
             lblNodesExtracted.setText("--");
             lblAnomaliesFound.setText("--");
             lblPdrCycles.setText("--");
             lblTortuosityIndex.setText("--");
 
-            // 5. Lock the workflow buttons
             btnExtractNetwork.setEnabled(false);
             btnScanAnomalies.setEnabled(false);
             btnMeasureTortuosity.setEnabled(false);
