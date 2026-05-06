@@ -15,14 +15,10 @@ public class MapPanel extends JPanel {
     private List<INode<RegionData>> activePath;
     private INode<RegionData>[][] nodeGrid;
     private BufferedImage baseImage;
-    private double scaleFactor = 1.0;
     private int gridRows, gridCols, blockSize;
 
     public MapPanel() {
-        setBackground(new Color(24, 24, 27)); 
-    }
-
-    public void setInstructionHook(JLabel label) {
+        setBackground(new Color(24, 24, 27));
     }
 
     public void loadScan(BufferedImage image) {
@@ -54,21 +50,27 @@ public class MapPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        if (baseImage != null) {
-            // Calculate how much we need to shrink the image to fit the panel
-            double scaleX = (double) getWidth() / baseImage.getWidth();
-            double scaleY = (double) getHeight() / baseImage.getHeight();
-            scaleFactor = Math.min(scaleX, scaleY);
-            if (scaleFactor > 1.0) scaleFactor = 1.0; // Prevent zooming in on small images
-            
-            // Shrink the entire canvas
-            g2d.scale(scaleFactor, scaleFactor);
-            g2d.drawImage(baseImage, 0, 0, null);
-        }
+        if (baseImage == null) return;
+
+        // Calculate the scale needed to fit both Width and Height
+        double scaleX = (double) getWidth() / baseImage.getWidth();
+        double scaleY = (double) getHeight() / baseImage.getHeight();
+        double scaleFactor = Math.min(scaleX, scaleY);
+
+        // Center the image inside the panel
+        double xOffset = (getWidth() - (baseImage.getWidth() * scaleFactor)) / 2.0;
+        double yOffset = (getHeight() - (baseImage.getHeight() * scaleFactor)) / 2.0;
+
+        g2d.translate(xOffset, yOffset);
+        g2d.scale(scaleFactor, scaleFactor);
+
+        // Draw Image
+        g2d.drawImage(baseImage, 0, 0, null);
+
+        // Draw Graph
         if (graph == null || nodeGrid == null) return;
 
-        // Draw Vessels and Anomalies
-        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f)); 
+        g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
         for (int r = 0; r < gridRows; r++) {
             for (int c = 0; c < gridCols; c++) {
                 INode<RegionData> node = nodeGrid[r][c];
@@ -80,7 +82,7 @@ public class MapPanel extends JPanel {
                 if (node.getData().isAnomaly()) {
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.9f));
                     g2d.setColor(new Color(239, 68, 68));
-                    g2d.fillOval(x - (blockSize/2), y - (blockSize/2), blockSize * 2, blockSize * 2); 
+                    g2d.fillOval(x - (blockSize/2), y - (blockSize/2), blockSize * 2, blockSize * 2);
                     g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
                 } else if (node.getData().isVessel()) {
                     g2d.setColor(new Color(16, 185, 129));
@@ -97,7 +99,7 @@ public class MapPanel extends JPanel {
                 RegionData d1 = activePath.get(i).getData();
                 RegionData d2 = activePath.get(i+1).getData();
                 g2d.drawLine(d1.getGridX() * blockSize + (blockSize/2), d1.getGridY() * blockSize + (blockSize/2),
-                             d2.getGridX() * blockSize + (blockSize/2), d2.getGridY() * blockSize + (blockSize/2));
+                        d2.getGridX() * blockSize + (blockSize/2), d2.getGridY() * blockSize + (blockSize/2));
             }
         }
     }

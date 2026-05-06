@@ -16,26 +16,25 @@ import pipeline.RetinaClassifier;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
 public class MainFrame extends JFrame {
 
-    private MapPanel mapPanel;
-    private JTextArea consoleOutput;
+    private CardLayout cardLayout;
+    private JPanel rootPanel;
+    private JPanel mainViewPanel;
+    private ComparePanel compareViewPanel;
 
+    private MapPanel mapPanel;
     private Matrix greenChannelMatrix;
     private Matrix redChannelMatrix;
     private Matrix binaryVesselMask;
-
     private AdjacencyListGraph<RegionData> vascularGraph;
     private INode<RegionData>[][] nodeGrid;
-
     private final int BLOCK_SIZE = 4;
 
-    // The 9 Live State Trackers
     private int lastNodes = 0;
     private int lastLesions = 0;
     private int lastHemorrhages = 0;
@@ -46,34 +45,57 @@ public class MainFrame extends JFrame {
     private int lastBranchPoints = 0;
     private int lastLargestComponent = 0;
     private double lastVesselDensity = 0.0;
-    
+
     private RetinaClassifier wekaClassifier;
 
-    private JLabel lblNodesExtracted, lblAnomaliesFound, lblTortuosityIndex, lblPdrCycles;
-    private JButton btnLoadImage,btnClear, btnExtractNetwork, btnScanAnomalies, btnMeasureTortuosity, btnBatchProcess, btnRunML;
+    private JLabel lblVascularNodes, lblIdentifiedLesions, lblTortuosityScore, lblNeovascularLoops;
+    private JButton btnUploadRetinalScan, btnClearWorkspace, btnIdentifyVascularNodes, btnIdentifyLesions, btnComputeVascularMetrics, btnExecuteMLClassification, btnCompareImages;
+
+    private JLabel lblWekaVascularNodes, lblWekaHemorrhages, lblWekaExudates, lblWekaNeovascularLoops, lblWekaTortuosityScore, lblWekaEndpoints, lblWekaBranchPoints, lblWekaLargestNetwork, lblWekaVesselDensity;
+    private GradeSliderPanel gradeSlider;
 
     public MainFrame() {
         setTitle("RetinaGraph Diagnostics & ML Pipeline");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1400, 950);
-        setLayout(new BorderLayout());
+        setSize(1600, 1100);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         getContentPane().setBackground(new Color(24, 24, 27));
 
+        try {
+            wekaClassifier = new RetinaClassifier("retina_model.model");
+        } catch (Exception e) {
+            System.out.println("Model not found yet or error loading.");
+        }
+
+        cardLayout = new CardLayout();
+        rootPanel = new JPanel(cardLayout);
+
+        buildMainView();
+
+        compareViewPanel = new ComparePanel(cardLayout, rootPanel, wekaClassifier);
+
+        rootPanel.add(mainViewPanel, "MAIN");
+        rootPanel.add(compareViewPanel, "COMPARE");
+
+        setContentPane(rootPanel);
+        setLocationRelativeTo(null);
+    }
+
+    private void buildMainView() {
+        mainViewPanel = new JPanel(new BorderLayout());
+        mainViewPanel.setBackground(new Color(24, 24, 27));
+
         mapPanel = new MapPanel();
-        JScrollPane scrollPane = new JScrollPane(mapPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        add(scrollPane, BorderLayout.CENTER);
+        mainViewPanel.add(mapPanel, BorderLayout.CENTER);
 
         setupSidebar();
-        setupConsole();
+        setupRightPanel();
+        setupBottomPanel();
         setupEventHandlers();
-
-        setLocationRelativeTo(null);
     }
 
     private void setupSidebar() {
         JPanel sidebar = new JPanel();
-        sidebar.setPreferredSize(new Dimension(360, getHeight()));
         sidebar.setBackground(new Color(9, 9, 11));
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setBorder(new EmptyBorder(25, 25, 25, 25));
@@ -86,28 +108,27 @@ public class MainFrame extends JFrame {
         sidebar.add(title);
         sidebar.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        btnLoadImage = createModernButton("1. Load Single Scan", new Color(37, 99, 235));
-        btnExtractNetwork = createModernButton("2. Extract Network", new Color(16, 185, 129));
-        btnScanAnomalies = createModernButton("3. k-NN Anomaly Scan", new Color(245, 158, 11));
-        btnMeasureTortuosity = createModernButton("4. Auto-Measure Chaos", new Color(139, 92, 246));
+        btnUploadRetinalScan = createModernButton("1. Upload Retinal Scan", new Color(37, 99, 235));
+        btnIdentifyVascularNodes = createModernButton("2. Identify Vascular Nodes", new Color(16, 185, 129));
+        btnIdentifyLesions = createModernButton("3. Identify Lesions (k-NN)", new Color(245, 158, 11));
+        btnComputeVascularMetrics = createModernButton("4. Compute Vascular Metrics", new Color(139, 92, 246));
 
-        btnBatchProcess = createModernButton("5. Batch Extract to CSV", new Color(71, 85, 105));
-        btnRunML = createModernButton("6. Execute Weka ML", new Color(225, 29, 72));
-        btnClear = createModernButton("Clear Workspace", new Color(100, 116, 139));
+        btnExecuteMLClassification = createModernButton("5. Execute ML Classification", new Color(225, 29, 72));
+        btnClearWorkspace = createModernButton("Clear Workspace", new Color(200, 24, 24));
+        btnCompareImages = createModernButton("Compare Images", new Color(34, 182, 182));
 
-        btnExtractNetwork.setEnabled(false);
-        btnScanAnomalies.setEnabled(false);
-        btnMeasureTortuosity.setEnabled(false);
-        btnBatchProcess.setEnabled(true);
-        btnRunML.setEnabled(false);
+        btnIdentifyVascularNodes.setEnabled(false);
+        btnIdentifyLesions.setEnabled(false);
+        btnComputeVascularMetrics.setEnabled(false);
+        btnExecuteMLClassification.setEnabled(false);
 
-        sidebar.add(btnLoadImage);
+        sidebar.add(btnUploadRetinalScan);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnExtractNetwork);
+        sidebar.add(btnIdentifyVascularNodes);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnScanAnomalies);
+        sidebar.add(btnIdentifyLesions);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnMeasureTortuosity);
+        sidebar.add(btnComputeVascularMetrics);
 
         sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
         JLabel mlLabel = new JLabel("MACHINE LEARNING");
@@ -116,60 +137,102 @@ public class MainFrame extends JFrame {
         sidebar.add(mlLabel);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        sidebar.add(btnBatchProcess);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(btnRunML);
+        sidebar.add(btnExecuteMLClassification);
         sidebar.add(Box.createRigidArea(new Dimension(0, 20)));
-        sidebar.add(btnClear);
-        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
 
-        lblNodesExtracted = new JLabel("--");
-        lblAnomaliesFound = new JLabel("--");
-        lblTortuosityIndex = new JLabel("--");
-        lblPdrCycles = new JLabel("--");
+        lblVascularNodes = new JLabel("--");
+        lblIdentifiedLesions = new JLabel("--");
+        lblTortuosityScore = new JLabel("--");
+        lblNeovascularLoops = new JLabel("--");
 
-        sidebar.add(createTelemetryCard("Vascular Nodes", lblNodesExtracted));
+        sidebar.add(createTelemetryCard("Vascular Nodes", lblVascularNodes));
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createTelemetryCard("Identified Lesions", lblAnomaliesFound));
+        sidebar.add(createTelemetryCard("Identified Lesions", lblIdentifiedLesions));
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createTelemetryCard("PDR Cycle Nets", lblPdrCycles));
+        sidebar.add(createTelemetryCard("Neovascular Loops", lblNeovascularLoops));
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
-        sidebar.add(createTelemetryCard("Dijkstra TI Score", lblTortuosityIndex));
+        sidebar.add(createTelemetryCard("Tortuosity Score", lblTortuosityScore));
 
-        add(sidebar, BorderLayout.WEST);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidebar.add(btnClearWorkspace);
+
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidebar.add(btnCompareImages);
+
+        mainViewPanel.add(sidebar, BorderLayout.WEST);
     }
 
-    private void setupConsole() {
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setPreferredSize(new Dimension(getWidth(), 150));
-        bottomPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        bottomPanel.setBackground(new Color(9, 9, 11));
+    private void setupRightPanel() {
+        JPanel rightPanel = new JPanel();
+        rightPanel.setPreferredSize(new Dimension(320, getHeight()));
+        rightPanel.setBackground(new Color(9, 9, 11));
+        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+        rightPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
-        consoleOutput = new JTextArea();
-        consoleOutput.setEditable(false);
-        consoleOutput.setBackground(new Color(24, 24, 27));
-        consoleOutput.setForeground(new Color(16, 185, 129));
-        consoleOutput.setFont(new Font("Consolas", Font.PLAIN, 13));
+        JLabel title = new JLabel("Data Extractions");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("SansSerif", Font.BOLD, 22));
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        DefaultCaret caret = (DefaultCaret)consoleOutput.getCaret();
-        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+        rightPanel.add(title);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 30)));
 
-        JScrollPane consoleScroll = new JScrollPane(consoleOutput);
-        consoleScroll.setBorder(BorderFactory.createLineBorder(new Color(63, 63, 70)));
-        bottomPanel.add(consoleScroll, BorderLayout.CENTER);
+        lblWekaVascularNodes = createResultLabel("Vascular Nodes: --");
+        lblWekaHemorrhages = createResultLabel("Hemorrhages: --");
+        lblWekaExudates = createResultLabel("Exudates: --");
+        lblWekaNeovascularLoops = createResultLabel("Neovascular Loops: --");
+        lblWekaTortuosityScore = createResultLabel("Tortuosity Score: --");
+        lblWekaEndpoints = createResultLabel("Endpoints: --");
+        lblWekaBranchPoints = createResultLabel("Branch Points: --");
+        lblWekaLargestNetwork = createResultLabel("Largest Network: --");
+        lblWekaVesselDensity = createResultLabel("Vessel Density: --");
 
-        add(bottomPanel, BorderLayout.SOUTH);
-        logToConsole("System Initialized. Awaiting user input...");
+        rightPanel.add(lblWekaVascularNodes);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaHemorrhages);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaExudates);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaNeovascularLoops);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaTortuosityScore);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaEndpoints);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaBranchPoints);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaLargestNetwork);
+        rightPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+        rightPanel.add(lblWekaVesselDensity);
+
+        mainViewPanel.add(rightPanel, BorderLayout.EAST);
+    }
+
+    private void setupBottomPanel() {
+        gradeSlider = new GradeSliderPanel();
+        gradeSlider.setPreferredSize(new Dimension(getWidth(), 120));
+        mainViewPanel.add(gradeSlider, BorderLayout.SOUTH);
+    }
+
+    private JLabel createResultLabel(String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(new Color(161, 161, 170));
+        lbl.setFont(new Font("Consolas", Font.PLAIN, 14));
+        lbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return lbl;
     }
 
     public void logToConsole(String message) {
-        SwingUtilities.invokeLater(() -> {
-            consoleOutput.append("> " + message + "\n");
-        });
+        System.out.println("LOG: " + message);
     }
 
     private void setupEventHandlers() {
-        btnLoadImage.addActionListener(e -> {
+
+        btnCompareImages.addActionListener(e -> {
+            cardLayout.show(rootPanel, "COMPARE");
+        });
+
+        btnUploadRetinalScan.addActionListener(e -> {
             FileDialog fileDialog = new FileDialog(this, "Select Fundus Scan", FileDialog.LOAD);
             fileDialog.setVisible(true);
 
@@ -178,44 +241,35 @@ public class MainFrame extends JFrame {
                 try {
                     logToConsole("Loading Image: " + file.getName() + "...");
                     BufferedImage img = ImageIO.read(file);
-                    mapPanel.setPreferredSize(new Dimension(img.getWidth(), img.getHeight()));
                     mapPanel.loadScan(img);
 
                     greenChannelMatrix = ImageToGraphConverter.extractGreenChannel(file.getAbsolutePath());
                     redChannelMatrix = ImageToGraphConverter.extractRedChannel(file.getAbsolutePath());
 
                     logToConsole("Matrix extraction complete.");
-                    btnExtractNetwork.setEnabled(true);
-                    btnScanAnomalies.setEnabled(false);
-                    btnMeasureTortuosity.setEnabled(false);
-                    btnRunML.setEnabled(false);
+                    btnIdentifyVascularNodes.setEnabled(true);
+                    btnIdentifyLesions.setEnabled(false);
+                    btnComputeVascularMetrics.setEnabled(false);
+                    btnExecuteMLClassification.setEnabled(false);
                 } catch (Exception ex) {
                     logToConsole("ERROR: Failed to load image.");
                 }
             }
         });
 
-        btnExtractNetwork.addActionListener(e -> {
+        btnIdentifyVascularNodes.addActionListener(e -> {
             try {
-                logToConsole("Executing Sauvola Thresholding...");
                 Matrix rawMask = ImageToGraphConverter.applySauvolaThresholding(greenChannelMatrix);
 
                 ImageToGraphConverter.DensityMetrics densityData = ImageToGraphConverter.calculateVesselDensity(rawMask);
                 lastVesselDensity = densityData.densityRatio;
-                logToConsole(String.format("Density Extracted: %.2f%% of FOV", lastVesselDensity * 100));
 
-                logToConsole("Bridging fragmented vessels (Morphological Dilation)...");
                 Matrix healedMask = ImageToGraphConverter.applyDilation(rawMask);
-
-                logToConsole("Downscaling to Blocks...");
                 Matrix blockMask = ImageToGraphConverter.downscaleToBlocks(healedMask, BLOCK_SIZE);
-
-                logToConsole("Executing Block-Level Skeletonization...");
                 Matrix skeleton = ImageToGraphConverter.applySkeletonization(blockMask);
 
                 binaryVesselMask = ImageToGraphConverter.removeStaircaseArtifacts(skeleton);
 
-                logToConsole("Building Topological Graph...");
                 vascularGraph = GraphBuilder.buildVascularGraph(greenChannelMatrix, binaryVesselMask, BLOCK_SIZE);
 
                 int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
@@ -231,25 +285,23 @@ public class MainFrame extends JFrame {
                 mapPanel.setGraphData(vascularGraph, nodeGrid, rows, cols, BLOCK_SIZE);
 
                 lastNodes = nodes.size();
-                lblNodesExtracted.setText(String.valueOf(lastNodes));
+                lblVascularNodes.setText(String.valueOf(lastNodes));
 
-                logToConsole("Graph Topology Built. Total Nodes: " + lastNodes);
-                btnScanAnomalies.setEnabled(true);
-                btnMeasureTortuosity.setEnabled(true);
+                btnIdentifyLesions.setEnabled(true);
+                btnComputeVascularMetrics.setEnabled(true);
             } catch (Exception ex) {
                 logToConsole("ERROR: Matrix operation failed.");
             }
         });
 
-        btnScanAnomalies.addActionListener(e -> {
-            logToConsole("Executing k-NN Graph Similarity search...");
+        btnIdentifyLesions.addActionListener(e -> {
             ArrayList<RegionData> isolatedAnomalies = SimilarityDetector.scanForAnomalies(greenChannelMatrix, redChannelMatrix, BLOCK_SIZE);
 
             GraphBuilder.mergeDiagnosticData(vascularGraph, nodeGrid, isolatedAnomalies);
             mapPanel.repaint();
 
             lastLesions = isolatedAnomalies.size();
-            lblAnomaliesFound.setText(String.valueOf(lastLesions));
+            lblIdentifiedLesions.setText(String.valueOf(lastLesions));
 
             lastHemorrhages = 0;
             lastExudates = 0;
@@ -260,86 +312,62 @@ public class MainFrame extends JFrame {
                     lastExudates++;
                 }
             }
-
-            logToConsole("k-NN Search Complete. Extracted " + lastLesions + " lesions (" + lastHemorrhages + " hemorrhages, " + lastExudates + " exudates).");
         });
 
-        btnMeasureTortuosity.addActionListener(e -> {
-            if (vascularGraph == null || vascularGraph.getNodes().size() < 2) {
-                logToConsole("ERROR: Not enough nodes in graph.");
-                return;
-            }
+        btnComputeVascularMetrics.addActionListener(e -> {
+            if (vascularGraph == null || vascularGraph.getNodes().size() < 2) return;
 
-            logToConsole("Automating Chaos Measurement & Topology Scan...");
             int rows = greenChannelMatrix.numberRows() / BLOCK_SIZE;
             int cols = greenChannelMatrix.numberCols() / BLOCK_SIZE;
 
             lastEndpoints = GraphMetrics.countEndpoints(vascularGraph);
             lastBranchPoints = GraphMetrics.countBranchPoints(vascularGraph);
             lastLargestComponent = GraphMetrics.calculateLargestComponentSize(vascularGraph, rows, cols);
-            
-            logToConsole("Topology: " + lastEndpoints + " Endpoints | " + lastBranchPoints + " Branch Points | Max Component: " + lastLargestComponent);
 
             lastCycles = PathFinder.countNeovascularLoops(vascularGraph, rows, cols);
-            lblPdrCycles.setText(String.valueOf(lastCycles));
-            
+            lblNeovascularLoops.setText(String.valueOf(lastCycles));
+
             ArrayList<List<INode<RegionData>>> pathContainer = new ArrayList<>();
             lastTI = PathFinder.calculateGlobalChaos(vascularGraph, rows, cols, pathContainer);
-            lblTortuosityIndex.setText(String.format("%.2f", lastTI));
+            lblTortuosityScore.setText(String.format("%.2f", lastTI));
 
             if (pathContainer.size() > 0) {
                 mapPanel.setActivePath(pathContainer.get(0));
             }
 
-            btnRunML.setEnabled(true);
+            btnExecuteMLClassification.setEnabled(true);
         });
 
-        btnBatchProcess.addActionListener(e -> {
-            logToConsole("Batch Processor must be run separately via pipeline.BatchProcessor main().");
-        });
-
-        btnRunML.addActionListener(e -> {
+        btnExecuteMLClassification.addActionListener(e -> {
             if (wekaClassifier == null) {
                 wekaClassifier = new RetinaClassifier("retina_model.model");
             }
 
-            logToConsole("Executing Weka Random Forest classification...");
-
-            // Pass all 9 features
             String resultIndex = wekaClassifier.predictDiagnosis(
-                lastNodes, lastHemorrhages, lastExudates, lastCycles, lastTI, 
-                lastEndpoints, lastBranchPoints, lastLargestComponent, lastVesselDensity
+                    lastNodes, lastHemorrhages, lastExudates, lastCycles, lastTI,
+                    lastEndpoints, lastBranchPoints, lastLargestComponent, lastVesselDensity
             );
 
-            String clinicalDiagnosis = "";
-            switch(resultIndex) {
-                case "0": clinicalDiagnosis = "Grade 0: No Diabetic Retinopathy"; break;
-                case "1": clinicalDiagnosis = "Grade 1: Mild Non-Proliferative DR"; break;
-                case "2": clinicalDiagnosis = "Grade 2: Moderate Non-Proliferative DR"; break;
-                case "3": clinicalDiagnosis = "Grade 3: Severe Non-Proliferative DR"; break;
-                case "4": clinicalDiagnosis = "Grade 4: Proliferative DR (Critical)"; break;
-                default: clinicalDiagnosis = "Unknown (" + resultIndex + ")";
+            lblWekaVascularNodes.setText("Vascular Nodes: " + lastNodes);
+            lblWekaHemorrhages.setText("Hemorrhages: " + lastHemorrhages);
+            lblWekaExudates.setText("Exudates: " + lastExudates);
+            lblWekaNeovascularLoops.setText("Neovascular Loops: " + lastCycles);
+            lblWekaTortuosityScore.setText("Tortuosity Score: " + String.format("%.2f", lastTI));
+            lblWekaEndpoints.setText("Endpoints: " + lastEndpoints);
+            lblWekaBranchPoints.setText("Branch Points: " + lastBranchPoints);
+            lblWekaLargestNetwork.setText("Largest Network: " + lastLargestComponent);
+            lblWekaVesselDensity.setText("Vessel Density: " + String.format("%.2f%%", lastVesselDensity * 100));
+
+            int gradeIndex = 0;
+            try {
+                gradeIndex = Integer.parseInt(resultIndex);
+            } catch (Exception ex) {
+                logToConsole("Error parsing grade: " + resultIndex);
             }
-
-            logToConsole("Diagnosis Complete: " + clinicalDiagnosis);
-
-            JOptionPane.showMessageDialog(MainFrame.this,
-                    "Predicted Diagnosis:\n" + clinicalDiagnosis + "\n\n" +
-                            "Extracted Biomarkers:\n" +
-                            " - Vascular Nodes: " + lastNodes + "\n" +
-                            " - Hemorrhages (Red): " + lastHemorrhages + "\n" +
-                            " - Exudates (Bright): " + lastExudates + "\n" +
-                            " - PDR Cycle Nets: " + lastCycles + "\n" +
-                            " - Tortuosity Index: " + String.format("%.2f", lastTI) + "\n" +
-                            " - Endpoints (Dead-Ends): " + lastEndpoints + "\n" +
-                            " - Branch Points (Splits): " + lastBranchPoints + "\n" +
-                            " - Largest Vessel Network: " + lastLargestComponent + " nodes\n" +
-                            " - Vessel Density: " + String.format("%.2f%%", lastVesselDensity * 100),
-                    "Weka ML Diagnostic Results",
-                    JOptionPane.INFORMATION_MESSAGE);
+            gradeSlider.animateToGrade(gradeIndex);
         });
 
-        btnClear.addActionListener(e -> {
+        btnClearWorkspace.addActionListener(e -> {
             mapPanel.loadScan(null);
             greenChannelMatrix = null;
             redChannelMatrix = null;
@@ -358,17 +386,27 @@ public class MainFrame extends JFrame {
             lastLargestComponent = 0;
             lastVesselDensity = 0.0;
 
-            lblNodesExtracted.setText("--");
-            lblAnomaliesFound.setText("--");
-            lblPdrCycles.setText("--");
-            lblTortuosityIndex.setText("--");
+            lblVascularNodes.setText("--");
+            lblIdentifiedLesions.setText("--");
+            lblNeovascularLoops.setText("--");
+            lblTortuosityScore.setText("--");
 
-            btnExtractNetwork.setEnabled(false);
-            btnScanAnomalies.setEnabled(false);
-            btnMeasureTortuosity.setEnabled(false);
-            btnRunML.setEnabled(false);
+            lblWekaVascularNodes.setText("Vascular Nodes: --");
+            lblWekaHemorrhages.setText("Hemorrhages: --");
+            lblWekaExudates.setText("Exudates: --");
+            lblWekaNeovascularLoops.setText("Neovascular Loops: --");
+            lblWekaTortuosityScore.setText("Tortuosity Score: --");
+            lblWekaEndpoints.setText("Endpoints: --");
+            lblWekaBranchPoints.setText("Branch Points: --");
+            lblWekaLargestNetwork.setText("Largest Network: --");
+            lblWekaVesselDensity.setText("Vessel Density: --");
 
-            logToConsole("Workspace cleared. Memory freed and ready for a new scan.");
+            gradeSlider.reset();
+
+            btnIdentifyVascularNodes.setEnabled(false);
+            btnIdentifyLesions.setEnabled(false);
+            btnComputeVascularMetrics.setEnabled(false);
+            btnExecuteMLClassification.setEnabled(false);
         });
     }
 
@@ -403,18 +441,108 @@ public class MainFrame extends JFrame {
                 new EmptyBorder(10, 15, 10, 15)
         ));
         card.setMaximumSize(new Dimension(320, 65));
+        card.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel title = new JLabel(titleText.toUpperCase());
         title.setForeground(new Color(161, 161, 170));
         title.setFont(new Font("SansSerif", Font.BOLD, 11));
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
 
         valueLabel.setForeground(Color.WHITE);
         valueLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        valueLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
         card.add(title);
         card.add(Box.createRigidArea(new Dimension(0, 5)));
         card.add(valueLabel);
         return card;
+    }
+
+    class GradeSliderPanel extends JPanel {
+        private int targetGrade = -1;
+        private double currentX = -1;
+        private Timer timer;
+
+        private final String[] labels = {"Grade 0: Normal", "Grade 1: Mild DR", "Grade 2: Moderate DR", "Grade 3: Severe DR", "Grade 4: Proliferative DR"};
+        private final Color[] gradeColors = {
+                new Color(16, 185, 129), new Color(132, 204, 22), new Color(234, 179, 8), new Color(249, 115, 22), new Color(225, 29, 72)
+        };
+
+        public GradeSliderPanel() {
+            setBackground(new Color(9, 9, 11));
+            setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(63, 63, 70)));
+            timer = new Timer(16, e -> updateAnimation());
+        }
+
+        public void animateToGrade(int grade) {
+            this.targetGrade = Math.max(0, Math.min(grade, 4));
+            timer.start();
+        }
+
+        public void reset() {
+            this.targetGrade = -1;
+            this.currentX = -1;
+            timer.stop();
+            repaint();
+        }
+
+        private void updateAnimation() {
+            if (targetGrade < 0) return;
+            double targetX = getTargetXForGrade(targetGrade);
+            if (currentX < 0) currentX = getTargetXForGrade(0);
+
+            double dx = targetX - currentX;
+            if (Math.abs(dx) < 1.0) {
+                currentX = targetX;
+                timer.stop();
+            } else {
+                currentX += dx * 0.1;
+            }
+            repaint();
+        }
+
+        private double getTargetXForGrade(int grade) {
+            int padding = 60;
+            int usableWidth = getWidth() - (padding * 2);
+            int sectionWidth = usableWidth / 5;
+            return padding + (grade * sectionWidth) + (sectionWidth / 2.0);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int padding = 60;
+            int usableWidth = getWidth() - (padding * 2);
+            if(usableWidth <= 0) return;
+
+            int sectionWidth = usableWidth / 5;
+            int trackHeight = 12;
+            int trackY = (getHeight() / 2) - 10;
+
+            for (int i = 0; i < 5; i++) {
+                int startX = padding + (i * sectionWidth);
+                g2.setColor(gradeColors[i]);
+                g2.fillRoundRect(startX + 2, trackY, sectionWidth - 4, trackHeight, 10, 10);
+
+                g2.setColor(i == targetGrade ? Color.WHITE : new Color(161, 161, 170));
+                g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+                int textWidth = g2.getFontMetrics().stringWidth(labels[i]);
+                g2.drawString(labels[i], startX + (sectionWidth / 2) - (textWidth / 2), trackY + trackHeight + 25);
+            }
+
+            if (currentX >= 0) {
+                g2.setColor(Color.WHITE);
+                int arrowSize = 14;
+                int ax = (int) currentX;
+                int ay = trackY - 5;
+                g2.fillPolygon(new int[]{ax - arrowSize, ax + arrowSize, ax}, new int[]{ay - arrowSize - 5, ay - arrowSize - 5, ay}, 3);
+            }
+        }
     }
 
     public static void main(String[] args) {
