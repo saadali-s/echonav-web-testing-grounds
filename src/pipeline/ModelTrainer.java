@@ -42,9 +42,7 @@ public class ModelTrainer {
             Evaluation eval = new Evaluation(data);
             eval.crossValidateModel(rf, data, 10, new Random(42));
 
-            System.out.println("\n=======================================================");
             System.out.println("             WEKA ML EVALUATION RESULTS");
-            System.out.println("=======================================================");
             System.out.println(eval.toSummaryString());
             
             System.out.println("5. Training Final Production Model on 100% of Data...");
