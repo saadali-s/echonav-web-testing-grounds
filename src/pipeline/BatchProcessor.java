@@ -151,9 +151,7 @@ public class BatchProcessor {
                 }
             }
 
-            System.out.println("\n=======================================================");
             System.out.println("BATCH COMPLETE! Dataset saved to " + outputFile.getAbsolutePath());
-            System.out.println("=======================================================");
 
         } catch (Exception e) {
             e.printStackTrace();
