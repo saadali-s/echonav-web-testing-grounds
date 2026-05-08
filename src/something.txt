@@ -1,0 +1,2 @@
+If you are reading this, I pushed code by mistake in this repo and it caused a lot of stuff to happen. 
+I re-added the stuff I got from cloning the latest version. Hopefully it still works but I am now gonna delete all my remotes to prevent this from happening in the future
