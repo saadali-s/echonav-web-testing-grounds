@@ -183,13 +183,7 @@ export interface RouteRequest {
   endNodeId: number;
 }
 
-export interface RouteStep {
-  nodeId: number;
-  label: string;
-  x: number;
-  y: number;
-  instruction: string;
-}
+
 
 export interface RouteResponse {
   path: NodeDto[];
