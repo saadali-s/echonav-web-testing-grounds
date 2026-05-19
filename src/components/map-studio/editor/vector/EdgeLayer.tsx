@@ -32,7 +32,7 @@ export function EdgeLayer({
         const isSelected = selectedEdgeIds.includes(edge.id) && selection === "EDGE";
         const isHazard = edge.isHazard;
         
-        // FIXED: Realtime Thick-Client Mathematics for smooth dragging UX
+        // FIXED: Realtime Thick-Client Mathematics for smooth dragging UXs
         const pixelDistance = Math.hypot(target.x - source.x, target.y - source.y);
         const realtimeWeightM = !isNaN(floorPlanScale) ? (pixelDistance * floorPlanScale) : null;
         const displayWeight = realtimeWeightM ? `${realtimeWeightM.toFixed(1)}m` : 'Uncalibrated';
@@ -65,7 +65,7 @@ export function EdgeLayer({
           </g>
         );
       })}
-
+  
      {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
     <polyline
 
