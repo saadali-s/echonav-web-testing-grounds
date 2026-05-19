@@ -1,16 +1,12 @@
 "use client";
 
+import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MapPin, Send, Users } from "lucide-react";
+import { useCreateTasks } from "@/hooks/api/useFleet";
+import { useGetBuildings, useGetFloorPlans, useGetSpatialGraph } from "@/hooks/api/useMapStudio";
+import { Loader2, Map, MapPin, Send, User, Users } from "lucide-react";
 import { useState } from "react";
 
 export interface UnassignedNode {
@@ -21,12 +17,42 @@ export interface UnassignedNode {
 }
 
 interface AssignmentProps {
-  nodes: UnassignedNode[];
+  nodes?: UnassignedNode[];
   staff: { id: string; name: string }[];
+  activeNodeIds?: number[];
 }
 
-export function AssignmentEngine({ nodes, staff }: AssignmentProps) {
+export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps) {
+  const { activeOrgId } = useAuth();
+  const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
+
+  const { data: buildings } = useGetBuildings(orgIdNum);
+  const firstBuildingId = buildings?.[0]?.id;
+  const { data: floorPlans, isLoading: isFloorPlansLoading } = useGetFloorPlans(firstBuildingId);
+
+  const [selectedFloorPlanId, setSelectedFloorPlanId] = useState<string>("");
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const [selectedStaffId, setSelectedStaffId] = useState<string>("");
+
+  const { data: graphData, isLoading: isGraphLoading } = useGetSpatialGraph(
+    selectedFloorPlanId ? Number(selectedFloorPlanId) : undefined
+  );
+
+  const createTasksMutation = useCreateTasks();
+
+  const dynamicNodes: UnassignedNode[] = (graphData?.nodes || [])
+    .filter((node) => !activeNodeIds.includes(Number(node.id)))
+    .map((node) => ({
+      id: String(node.id),
+      label: node.label || `Node ${node.id}`,
+      x: node.x,
+      y: node.y,
+    }));
+
+  const handleFloorPlanChange = (val: string) => {
+    setSelectedFloorPlanId(val);
+    setSelectedNodes(new Set());
+  };
 
   const toggleNode = (id: string) => {
     const newSelected = new Set(selectedNodes);
@@ -36,115 +62,167 @@ export function AssignmentEngine({ nodes, staff }: AssignmentProps) {
   };
 
   const toggleAll = () => {
-    if (selectedNodes.size === nodes.length) setSelectedNodes(new Set());
-    else setSelectedNodes(new Set(nodes.map((n) => n.id)));
+    if (selectedNodes.size === dynamicNodes.length && dynamicNodes.length > 0) {
+      setSelectedNodes(new Set());
+    } else {
+      setSelectedNodes(new Set(dynamicNodes.map((n) => n.id)));
+    }
+  };
+
+  const handleAssign = async () => {
+    if (selectedNodes.size === 0 || !selectedStaffId) return;
+
+    try {
+      const nodeIds = Array.from(selectedNodes).map(Number);
+      const staffId = Number(selectedStaffId);
+
+      await createTasksMutation.mutateAsync({
+        nodeIds,
+        staffId,
+      });
+
+      setSelectedNodes(new Set());
+      setSelectedStaffId("");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to dispatch tasks. Check console for details.");
+    }
   };
 
   return (
-    <Card className="relative h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none" />
-
-      <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-blue-300 dark:bg-blue-950/40 p-5 rounded-t-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="font-black uppercase tracking-wider text-sm text-blue-1050 dark:text-blue-500">
-              Virtual Node Browser
-            </CardTitle>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-1050 dark:text-blue-300 mt-1">
-              Select unassigned nodes for deployment.
-            </p>
-          </div>
-          <Select defaultValue="floor-2">
-            <SelectTrigger className="w-full sm:w-55 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 font-bold text-xs uppercase  dark:shadow-none rounded-lg h-10 text-zinc-950 dark:text-zinc-100 relative z-20">
-              <SelectValue placeholder="Select Floor Plan" />
-            </SelectTrigger>
-            <SelectContent className="border-2 border-zinc-950 font-bold">
-              <SelectItem
-                value="floor-2"
-                className="text-xs uppercase font-bold"
-              >
-                Science Block - Floor 2
-              </SelectItem>
-              <SelectItem
-                value="floor-1"
-                className="text-xs uppercase font-bold"
-              >
-                Library - Ground Floor
-              </SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="h-full flex flex-col">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+            <Send className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+            Assignment Workspace
+          </h2>
+          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">Select location, pick nodes, and assign a technician.</p>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="relative z-10 flex-1 p-0 overflow-y-auto bg-white dark:bg-zinc-950">
-        <div className="min-w-100">
-          <div className="grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-3 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-[11px] font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-400 sticky top-0 z-10">
-            <Checkbox
-              checked={selectedNodes.size === nodes.length && nodes.length > 0}
-              onCheckedChange={toggleAll}
-              className="border-2 border-zinc-950 data-[state=checked]:bg-zinc-950 dark:border-zinc-400 dark:data-[state=checked]:bg-zinc-100 dark:data-[state=checked]:text-zinc-950"
-            />
-            <span>Node Label</span>
-            <span>Coordinates</span>
-          </div>
+      {/* 3-Column Grid for step-by-step selection */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
+        
+        {/* Column 1: Floor Plans */}
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+          <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
+            <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
+              <Map className="h-4 w-4" /> Step 1: Location
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 p-4 overflow-y-auto space-y-2">
+            {isFloorPlansLoading && <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />}
+            {(!floorPlans || floorPlans.length === 0) && !isFloorPlansLoading && (
+              <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">No Floor Plans Found</div>
+            )}
+            {floorPlans?.map((fp) => (
+              <div
+                key={fp.id}
+                onClick={() => handleFloorPlanChange(String(fp.id))}
+                className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedFloorPlanId === String(fp.id)
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <div className="font-black text-sm uppercase">{fp.name}</div>
+                <div className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest mt-1">ID: {fp.id}</div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
-          <div className="flex flex-col">
-            {nodes.map((node, index) => {
-              const isLast = index === nodes.length - 1;
-              return (
-                <label
-                  key={node.id}
-                  className={`grid grid-cols-[auto_1fr_auto] gap-4 px-5 py-4 items-center hover:bg-zinc-50 dark:hover:bg-zinc-900/50 cursor-pointer transition-colors ${!isLast ? "border-b-2 border-zinc-100 dark:border-zinc-800" : ""}`}
-                >
+        {/* Column 2: Nodes */}
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+          <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
+                <MapPin className="h-4 w-4" /> Step 2: Nodes
+              </CardTitle>
+              <button
+                onClick={toggleAll}
+                disabled={dynamicNodes.length === 0}
+                className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors disabled:opacity-50"
+              >
+                {selectedNodes.size === dynamicNodes.length && dynamicNodes.length > 0 ? "Deselect All" : "Select All"}
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="flex-1 p-4 overflow-y-auto space-y-2">
+            {!selectedFloorPlanId && (
+              <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg mt-4">
+                Select a floor plan first
+              </div>
+            )}
+            {isGraphLoading && selectedFloorPlanId && <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />}
+            {!isGraphLoading && dynamicNodes.length === 0 && selectedFloorPlanId && (
+              <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                No unassigned nodes available.
+              </div>
+            )}
+            {dynamicNodes.map((node) => (
+              <div
+                key={node.id}
+                onClick={() => toggleNode(node.id)}
+                className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  selectedNodes.has(node.id)
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/30"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <div className="flex items-center gap-3">
                   <Checkbox
                     checked={selectedNodes.has(node.id)}
                     onCheckedChange={() => toggleNode(node.id)}
-                    className="border-2 border-zinc-950 data-[state=checked]:bg-zinc-950 dark:border-zinc-400 dark:data-[state=checked]:bg-zinc-100 dark:data-[state=checked]:text-zinc-950"
+                    className="border-2 border-zinc-950 dark:border-zinc-700 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                   />
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-md border-2 border-zinc-200 dark:border-zinc-800 flex items-center justify-center bg-white dark:bg-zinc-950 shrink-0">
-                      <MapPin className="h-4 w-4 text-zinc-950 dark:text-zinc-100" />
-                    </div>
-                    <span className="text-sm font-black text-zinc-950 dark:text-zinc-100 uppercase">
-                      {node.label}
-                    </span>
+                  <div>
+                    <div className="font-black text-sm uppercase">{node.label}</div>
+                    <div className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">ID: {node.id}</div>
                   </div>
-                  <span className="text-[11px] text-zinc-500 font-bold bg-zinc-100 dark:bg-zinc-900 px-2 py-1 border-2 border-zinc-200 dark:border-zinc-800 rounded-md">
-                    X:{node.x} Y:{node.y}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
-      </CardContent>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
-      <div className="relative z-10 p-5 border-t-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex flex-col sm:flex-row gap-4 items-center shrink-0">
-        <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
-          <div className="w-10 h-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center shrink-0">
-            <Users className="h-5 w-5 text-zinc-950 dark:text-zinc-100" />
+        {/* Column 3: Staff & Dispatch */}
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
+          <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
+            <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
+              <Users className="h-4 w-4" /> Step 3: Technician
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1 p-4 overflow-y-auto space-y-2 pb-24">
+            {staff.map((s) => (
+              <div
+                key={s.id}
+                onClick={() => setSelectedStaffId(s.id)}
+                className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  selectedStaffId === s.id
+                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400"
+                    : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <User className="h-5 w-5 opacity-70" />
+                <span className="font-black text-sm uppercase break-all">{s.name}</span>
+              </div>
+            ))}
+          </CardContent>
+          
+          {/* Sticky Summary / Action Footer */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-zinc-50 dark:bg-zinc-900 border-t-2 border-zinc-950 dark:border-zinc-800">
+            <Button
+              onClick={handleAssign}
+              disabled={selectedNodes.size === 0 || !selectedStaffId || createTasksMutation.isPending}
+              className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black h-12 tracking-widest uppercase text-xs shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)]"
+            >
+              {createTasksMutation.isPending ? "Dispatching..." : `Create ${selectedNodes.size} Task${selectedNodes.size !== 1 ? 's' : ''}`}
+            </Button>
           </div>
-          <Select>
-            <SelectTrigger className="w-full bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 font-bold text-sm dark:shadow-none rounded-lg h-10">
-              <SelectValue placeholder="Assign Technician..." />
-            </SelectTrigger>
-            <SelectContent className="border-2 border-zinc-950 font-bold">
-              {staff.map((s) => (
-                <SelectItem key={s.id} value={s.id} className="font-bold">
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button
-          disabled={selectedNodes.size === 0}
-          className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
-        >
-          <Send className="h-4 w-4 mr-2" />
-          Create Tasks ({selectedNodes.size})
-        </Button>
+        </Card>
       </div>
-    </Card>
+    </div>
   );
 }

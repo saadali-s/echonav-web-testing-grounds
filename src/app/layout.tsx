@@ -4,6 +4,7 @@ import "./globals.css";
 
 // Providers
 import { AuthProvider } from "@/components/layout/auth-provider";
+import { QueryProvider } from "@/components/layout/query-provider"; // <-- NEW IMPORT
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
@@ -35,17 +36,20 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <SidebarProvider>
-              <Sidebar />
-              <div className="flex-1 flex flex-col min-w-0">
-                <Header />
-                <main className="flex-1 overflow-y-auto p-6 md:p-8">
-                  {children}
-                </main>
-              </div>
-            </SidebarProvider>
-          </AuthProvider>
+          {/* --- INJECT THE QUERY PROVIDER HERE --- */}
+          <QueryProvider>
+            <AuthProvider>
+              <SidebarProvider>
+                <Sidebar />
+                <div className="flex-1 flex flex-col min-w-0">
+                  <Header />
+                  <main className="flex-1 overflow-y-auto p-6 md:p-8">
+                    {children}
+                  </main>
+                </div>
+              </SidebarProvider>
+            </AuthProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

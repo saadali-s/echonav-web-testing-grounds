@@ -1,30 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { ArrowRight, Layers, Map, Ruler, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { 
-  Layers, 
-  Map, 
-  Plus, 
-  ArrowRight, 
-  UploadCloud, 
-  FileType2, 
-  Trash2 
-} from "lucide-react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,12 +15,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-export interface BuildingData {
-  id: string;
-  name: string;
-  address: string;
-}
+import { queryKeys } from "@/hooks/api/queryKeys";
+import { useDeleteFloorPlan, useGetFloorPlans } from "@/hooks/api/useMapStudio";
+import { useQueryClient } from "@tanstack/react-query";
+import { CreateFloorPlan } from "./CreateFloorPlan";
+
+const FLOORS_PER_PAGE = 6;
 
 export interface FloorData {
   id: string;
@@ -49,173 +31,137 @@ export interface FloorData {
   nodes: number;
   edges: number;
   status: "Active" | "Processing" | "Error";
+  scale: number | null; 
 }
 
-const initialFloors: FloorData[] = [
-  { id: "floor-1", name: "Ground Floor", nodes: 156, edges: 210, status: "Active" },
-  { id: "floor-2", name: "Floor 2", nodes: 42, edges: 68, status: "Active" },
-];
+export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
+  const queryClient = useQueryClient();
+  const buildingIdNum = Number(buildingId);
+  const [currentPage, setCurrentPage] = useState(1);
 
-export function BuildingMapsComposer({ building }: { building: BuildingData }) {
-  const [floors, setFloors] = useState<FloorData[]>(initialFloors);
-  const [newFloorLabel, setNewFloorLabel] = useState("");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { data: floorPlansDto, isLoading, isError } = useGetFloorPlans(buildingIdNum);
+  const deleteMutation = useDeleteFloorPlan();
 
-  // --- Handlers ---
-  const handleAddFloor = () => {
-    if (!newFloorLabel.trim()) return;
+  const mappedFloors: FloorData[] = (floorPlansDto || []).map((fp) => ({
+    id: String(fp.id || ""),
+    name: fp.name || "Unnamed Floor",
+    nodes: 0, 
+    edges: 0,
+    status: "Active",
+    scale: fp.scale ?? null,
+  }));
 
-    const newFloor: FloorData = {
-      id: `floor-${Math.random().toString(36).substr(2, 9)}`,
-      name: newFloorLabel,
-      nodes: 0,
-      edges: 0,
-      status: "Processing",
-    };
+  const totalPages = Math.max(1, Math.ceil(mappedFloors.length / FLOORS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * FLOORS_PER_PAGE;
+  const paginatedFloors = mappedFloors.slice(startIndex, startIndex + FLOORS_PER_PAGE);
 
-    setFloors((prev) => [...prev, newFloor]);
-    setNewFloorLabel("");
-    setIsAddDialogOpen(false);
+  const handleUploadSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.floorPlans(buildingIdNum) });
+    setCurrentPage(1); 
   };
 
-  const handleDeleteFloor = (id: string) => {
-    setFloors((prev) => prev.filter((f) => f.id !== id));
+  const handleDeleteFloor = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync({ floorPlanId: Number(id) });
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+    }
   };
 
   return (
     <div className="space-y-8">
-      {/* Sticky Header Section */}
       <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-zinc-950 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5 mb-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Map className="h-5 w-5 text-zinc-500" />
             <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
-              {building?.name || "Building Detail"}
+              Building Directory
             </h1>
           </div>
           <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">
-            Manage individual floor plans and maps for this location.
+            Manage individual floor plans and maps for location #{buildingId}.
           </p>
         </div>
 
         <div className="flex items-center gap-4">
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
-                <Plus className="h-4 w-4 mr-2" />
-                ADD NEW MAP
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden">
-              <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
-                <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">
-                  Add Floor Plan
-                </DialogTitle>
-                <DialogDescription className="font-bold text-zinc-500 text-xs mt-1">
-                  Upload a floor plan specific to {building?.name || "this building"}.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid gap-6 p-6">
-                <div className="grid gap-2">
-                  <Label htmlFor="floor-label" className="font-black uppercase text-[11px] tracking-wider text-zinc-600 dark:text-zinc-400">
-                    Floor Label
-                  </Label>
-                  <Input
-                    id="floor-label"
-                    value={newFloorLabel}
-                    onChange={(e) => setNewFloorLabel(e.target.value)}
-                    placeholder="e.g., Ground Floor"
-                    className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium"
-                  />
-                </div>
-
-                <div className="border-2 border-dashed border-zinc-950 dark:border-zinc-700 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-900 group cursor-pointer">
-                  <div className="h-12 w-12 rounded-lg border-2 border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
-                    <UploadCloud className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
-                  </div>
-                  <p className="text-sm font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">Upload or drag and drop</p>
-                  <p className="text-xs font-bold text-zinc-500 mt-1">.DWG, .PDF, or High-Res .PNG</p>
-                </div>
-              </div>
-
-              <DialogFooter className="p-6 pt-0 border-t-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 mt-auto flex-row justify-end gap-3 sm:gap-0">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
-                  Cancel
-                </Button>
-                <Button onClick={handleAddFloor} className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
-                  Upload Floor Plan
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <CreateFloorPlan buildingId={buildingIdNum} onUploadSuccess={handleUploadSuccess} />
         </div>
       </div>
 
-      {/* Grid of Floor Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-        {floors.map((floor) => (
-          <Card key={floor.id} className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group">
-            <CardContent className="p-6 flex items-center justify-between">
-              {/* Left Side: Icon and Info */}
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex items-center justify-center border-2 border-zinc-950 dark:border-zinc-800">
-                  <Layers className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">{floor.name}</h3>
-                  <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
-                    {floor.nodes} Nodes | {floor.edges} Edges
-                  </p>
-                </div>
-              </div>
+      {isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+          {[1, 2].map((skeleton) => (
+            <div key={skeleton} className="h-32 rounded-xl border-2 border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 animate-pulse" />
+          ))}
+        </div>
+      )}
 
-              {/* Right Side: Action Buttons */}
-              <div className="flex items-center gap-3">
-                {/* Delete Confirmation */}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="h-10 w-10 p-0 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-y-0.5 active:shadow-none"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="font-black uppercase tracking-tight text-zinc-950 dark:text-zinc-100">
-                        Remove Floor Plan?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="font-bold text-zinc-500">
-                        This will delete <span className="text-zinc-950 dark:text-zinc-100 underline decoration-2">{floor.name}</span> and all its vector routing data. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="gap-2 sm:gap-0">
-                      <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
-                        Cancel
-                      </AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={() => handleDeleteFloor(floor.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]"
-                      >
-                        Delete Floor
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+      {isError && (
+        <div className="p-6 text-center border-2 border-red-500 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 rounded-xl font-bold uppercase tracking-wider text-sm">
+          Failed to load floor plans. Please check your connection.
+        </div>
+      )}
 
-                {/* Edit Canvas Link */}
-                <Button asChild variant="outline" className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all active:translate-y-0.5 active:shadow-none">
-                  <Link href={`/map-studio/${building?.id || 'unknown'}/${floor.id}`}>
-                    Edit Canvas <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {!isLoading && !isError && mappedFloors.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 mt-8">
+          <div className="h-16 w-16 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+            <Layers className="h-8 w-8 text-zinc-400 dark:text-zinc-600" />
+          </div>
+          <h3 className="text-lg font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">No Floors Found</h3>
+          <p className="text-sm font-bold text-zinc-500 mt-2 max-w-md">This building does not have any architectural maps registered yet.</p>
+        </div>
+      )}
+
+      {!isLoading && !isError && paginatedFloors.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+          {paginatedFloors.map((floor) => (
+            <Card key={floor.id} className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] bg-white dark:bg-zinc-950 group">
+              <CardContent className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex items-center justify-center border-2 border-zinc-950 dark:border-zinc-800">
+                    <Layers className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">{floor.name}</h3>
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
+                      0 Nodes | 0 Edges
+                    </p>
+                    <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${floor.scale ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+                      <Ruler className="h-3 w-3" />
+                      {floor.scale ? `Scale: ${floor.scale.toFixed(4)}` : "Uncalibrated Scale"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="h-10 w-10 p-0 border-2 border-zinc-950 text-zinc-500 hover:text-red-600 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="border-2 border-zinc-950 rounded-xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="font-black uppercase">Remove Floor Plan?</AlertDialogTitle>
+                        <AlertDialogDescription className="font-bold">This cannot be undone.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-2 border-zinc-950">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteFloor(floor.id)} className="bg-red-600 border-2 border-zinc-950">Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <Button asChild variant="outline" className="border-2 border-zinc-950 font-bold uppercase text-[11px] h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+                    <Link href={`/map-studio/${buildingId}/${floor.id}`}>Edit Canvas <ArrowRight className="w-4 h-4 ml-2" /></Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

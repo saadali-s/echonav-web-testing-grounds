@@ -1,0 +1,133 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { mapStudioActions } from "@/lib/actions/mapStudio";
+import { FileText, Plus, UploadCloud } from "lucide-react";
+import { useRef, useState } from "react";
+
+interface CreateFloorPlanProps {
+  buildingId: number;
+  onUploadSuccess: () => void;
+}
+
+export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlanProps) {
+  const [open, setOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const [newFloorLabel, setNewFloorLabel] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!newFloorLabel.trim() || !selectedFile) {
+      alert("Please provide both a label and a file.");
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      // Use the raw Axios action to bypass Kubb typing errors
+      await mapStudioActions.uploadFloorPlan(buildingId, newFloorLabel, selectedFile);
+      
+      onUploadSuccess();
+      setOpen(false);
+      setNewFloorLabel("");
+      setSelectedFile(null);
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) { setNewFloorLabel(""); setSelectedFile(null); }
+    }}>
+      <DialogTrigger asChild>
+        <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
+          <Plus className="h-4 w-4 mr-2" />
+          ADD NEW MAP
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden">
+        <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
+          <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">
+            Add Floor Plan
+          </DialogTitle>
+          <DialogDescription className="font-bold text-zinc-500 text-xs mt-1">
+            Upload a structural map specific to this building.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-6 p-6">
+          <div className="grid gap-2">
+            <Label htmlFor="floor-label" className="font-black uppercase text-[11px] tracking-wider text-zinc-600 dark:text-zinc-400">
+              Floor Label
+            </Label>
+            <Input
+              id="floor-label"
+              value={newFloorLabel}
+              onChange={(e) => setNewFloorLabel(e.target.value)}
+              placeholder="e.g., Ground Floor"
+              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium"
+            />
+          </div>
+
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer group ${selectedFile ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' : 'border-zinc-950 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-900'}`}
+          >
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              className="hidden" 
+              accept=".dwg,.svg,.pdf,.png"
+              onChange={handleFileSelect}
+            />
+            <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>
+              {selectedFile ? <FileText className="h-6 w-6" /> : <UploadCloud className="h-6 w-6" />}
+            </div>
+            <p className="text-sm font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
+              {selectedFile ? 'File Selected' : 'Upload or drag and drop'}
+            </p>
+            <p className="text-xs font-bold mt-1 text-zinc-500">
+              {selectedFile ? selectedFile.name : '.DWG, .SVG, .PDF, or High-Res .PNG'}
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="p-6 pt-0 border-t-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 mt-auto flex-row justify-end gap-3 sm:gap-0">
+          <Button variant="outline" onClick={() => setOpen(false)} className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUpload} 
+            disabled={isUploading || !newFloorLabel.trim() || !selectedFile}
+            className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50"
+          >
+            {isUploading ? 'Uploading...' : 'Upload Floor Plan'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

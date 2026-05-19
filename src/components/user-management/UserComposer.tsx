@@ -1,78 +1,60 @@
 "use client";
 
-import { useState } from "react";
-import { ActiveUserList, ActiveUsers } from "./ActiveUserList";
-import { InvitedUsersList, InvitedUsers } from "./InvitedUserList";
-import { InviteNewUser } from "./InviteNewUser";
-import { Button } from "../ui/button";
+import { useAuth } from "@/components/layout/auth-provider";
+import { useDeleteUser, useGetPendingUserPins, useGetUsers } from "@/hooks/api/useUsers";
 import { KeyRound } from "lucide-react";
-
-const mockActive: ActiveUsers[] = [
-  {
-    id: "st1",
-    name: "Elena Rostova",
-    email: "ElenaRostova@test.edu",
-    pin: "23445",
-    generatedBy: "admin@institution.edu",
-    joinedDate: "Jan 12, 2025",
-  },
-  {
-    id: "st2",
-    name: "Julian Vance",
-    email: "JulianVance@test.edu",
-    pin: "67676",
-    generatedBy: "admin@institution.edu",
-    joinedDate: "Feb 03, 2023",
-  },
-  {
-    id: "st3",
-    name: "Chloe Sterling",
-    email: "ChloeSterling@test.edu",
-    pin: "34596",
-    generatedBy: "s.jenkins@institution.edu",
-    joinedDate: "June 05, 2024",
-  },
-];
-
-const mockInvited: InvitedUsers[] = [
-  {
-    id: "inv1",
-    name: "Marcus Thorne",
-    email: "MarcusThorne@test.edu",
-    pin: "88990",
-    generatedBy: "admin@institution.edu",
-    invitedDate: "April 17, 2023",
-  },
-  {
-    id: "inv2",
-    name: "Sarah Lin",
-    email: "SarahLin@test.edu",
-    pin: "11223",
-    generatedBy: "s.jenkins@institution.edu",
-    invitedDate: "October 03, 2024",
-  },
-];
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { ActiveUserList, ActiveUsers } from "./ActiveUserList";
+import { InvitedUsers, InvitedUsersList } from "./InvitedUserList";
+import { InviteNewUser } from "./InviteNewUser";
 
 export function UserComposer() {
-  const [activeUsers, setActiveUsers] = useState<ActiveUsers[]>(mockActive);
-  const [invitedUsers, setInvitedUsers] = useState<InvitedUsers[]>(mockInvited);
+  const { activeOrgId } = useAuth();
+  const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
+
+  // Fetch the real data from Spring Boot
+  const { data: usersDtoList, isLoading, isError } = useGetUsers(orgIdNum);
+  const { data: pinsDtoList, isLoading: pinsLoading } = useGetPendingUserPins(orgIdNum);
+  const deleteUserMutation = useDeleteUser(orgIdNum);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  const handleDeleteActiveUser = (id: string) => {
-    setActiveUsers((currentUsers) =>
-      currentUsers.filter((user) => user.id !== id),
-    );
+  // Map the backend DTO to the frontend UI interface
+  const activeUsers: ActiveUsers[] = (usersDtoList || []).map((user) => ({
+    id: String(user.id),
+    name: `${user.firstName} ${user.lastName}`.trim(),
+    email: user.email,
+    pin: "******", // Concealed for security after generation
+    generatedBy: "System Admin",
+    joinedDate: "Recently",
+  }));
+
+  // Empty placeholder. Concierge pairing pins are handled directly in the modal flow.
+  const invitedUsers: InvitedUsers[] = (pinsDtoList || []).map((pin) => ({
+    id: String(pin.id),
+    name: `${pin.firstName} ${pin.lastName}`.trim(),
+    email: pin.email,
+    pin: pin.pinCode,
+    generatedBy: pin.generatedBy,
+    invitedDate: new Date(pin.invitedDate).toLocaleDateString(),
+  }));
+
+  const handleDeleteActiveUser = async (id: string) => {
+    try {
+      await deleteUserMutation.mutateAsync(Number(id));
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+    }
   };
 
   const handleDeleteInvitedUser = (id: string) => {
-    setInvitedUsers((currentUsers) =>
-      currentUsers.filter((user) => user.id !== id),
-    );
+    console.log("Invited user deletion placeholder", id);
   };
 
   const handleAddInvitedUser = (newUser: InvitedUsers) => {
-    setInvitedUsers([newUser, ...invitedUsers]);
+    // This will be deprecated in the next step when we wire the modal directly to the backend
+    console.log("New user invited:", newUser);
   };
 
   return (
@@ -97,22 +79,37 @@ export function UserComposer() {
           </Button>
         </div>
 
-        <div className="max-w-full space-y-8">
-          <ActiveUserList
-            users={activeUsers}
-            onDelete={handleDeleteActiveUser}
-          />
-          <InvitedUsersList
-            users={invitedUsers}
-            onDelete={handleDeleteInvitedUser}
-          />
-        </div>
+        {isLoading && (
+          <div className="p-8 text-center text-zinc-500 font-bold animate-pulse uppercase tracking-widest border-2 border-dashed border-zinc-300 rounded-xl">
+            Loading User Directory...
+          </div>
+        )}
+
+        {isError && (
+          <div className="p-8 text-center text-red-700 bg-red-50 border-2 border-red-500 font-bold uppercase tracking-widest rounded-xl">
+            Failed to load user directory. Please check your connection.
+          </div>
+        )}
+
+        {!isLoading && !isError && (
+          <div className="max-w-full space-y-8">
+            <ActiveUserList
+              users={activeUsers}
+              onDelete={handleDeleteActiveUser}
+            />
+            <InvitedUsersList
+              users={invitedUsers}
+              onDelete={handleDeleteInvitedUser}
+            />
+          </div>
+        )}
       </div>
 
       <InviteNewUser
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
         onSendInvite={handleAddInvitedUser}
+        pairingPin="" 
       />
     </div>
   );

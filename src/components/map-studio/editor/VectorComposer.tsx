@@ -1,199 +1,159 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { InspectorPanel, SelectionType } from "./InspectorPanel";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { InspectorPanel } from "./InspectorPanel";
 import { BlueprintLayer } from "./vector/BlueprintLayer";
 import { EdgeLayer } from "./vector/EdgeLayer";
 import { HistoryControls } from "./vector/HistoryControls";
 import { NodeLayer } from "./vector/NodeLayer";
 import { StatusBar } from "./vector/StatusBar";
-import { EdgeData, NodeData, VectorComposerProps } from "./vector/types";
+import { VectorComposerProps } from "./vector/types";
 import { ZoomControls } from "./vector/ZoomControls";
 
-export function VectorComposer({ activeTool }: VectorComposerProps) {
+import { Ruler } from "lucide-react";
+import { useEditorState } from "./hooks/useEditorState";
+import { useHistory } from "./hooks/useHistory";
+import { useViewport } from "./hooks/useViewport";
+
+export function VectorComposer({ 
+  activeTool: externalActiveTool, imageUrl, onSaveDb, onUpdateScale, onCalculateRoute,
+  initialNodes = [], initialEdges = [], initialScale = ""
+}: VectorComposerProps) {
+  
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasHydrated = useRef(false);
+  
+  // Custom Hooks
+  const { pan, setPan, scale, adjustZoomCentered, resetZoom, getLogicalCoords } = useViewport(containerRef);
+  const { nodes, edges, pushHistory, undo, redo, canUndo, canRedo, resetHistory } = useHistory(initialNodes, initialEdges);
+  const state = useEditorState(externalActiveTool);
 
-  const [history, setHistory] = useState<
-    { nodes: NodeData[]; edges: EdgeData[] }[]
-  >([{ nodes: [], edges: [] }]);
-  const [historyIndex, setHistoryIndex] = useState(0);
-  const [nodes, setNodes] = useState<NodeData[]>([]);
-  const [edges, setEdges] = useState<EdgeData[]>([]);
+  const isUncalibrated = initialScale === "" || initialScale === "0.05";
+  const parsedScale = parseFloat(initialScale);
 
-  const [selection, setSelection] = useState<SelectionType>(null);
-  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
-  const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
-
-  const [pan, setPan] = useState({ x: 100, y: 100 });
-  const [scale, setScale] = useState(1);
-  const [floorPlanScale, setFloorPlanScale] = useState(""); 
-
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const [dragStartPos, setDragStartPos] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [dragStartNodes, setDragStartNodes] = useState<
-    { id: string; startX: number; startY: number }[] | null
-  >(null);
-  const [draftEdge, setDraftEdge] = useState<{
-    source: string;
-    currentX: number;
-    currentY: number;
-  } | null>(null);
-  const [selectionBox, setSelectionBox] = useState<{
-    startX: number;
-    startY: number;
-    currentX: number;
-    currentY: number;
-  } | null>(null);
-
-  const panRef = useRef(pan);
-  const scaleRef = useRef(scale);
+  // Enforce Scale Tool Lockout
   useEffect(() => {
-    panRef.current = pan;
-  }, [pan]);
-  useEffect(() => {
-    scaleRef.current = scale;
-  }, [scale]);
-
-  useEffect(() => {
-    const current = history[historyIndex];
-    if (current) {
-      setNodes(current.nodes);
-      setEdges(current.edges);
+    if (isUncalibrated && state.activeTool !== "SCALE") {
+        state.setActiveTool("SCALE");
+    } else if (!isUncalibrated && externalActiveTool !== state.activeTool) {
+        state.setActiveTool(externalActiveTool);
     }
-  }, [historyIndex, history]);
+  }, [isUncalibrated, externalActiveTool, state.activeTool, state]);
 
-  const pushHistory = (newNodes: NodeData[], newEdges: EdgeData[]) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ nodes: newNodes, edges: newEdges });
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  };
+  // Handle Tool Changes
+  useEffect(() => {
+    if (state.activeTool !== "SCALE") state.clearCalibration();
+    if (state.activeTool !== "ROUTE") state.clearRouting();
+  }, [state.activeTool, state]); 
 
-  const undo = () => {
-    if (historyIndex > 0) setHistoryIndex(historyIndex - 1);
-  };
-  const redo = () => {
-    if (historyIndex < history.length - 1) setHistoryIndex(historyIndex + 1);
-  };
+  // STRICT HYDRATION
+  useEffect(() => {
+    if (initialNodes.length > 0 && !hasHydrated.current) {
+      resetHistory(initialNodes, initialEdges);
+      state.clearSelection();
+      hasHydrated.current = true;
+    }
+  }, [initialNodes, initialEdges, resetHistory, state]);
 
-  const getLogicalCoords = (clientX: number, clientY: number) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
-    return {
-      x: (clientX - rect.left - pan.x) / scale,
-      y: (clientY - rect.top - pan.y) / scale,
-    };
-  };
+  // Distance Calculations
+  const calibrationPixelDistance = useMemo(() => {
+    if (state.calibrationStart && state.calibrationEnd) {
+      return Math.hypot(state.calibrationEnd.x - state.calibrationStart.x, state.calibrationEnd.y - state.calibrationStart.y);
+    }
+    return null;
+  }, [state.calibrationStart, state.calibrationEnd]);
 
-  const handleDeleteSelection = () => {
-    if (selection === "NODE" && selectedNodeIds.length > 0) {
-      const newNodes = nodes.filter((n) => !selectedNodeIds.includes(n.id));
-      const newEdges = edges.filter(
-        (e) =>
-          !selectedNodeIds.includes(e.source) &&
-          !selectedNodeIds.includes(e.target),
-      );
+  // FIXED: Realtime Inspector Math
+  const selectedEdgeDistance = useMemo(() => {
+    if (state.selection === "EDGE" && state.selectedEdgeIds.length === 1) {
+      const edge = edges.find(e => e.id === state.selectedEdgeIds[0]);
+      if (edge) {
+        const s = nodes.find(n => n.id === edge.source);
+        const t = nodes.find(n => n.id === edge.target);
+        if (s && t) {
+          const pixels = Math.hypot(t.x - s.x, t.y - s.y);
+          return isNaN(parsedScale) ? null : pixels * parsedScale;
+        }
+      }
+    }
+    return null;
+  }, [state.selection, state.selectedEdgeIds, edges, nodes, parsedScale]);
+
+  // Handlers
+  const handleDeleteSelection = useCallback(() => {
+    if (state.selection === "NODE" && state.selectedNodeIds.length > 0) {
+      const newNodes = nodes.filter((n) => !state.selectedNodeIds.includes(n.id));
+      const newEdges = edges.filter((e) => !state.selectedNodeIds.includes(e.source) && !state.selectedNodeIds.includes(e.target));
       pushHistory(newNodes, newEdges);
-      setSelectedNodeIds([]);
-      setSelection(null);
-    } else if (selection === "EDGE" && selectedEdgeIds.length > 0) {
-      const newEdges = edges.filter((e) => !selectedEdgeIds.includes(e.id));
+      state.clearSelection();
+    } else if (state.selection === "EDGE" && state.selectedEdgeIds.length > 0) {
+      const newEdges = edges.filter((e) => !state.selectedEdgeIds.includes(e.id));
       pushHistory(nodes, newEdges);
-      setSelectedEdgeIds([]);
-      setSelection(null);
+      state.clearSelection();
     }
-  };
+  }, [state, nodes, edges, pushHistory]);
 
+  // Keyboard Listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" && e.target === document.body) {
         e.preventDefault();
-        setIsSpacePressed(true);
+        state.setIsSpacePressed(true);
       }
-      if (e.code === "Delete" || e.code === "Backspace") {
-        handleDeleteSelection();
-      }
+      if (e.code === "Delete" || e.code === "Backspace") handleDeleteSelection();
+      
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault();
-        e.shiftKey ? redo() : undo();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
       }
     };
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") setIsSpacePressed(false);
+      if (e.code === "Space") state.setIsSpacePressed(false);
     };
+    
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [
-    nodes,
-    edges,
-    selectedNodeIds,
-    selectedEdgeIds,
-    selection,
-    historyIndex,
-    history,
-  ]);
+  }, [handleDeleteSelection, undo, redo, state]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      if (e.ctrlKey || e.metaKey) {
-        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(
-          0.1,
-          Math.min(scaleRef.current * zoomFactor, 5),
-        );
-        const rect = container.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        setScale(newScale);
-        setPan({
-          x: x - (x - panRef.current.x) * (newScale / scaleRef.current),
-          y: y - (y - panRef.current.y) * (newScale / scaleRef.current),
-        });
-      } else {
-        setPan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
-      }
-    };
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    return () => container.removeEventListener("wheel", handleWheel);
-  }, []);
-
+  // Pointer Events
   const handlePointerDown = (e: React.PointerEvent) => {
     const logical = getLogicalCoords(e.clientX, e.clientY);
 
     if (e.button === 2) {
-      setSelectionBox({
-        startX: logical.x,
-        startY: logical.y,
-        currentX: logical.x,
-        currentY: logical.y,
-      });
+      state.setSelectionBox({ startX: logical.x, startY: logical.y, currentX: logical.x, currentY: logical.y });
       e.currentTarget.setPointerCapture(e.pointerId);
       return;
     }
 
-    if (
-      e.button === 1 ||
-      isSpacePressed ||
-      (activeTool === "SELECT" && e.shiftKey) ||
-      activeTool === "PAN"
-    ) {
-      setIsPanning(true);
-      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    if (e.button === 1 || state.isSpacePressed || (state.activeTool === "SELECT" && e.shiftKey) || state.activeTool === "PAN") {
+      state.setIsPanning(true);
+      state.setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
       e.currentTarget.setPointerCapture(e.pointerId);
       return;
     }
+
+    if (state.activeTool === "SCALE") {
+      if (!state.calibrationStart || (state.calibrationStart && state.calibrationEnd)) {
+        state.setCalibrationStart({ x: logical.x, y: logical.y });
+        state.setCalibrationEnd(null);
+        state.setCalibrationCurrent({ x: logical.x, y: logical.y });
+      } else if (state.calibrationStart && !state.calibrationEnd) {
+        state.setCalibrationEnd({ x: logical.x, y: logical.y });
+        state.setCalibrationCurrent(null);
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if (isUncalibrated) return;
 
     const clickedNode = nodes.find((n) => {
       const dx = n.x - logical.x;
@@ -201,111 +161,103 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
       return Math.sqrt(dx * dx + dy * dy) < 24 / scale;
     });
 
-    if (clickedNode) {
-      if (activeTool === "SELECT") {
-        let newSelection = [clickedNode.id];
-        setSelectedNodeIds(newSelection);
-        setSelectedEdgeIds([]);
-        setSelection("NODE");
-        setDragStartNodes(
-          nodes
-            .filter((n) => newSelection.includes(n.id))
-            .map((n) => ({ id: n.id, startX: n.x, startY: n.y })),
-        );
-        setDragStartPos({ x: logical.x, y: logical.y });
-      } else if (activeTool === "EDGE") {
-        setDraftEdge({
-          source: clickedNode.id,
-          currentX: clickedNode.x,
-          currentY: clickedNode.y,
-        });
-      } else if (activeTool === "HAZARD") {
-        pushHistory(
-          nodes.map((n) =>
-            n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n,
-          ),
-          edges,
-        );
+    if (state.activeTool === "ROUTE") {
+      if (clickedNode) {
+        if (!state.routeStartNode || (state.routeStartNode && state.routeEndNode)) {
+          state.setRouteStartNode(clickedNode.id);
+          state.setRouteEndNode(null);
+          state.setCalculatedRoute(null);
+        } else if (state.routeStartNode && !state.routeEndNode && state.routeStartNode !== clickedNode.id) {
+          state.setRouteEndNode(clickedNode.id);
+          if (onCalculateRoute) {
+            state.setIsCalculatingRoute(true);
+            onCalculateRoute(state.routeStartNode, clickedNode.id)
+              .then(res => state.setCalculatedRoute(res))
+              .catch(err => console.error("Routing error:", err))
+              .finally(() => state.setIsCalculatingRoute(false));
+          }
+        }
       }
       e.currentTarget.setPointerCapture(e.pointerId);
       return;
     }
 
-    if (activeTool === "NODE") {
-      const newNode = {
-        id: `n${Date.now()}`,
-        x: logical.x,
-        y: logical.y,
-        label: `Node ${nodes.length + 1}`,
-      };
+    if (clickedNode) {
+      if (state.activeTool === "SELECT") {
+        const newSelection = [clickedNode.id];
+        state.setSelectedNodeIds(newSelection);
+        state.setSelectedEdgeIds([]);
+        state.setSelection("NODE");
+        state.setDragStartNodes(nodes.filter((n) => newSelection.includes(n.id)).map((n) => ({ id: n.id, startX: n.x, startY: n.y })));
+        state.setActiveDragNodes(nodes); 
+        state.setDragStartPos({ x: logical.x, y: logical.y });
+      } else if (state.activeTool === "EDGE") {
+        state.setDraftEdge({ source: clickedNode.id, currentX: clickedNode.x, currentY: clickedNode.y });
+      } else if (state.activeTool === "HAZARD") {
+        pushHistory(nodes.map((n) => (n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n)), edges);
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if (state.activeTool === "NODE") {
+      const newNode = { id: `n${Date.now()}`, x: logical.x, y: logical.y, label: `Node ${nodes.length + 1}` };
       pushHistory([...nodes, newNode], edges);
-      setSelectedNodeIds([newNode.id]);
-      setSelectedEdgeIds([]);
-      setSelection("NODE");
-    } else if (activeTool === "SELECT") {
-      setSelectedNodeIds([]);
-      setSelectedEdgeIds([]);
-      setSelection(null);
+      state.setSelectedNodeIds([newNode.id]);
+      state.setSelectedEdgeIds([]);
+      state.setSelection("NODE");
+    } else if (state.activeTool === "SELECT") {
+      state.clearSelection();
     }
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
     const logical = getLogicalCoords(e.clientX, e.clientY);
-    if (isPanning)
-      return setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
-    if (selectionBox)
-      return setSelectionBox({
-        ...selectionBox,
-        currentX: logical.x,
-        currentY: logical.y,
-      });
+    if (state.isPanning) return setPan({ x: e.clientX - state.panStart.x, y: e.clientY - state.panStart.y });
+    if (state.selectionBox) return state.setSelectionBox({ ...state.selectionBox, currentX: logical.x, currentY: logical.y });
+    
+    if (state.activeTool === "SCALE" && state.calibrationStart && !state.calibrationEnd) {
+      state.setCalibrationCurrent({ x: logical.x, y: logical.y });
+    }
 
-    if (dragStartNodes && dragStartPos) {
-      const deltaX = logical.x - dragStartPos.x;
-      const deltaY = logical.y - dragStartPos.y;
-      setNodes(
+    if (state.dragStartNodes && state.dragStartPos) {
+      const deltaX = logical.x - state.dragStartPos.x;
+      const deltaY = logical.y - state.dragStartPos.y;
+      state.setActiveDragNodes(
         nodes.map((n) => {
-          const startNode = dragStartNodes.find((d) => d.id === n.id);
-          return startNode
-            ? {
-                ...n,
-                x: startNode.startX + deltaX,
-                y: startNode.startY + deltaY,
-              }
-            : n;
-        }),
+          const startNode = state.dragStartNodes?.find((d) => d.id === n.id);
+          return startNode ? { ...n, x: startNode.startX + deltaX, y: startNode.startY + deltaY } : n;
+        })
       );
     }
-    if (draftEdge)
-      setDraftEdge({ ...draftEdge, currentX: logical.x, currentY: logical.y });
+    if (state.draftEdge) state.setDraftEdge({ ...state.draftEdge, currentX: logical.x, currentY: logical.y });
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    setIsPanning(false);
-
-    if (selectionBox) {
-      const minX = Math.min(selectionBox.startX, selectionBox.currentX);
-      const maxX = Math.max(selectionBox.startX, selectionBox.currentX);
-      const minY = Math.min(selectionBox.startY, selectionBox.currentY);
-      const maxY = Math.max(selectionBox.startY, selectionBox.currentY);
-      const insideNodes = nodes
-        .filter((n) => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY)
-        .map((n) => n.id);
-      setSelectedNodeIds(insideNodes);
-      setSelectedEdgeIds([]);
-      setSelection(insideNodes.length === 1 ? "NODE" : null);
-      setSelectionBox(null);
+    state.setIsPanning(false);
+    if (state.selectionBox) {
+      const minX = Math.min(state.selectionBox.startX, state.selectionBox.currentX);
+      const maxX = Math.max(state.selectionBox.startX, state.selectionBox.currentX);
+      const minY = Math.min(state.selectionBox.startY, state.selectionBox.currentY);
+      const maxY = Math.max(state.selectionBox.startY, state.selectionBox.currentY);
+      const insideNodes = nodes.filter((n) => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY).map((n) => n.id);
+      
+      state.setSelectedNodeIds(insideNodes);
+      state.setSelectedEdgeIds([]);
+      state.setSelection(insideNodes.length > 0 ? "NODE" : null);
+      state.setSelectionBox(null);
       return;
     }
 
-    if (dragStartNodes) {
-      pushHistory(nodes, edges);
-      setDragStartNodes(null);
-      setDragStartPos(null);
+    if (state.dragStartNodes && state.activeDragNodes) {
+      pushHistory(state.activeDragNodes, edges);
+      state.setDragStartNodes(null);
+      state.setDragStartPos(null);
+      state.setActiveDragNodes(null);
     }
 
-    if (draftEdge) {
+    if (state.draftEdge) {
       const logical = getLogicalCoords(e.clientX, e.clientY);
       const dropTarget = nodes.find((n) => {
         const dx = n.x - logical.x;
@@ -313,61 +265,67 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
         return Math.sqrt(dx * dx + dy * dy) < 30 / scale;
       });
 
-      if (dropTarget && dropTarget.id !== draftEdge.source) {
-        const exists = edges.some(
-          (edge) =>
-            (edge.source === draftEdge.source &&
-              edge.target === dropTarget.id) ||
-            (edge.target === draftEdge.source && edge.source === dropTarget.id),
+      if (dropTarget && dropTarget.id !== state.draftEdge.source) {
+        const exists = edges.some((edge) => 
+          (edge.source === state.draftEdge?.source && edge.target === dropTarget.id) || 
+          (edge.target === state.draftEdge?.source && edge.source === dropTarget.id)
         );
         if (!exists) {
-          const newEdges = [
-            ...edges,
-            {
-              id: `e${Date.now()}`,
-              source: draftEdge.source,
-              target: dropTarget.id,
-            },
-          ];
+          const newEdges = [...edges, { id: `e${Date.now()}`, source: state.draftEdge.source, target: dropTarget.id }];
           pushHistory(nodes, newEdges);
-          setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
-          setSelectedNodeIds([]);
-          setSelection("EDGE");
+          state.setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
+          state.setSelectedNodeIds([]);
+          state.setSelection("EDGE");
         }
       }
-      setDraftEdge(null);
+      state.setDraftEdge(null);
     }
   };
 
   const handleEdgeClick = (e: React.PointerEvent, edgeId: string) => {
     e.stopPropagation();
-    if (activeTool === "HAZARD") {
-      pushHistory(
-        nodes,
-        edges.map((ed) =>
-          ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed,
-        ),
-      );
+    if (state.activeTool === "HAZARD") {
+      pushHistory(nodes, edges.map((ed) => (ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed)));
     } else {
-      setSelectedEdgeIds([edgeId]);
-      setSelectedNodeIds([]);
-      setSelection("EDGE");
+      state.setSelectedEdgeIds([edgeId]);
+      state.setSelectedNodeIds([]);
+      state.setSelection("EDGE");
     }
   };
 
-  const adjustZoomCentered = (factor: number) => {
-    const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const newScale = Math.max(0.1, Math.min(scale * factor, 5));
-    setPan({
-      x: rect.width / 2 - (rect.width / 2 - pan.x) * (newScale / scale),
-      y: rect.height / 2 - (rect.height / 2 - pan.y) * (newScale / scale),
-    });
-    setScale(newScale);
+  const handleSaveWrapper = async () => {
+    pushHistory(nodes, edges);
+    if (onSaveDb) {
+      try {
+        await onSaveDb(nodes, edges);
+      } catch (err) {
+        console.error("Save failed", err);
+      }
+    }
   };
 
+  const handleCalibrateWrapper = async (newScaleRatio: number) => {
+    if (onUpdateScale) {
+      try {
+        await onUpdateScale(newScaleRatio);
+      } catch (err) {
+        console.error("Scale update failed", err);
+      }
+    }
+    state.clearCalibration();
+  };
+
+  const displayNodes = state.activeDragNodes || nodes;
+
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 overflow-hidden relative">
+      {isUncalibrated && (
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-amber-950 px-6 py-3 rounded-xl border-2 border-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center gap-3 font-black tracking-wide uppercase text-xs animate-bounce pointer-events-none">
+           <Ruler className="h-5 w-5" />
+           Calibration Required: Draw a line between two known points to establish real-world scale.
+        </div>
+      )}
+
       <div
         ref={containerRef}
         className="flex-1 relative overflow-hidden bg-zinc-50 dark:bg-zinc-900 select-none outline-none"
@@ -382,64 +340,53 @@ export function VectorComposer({ activeTool }: VectorComposerProps) {
           backgroundPosition: `${pan.x}px ${pan.y}px`,
         }}
       >
-        <HistoryControls
-          undo={undo}
-          redo={redo}
-          canUndo={historyIndex > 0}
-          canRedo={historyIndex < history.length - 1}
-        />
-        <ZoomControls
-          scale={scale}
-          adjustZoomCentered={adjustZoomCentered}
-          resetZoom={() => {
-            setScale(1);
-            setPan({ x: 100, y: 100 });
-          }}
-        />
-        <StatusBar activeTool={activeTool} nodeCount={nodes.length} />
+        <HistoryControls undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo} />
+        <ZoomControls scale={scale} adjustZoomCentered={adjustZoomCentered} resetZoom={resetZoom} />
+        <StatusBar activeTool={state.activeTool} nodeCount={nodes.length} />
 
         <div
           className="absolute inset-0 origin-top-left pointer-events-none"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-          }}
+          style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }}
         >
-          <BlueprintLayer />
-          <EdgeLayer
-            nodes={nodes}
-            edges={edges}
-            selectedEdgeIds={selectedEdgeIds}
-            selection={selection}
-            draftEdge={draftEdge}
-            selectionBox={selectionBox}
-            scale={scale}
-            onEdgeClick={handleEdgeClick}
+          <BlueprintLayer imageUrl={imageUrl} />
+          <EdgeLayer 
+            nodes={displayNodes} 
+            edges={edges} 
+            selectedEdgeIds={state.selectedEdgeIds} 
+            selection={state.selection} 
+            draftEdge={state.draftEdge} 
+            selectionBox={state.selectionBox} 
+            scale={scale} 
+            floorPlanScale={parsedScale} // FIXED: Passed calculated scale to EdgeLayer
+            onEdgeClick={handleEdgeClick} 
+            calibrationStart={state.calibrationStart}
+            calibrationEnd={state.calibrationEnd}
+            calibrationCurrent={state.calibrationCurrent}
+            calculatedRoute={state.calculatedRoute}
           />
-          <NodeLayer nodes={nodes} selectedNodeIds={selectedNodeIds} />
+          <NodeLayer nodes={displayNodes} selectedNodeIds={state.selectedNodeIds} />
         </div>
       </div>
 
       <InspectorPanel
-        selectionType={selection}
-        activeTool={activeTool}
-        floorPlanScale={floorPlanScale}
-        selectedNode={
-          selectedNodeIds.length === 1
-            ? nodes.find((n) => n.id === selectedNodeIds[0])
-            : undefined
-        }
+        selectionType={state.selection}
+        activeTool={state.activeTool}
+        floorPlanScale={initialScale} 
+        selectedNode={state.selectedNodeIds.length === 1 ? nodes.find((n) => n.id === state.selectedNodeIds[0]) : undefined}
         updateNode={(updates) => {
-          if (selectedNodeIds.length === 1) {
-            setNodes(
-              nodes.map((n) =>
-                n.id === selectedNodeIds[0] ? { ...n, ...updates } : n,
-              ),
-            );
+          if (state.selectedNodeIds.length === 1) {
+             pushHistory(nodes.map((n) => n.id === state.selectedNodeIds[0] ? { ...n, ...updates } : n), edges);
           }
         }}
-        onSave={() => pushHistory(nodes, edges)}
+        onSave={handleSaveWrapper}
         onDelete={handleDeleteSelection}
-        onFloorPlanScaleChange={(newVal) => setFloorPlanScale(newVal)}
+        calibrationPixelDistance={calibrationPixelDistance}
+        onCalibrate={handleCalibrateWrapper}
+        edgeMeters={selectedEdgeDistance} // FIXED: Restored edge distance binding
+        routeStartNode={state.routeStartNode}
+        routeEndNode={state.routeEndNode}
+        calculatedRoute={state.calculatedRoute}
+        isCalculatingRoute={state.isCalculatingRoute}
       />
     </div>
   );

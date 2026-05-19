@@ -3,15 +3,16 @@
 import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import axios from "axios";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -22,16 +23,23 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
-    // Simulate network request
-    setTimeout(() => {
-      login(); // AuthProvider sets the cookie and routes to /dashboard
+    try {
+      // Trigger the real Spring Boot login flow
+      await login(email, password);
+    } catch (err: unknown) {
+      // Catch Spring Boot's custom ErrorResponse
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Unable to connect to the server. Please check your network.");
+      }
       setIsLoading(false);
-    }, 1200);
+    }
   };
 
   return (
@@ -94,7 +102,7 @@ export function LoginForm() {
               disabled={isLoading}
               className="mt-2 w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.98] transition-all"
             >
-              {isLoading ? "Logging in..." : "Log in"}
+              {isLoading ? "Authenticating..." : "Log in"}
             </Button>
           </CardFooter>
         </form>

@@ -11,16 +11,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User as UserIcon } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export function UserAccountNav() {
   const { user, logout } = useAuth();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Fixes the Hydration Mismatch AND satisfies the linter by making it asynchronous
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show a blank brutalist box for a split second while loading
+  if (!isMounted) {
+    return (
+      <Button
+        variant="ghost"
+        className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 overflow-hidden p-0"
+      >
+        <Avatar className="h-full w-full rounded-none">
+          <AvatarFallback className="bg-zinc-100 dark:bg-zinc-900"></AvatarFallback>
+        </Avatar>
+      </Button>
+    );
+  }
 
   const displayName = user?.user_metadata?.display_name || "Admin";
-  const userEmail = user?.email;
+  const userEmail = user?.email || "No email provided";
 
-  // Extract initials for the avatar fallback
+  // Extract initials safely
   const initials = displayName
     .split(" ")
     .map((n: string) => n[0])
@@ -87,7 +109,7 @@ export function UserAccountNav() {
           className="cursor-pointer font-bold rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 focus:bg-zinc-100 dark:focus:bg-zinc-800 p-3 transition-colors"
         >
           <Link href="#">
-            <User className="mr-3 h-4 w-4 text-zinc-500" />
+            <UserIcon className="mr-3 h-4 w-4 text-zinc-500" />
             <span>My Profile</span>
           </Link>
         </DropdownMenuItem>
@@ -97,7 +119,6 @@ export function UserAccountNav() {
         <DropdownMenuItem
           className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-500 dark:focus:bg-red-950/30 cursor-pointer font-bold rounded-lg p-3 transition-colors"
           onSelect={(e) => {
-            // PROPER RADIX/SHADCN LOGOUT HANDLING:
             // Prevent default to stop the dropdown from destroying itself before the window navigates
             e.preventDefault();
             handleSignOut();

@@ -1,65 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useAuth } from "@/components/layout/auth-provider";
+import { useDeleteStaff, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
 
-const mockPending: PendingInvite[] = [
-  {
-    id: "inv1",
-    email: "j.doe@institution.edu",
-    inviteCode: "A7X9-B2M4",
-    status: "PENDING",
-    expirationDate: "4 Hours",
-  },
-  {
-    id: "inv2",
-    email: "t.smith@institution.edu",
-    inviteCode: "C3V1-N8L0",
-    status: "EXPIRED",
-    expirationDate: "36 Hours Ago",
-  },
-];
-
-const mockActive: ActiveStaff[] = [
-  {
-    id: "st1",
-    name: "Sarah Jenkins",
-    email: "s.jenkins@institution.edu",
-    role: "ADMIN",
-    joinedDate: "Jan 12, 2026",
-  },
-  {
-    id: "st2",
-    name: "Michael Chen",
-    email: "m.chen@institution.edu",
-    role: "TECHNICIAN",
-    joinedDate: "Feb 03, 2026",
-  },
-  {
-    id: "st3",
-    name: "Dr. Mabaso",
-    email: "mabaso@institution.edu",
-    role: "ADMIN",
-    joinedDate: "Dec 05, 2025",
-  },
-];
-
 export function StaffComposer() {
-  const [activeStaff, setActiveStaff] = useState<ActiveStaff[]>(mockActive);
-  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>(mockPending);
+  const { activeOrgId } = useAuth();
+  const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-  const handleDeleteStaff = (id: string) => {
-    setActiveStaff((currentStaff) =>
-      currentStaff.filter((member) => member.id !== id),
-    );
+  // Fetch the real data from Spring Boot
+  const { data: staffDtoList, isLoading, isError } = useGetStaff(orgIdNum);
+  const { data: invitesDtoList, isLoading: invitesLoading } = useGetPendingInvites(orgIdNum);
+  const deleteStaffMutation = useDeleteStaff(orgIdNum);
+
+  // Map the backend DTO to the frontend UI interface
+  const activeStaff: ActiveStaff[] = (staffDtoList || []).map((staff) => ({
+    id: String(staff.id),
+    name: staff.email.split("@")[0], // Extracted from email since Staff table doesn't have names
+    email: staff.email,
+    role: (staff.role === "ADMIN" ? "ADMIN" : "TECHNICIAN"),
+    joinedDate: staff.joinedDate || "Recently",
+  }));
+
+  // Empty placeholder until we build the GET /invites endpoint
+  const pendingInvites: PendingInvite[] = (invitesDtoList || []).map((invite) => ({
+    id: String(invite.id),
+    email: invite.email,
+    inviteCode: "PENDING", 
+    status: (invite.status as "PENDING" | "EXPIRED"),
+    expirationDate: new Date(invite.expirationDate).toLocaleDateString(),
+  }));
+  
+  const handleDeleteStaff = async (id: string) => {
+    try {
+      await deleteStaffMutation.mutateAsync(Number(id));
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+    }
   };
 
   const handleDeleteInvitedStaff = (id: string) => {
-    setPendingInvites((currentInvites) =>
-      currentInvites.filter((invite) => invite.id !== id),
-    );
+    console.log("Invite deletion will be implemented later.", id);
   };
 
   return (
@@ -79,10 +62,24 @@ export function StaffComposer() {
         <InviteEngine />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-        <InvitationQueue invites={pendingInvites} onDelete={handleDeleteInvitedStaff} />
-        <ActiveStaffRoster staff={activeStaff} onDelete={handleDeleteStaff} />
-      </div>
+      {isLoading && (
+        <div className="p-8 text-center text-zinc-500 font-bold animate-pulse uppercase tracking-widest border-2 border-dashed border-zinc-300 rounded-xl">
+          Loading Staff Roster...
+        </div>
+      )}
+
+      {isError && (
+        <div className="p-8 text-center text-red-700 bg-red-50 border-2 border-red-500 font-bold uppercase tracking-widest rounded-xl">
+          Failed to load staff directory. Please check your connection.
+        </div>
+      )}
+
+      {!isLoading && !isError && (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
+          <InvitationQueue invites={pendingInvites} onDelete={handleDeleteInvitedStaff} />
+          <ActiveStaffRoster staff={activeStaff} onDelete={handleDeleteStaff} />
+        </div>
+      )}
     </div>
   );
 }

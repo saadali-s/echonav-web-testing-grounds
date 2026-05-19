@@ -1,7 +1,5 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,13 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useGooglePlacesAutocomplete } from "@/hooks/AutoAddressGoogleMaps";
+import { Plus } from "lucide-react";
+import { useRef, useState } from "react";
 import { BuildingData } from "./BuildingCard";
 
 interface CreateBuildingProps {
   onAdd: (building: Omit<BuildingData, "id" | "stats" | "health" | "updatedAt">) => void;
 }
 
-function BuildingForm({ onAdd, onClose }: { onAdd: any; onClose: () => void }) {
+function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData, "id" | "stats" | "health" | "updatedAt">) => void; onClose: () => void }) {
   const [privacy, setPrivacy] = useState<"PUBLIC" | "PRIVATE">("PUBLIC");
   const [name, setName] = useState("");
   const [street, setStreet] = useState("");
@@ -156,7 +156,7 @@ export function CreateBuilding({ onAdd }: CreateBuildingProps) {
         onFocusOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
         onInteractOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
-        className="sm:max-w-[500px] border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden"
+        className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden"
       >
         <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
           <DialogTitle className="font-black uppercase tracking-wider text-lg">Add New Building</DialogTitle>
