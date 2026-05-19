@@ -68,7 +68,7 @@ export function EdgeLayer({
 
      {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
     <polyline
-        // Change (step: RouteStep) to (step: NodeDto)
+
         points={calculatedRoute.path.map((step: NodeDto) => `${step.x},${step.y}`).join(" ")}
         fill="none"
         stroke="#a855f7"
