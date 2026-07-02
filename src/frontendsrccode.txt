@@ -1,0 +1,1483 @@
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\components\map-studio\editor\hooks\useEditorState.ts
+====================================
+import { RouteResponse } from "@/lib/api/types";
+import { useCallback, useState } from "react";
+import { SelectionType } from "../InspectorPanel";
+import { ToolMode } from "../Toolbelt";
+import { NodeData } from "../vector/types";
+
+export function useEditorState(initialTool: ToolMode = "SELECT") {
+  // Tool & Selection State
+  const [activeTool, setActiveTool] = useState<ToolMode>(initialTool);
+  const [selection, setSelection] = useState<SelectionType>(null);
+  const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
+  const [selectedEdgeIds, setSelectedEdgeIds] = useState<string[]>([]);
+
+  // Keyboard & Panning State
+  const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+
+  // Dragging State
+  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragStartNodes, setDragStartNodes] = useState<{ id: string; startX: number; startY: number }[] | null>(null);
+  const [activeDragNodes, setActiveDragNodes] = useState<NodeData[] | null>(null);
+  
+  // Drawing State
+  const [draftEdge, setDraftEdge] = useState<{ source: string; currentX: number; currentY: number } | null>(null);
+  const [selectionBox, setSelectionBox] = useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null);
+
+  // Calibration State
+  const [calibrationStart, setCalibrationStart] = useState<{ x: number, y: number } | null>(null);
+  const [calibrationEnd, setCalibrationEnd] = useState<{ x: number, y: number } | null>(null);
+  const [calibrationCurrent, setCalibrationCurrent] = useState<{ x: number, y: number } | null>(null);
+
+  // Routing State
+  const [routeStartNode, setRouteStartNode] = useState<string | null>(null);
+  const [routeEndNode, setRouteEndNode] = useState<string | null>(null);
+  const [calculatedRoute, setCalculatedRoute] = useState<RouteResponse | null>(null);
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+
+  // Helper clear functions
+  const clearSelection = useCallback(() => {
+    setSelectedNodeIds([]);
+    setSelectedEdgeIds([]);
+    setSelection(null);
+  }, []);
+
+  const clearCalibration = useCallback(() => {
+    setCalibrationStart(null);
+    setCalibrationEnd(null);
+    setCalibrationCurrent(null);
+  }, []);
+
+  const clearRouting = useCallback(() => {
+    setRouteStartNode(null);
+    setRouteEndNode(null);
+    setCalculatedRoute(null);
+  }, []);
+
+  return {
+    activeTool, setActiveTool,
+    selection, setSelection, clearSelection,
+    selectedNodeIds, setSelectedNodeIds,
+    selectedEdgeIds, setSelectedEdgeIds,
+    isSpacePressed, setIsSpacePressed,
+    isPanning, setIsPanning,
+    panStart, setPanStart,
+    dragStartPos, setDragStartPos,
+    dragStartNodes, setDragStartNodes,
+    activeDragNodes, setActiveDragNodes,
+    draftEdge, setDraftEdge,
+    selectionBox, setSelectionBox,
+    calibrationStart, setCalibrationStart,
+    calibrationEnd, setCalibrationEnd,
+    calibrationCurrent, setCalibrationCurrent, clearCalibration,
+    routeStartNode, setRouteStartNode,
+    routeEndNode, setRouteEndNode,
+    calculatedRoute, setCalculatedRoute,
+    isCalculatingRoute, setIsCalculatingRoute, clearRouting
+  };
+}
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\components\map-studio\editor\hooks\useHistory.ts
+====================================
+import { useCallback, useState } from "react";
+import { EdgeData, NodeData } from "../vector/types";
+
+export function useHistory(initialNodes: NodeData[], initialEdges: EdgeData[]) {
+  const [history, setHistory] = useState<{ nodes: NodeData[]; edges: EdgeData[] }[]>([
+    { nodes: initialNodes, edges: initialEdges }
+  ]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  const pushHistory = useCallback((newNodes: NodeData[], newEdges: EdgeData[]) => {
+    setHistory((prev) => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push({ nodes: newNodes, edges: newEdges });
+      return newHistory;
+    });
+    setHistoryIndex((prev) => prev + 1);
+  }, [historyIndex]);
+
+  const undo = useCallback(() => { 
+    if (historyIndex > 0) setHistoryIndex((prev) => prev - 1); 
+  }, [historyIndex]);
+
+  const redo = useCallback(() => { 
+    if (historyIndex < history.length - 1) setHistoryIndex((prev) => prev + 1); 
+  }, [historyIndex, history.length]);
+
+  const resetHistory = useCallback((nodes: NodeData[], edges: EdgeData[]) => {
+    setHistory([{ nodes, edges }]);
+    setHistoryIndex(0);
+  }, []);
+
+  const currentHistory = history[historyIndex] || { nodes: [], edges: [] };
+
+  return {
+    nodes: currentHistory.nodes,
+    edges: currentHistory.edges,
+    pushHistory,
+    undo,
+    redo,
+    resetHistory,
+    canUndo: historyIndex > 0,
+    canRedo: historyIndex < history.length - 1
+  };
+}
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\components\map-studio\editor\hooks\useViewport.ts
+====================================
+import { RefObject, useCallback, useEffect, useRef, useState } from "react";
+
+export function useViewport(containerRef: RefObject<HTMLDivElement | null>) {
+  const [pan, setPan] = useState({ x: 100, y: 100 });
+  const [scale, setScale] = useState(1);
+  
+  // Refs to bypass stale closures in passive event listeners
+  const panRef = useRef(pan);
+  const scaleRef = useRef(scale);
+
+  useEffect(() => { panRef.current = pan; }, [pan]);
+  useEffect(() => { scaleRef.current = scale; }, [scale]);
+
+  // Native wheel event listener for high-performance trackpad zooming
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+        const newScale = Math.max(0.1, Math.min(scaleRef.current * zoomFactor, 5));
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        setScale(newScale);
+        setPan({
+          x: x - (x - panRef.current.x) * (newScale / scaleRef.current),
+          y: y - (y - panRef.current.y) * (newScale / scaleRef.current),
+        });
+      } else {
+        setPan((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+      }
+    };
+    
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, [containerRef]);
+
+  // Button-driven zoom logic
+  const adjustZoomCentered = useCallback((factor: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const newScale = Math.max(0.1, Math.min(scale * factor, 5));
+    setPan(prevPan => ({
+      x: rect.width / 2 - (rect.width / 2 - prevPan.x) * (newScale / scale),
+      y: rect.height / 2 - (rect.height / 2 - prevPan.y) * (newScale / scale),
+    }));
+    setScale(newScale);
+  }, [scale, containerRef]);
+
+  const resetZoom = useCallback(() => {
+    setScale(1);
+    setPan({ x: 100, y: 100 });
+  }, []);
+
+  // Logical coordinate projection for mouse clicks
+  const getLogicalCoords = useCallback((clientX: number, clientY: number) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: (clientX - rect.left - pan.x) / scale,
+      y: (clientY - rect.top - pan.y) / scale,
+    };
+  }, [pan, scale, containerRef]);
+
+  return { 
+    pan, 
+    setPan, 
+    scale, 
+    setScale, 
+    adjustZoomCentered, 
+    resetZoom, 
+    getLogicalCoords 
+  };
+}
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\AutoAddressGoogleMaps.ts
+====================================
+"use client";
+
+import { RefObject, useEffect, useRef, useState } from "react";
+
+// 1. Tell TypeScript that 'google' exists on the global window object
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
+export interface AddressDetails {
+  streetAddress: string;
+  city: string;
+  stateProvince: string;
+  postalCode: string;
+  country: string;
+  countryCode: string;
+}
+
+export function useGooglePlacesAutocomplete(
+  inputRef: RefObject<HTMLInputElement | null>,
+  countryCode: string | undefined | null,
+  onAddressSelect: (details: AddressDetails) => void
+) {
+  // 2. Fix "cascading renders" warning by initializing state safely based on the window object
+  const [isLoaded, setIsLoaded] = useState<boolean>(() => {
+    if (typeof window !== "undefined" && window.google?.maps?.places) {
+      return true;
+    }
+    return false;
+  });
+
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  const onAddressSelectRef = useRef(onAddressSelect);
+  useEffect(() => {
+    onAddressSelectRef.current = onAddressSelect;
+  }, [onAddressSelect]);
+
+  // Load the script only if not already loaded
+  useEffect(() => {
+    if (isLoaded) return;
+
+    const scriptId = "google-maps-script";
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+    if (!script) {
+      script = document.createElement("script");
+      script.id = scriptId;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setIsLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      const handleLoad = () => setIsLoaded(true);
+      script.addEventListener("load", handleLoad);
+      return () => script.removeEventListener("load", handleLoad);
+    }
+  }, [isLoaded]);
+
+  // 3. Store the country code in a ref to use during initial mount without triggering the useEffect dependency warning
+  const countryCodeRef = useRef(countryCode);
+  useEffect(() => {
+    countryCodeRef.current = countryCode;
+  }, [countryCode]);
+
+  // Initialize Autocomplete
+  useEffect(() => {
+    if (!isLoaded || !inputRef.current) return;
+
+    // 4. Remove 'any' and use standard Google Maps types
+    const options: google.maps.places.AutocompleteOptions = {
+      fields: ["address_components", "formatted_address", "name"],
+      types: ["address"],
+    };
+
+    const initialCountryCode = countryCodeRef.current;
+    if (initialCountryCode && initialCountryCode.trim().length > 0) {
+      options.componentRestrictions = { country: initialCountryCode.toLowerCase() };
+    }
+
+    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      inputRef.current,
+      options
+    );
+
+    const listener = autocompleteRef.current.addListener("place_changed", () => {
+      const place = autocompleteRef.current?.getPlace();
+      if (!place || !place.address_components) return;
+
+      let streetNumber = "";
+      let route = "";
+      let city = "";
+      let stateProvince = "";
+      let postalCode = "";
+      let country = "";
+      let returnedCountryCode = "";
+
+      for (const component of place.address_components) {
+        const types = component.types;
+        if (types.includes("street_number")) streetNumber = component.long_name;
+        if (types.includes("route")) route = component.long_name;
+
+        if (types.includes("locality")) {
+          city = component.long_name;
+        } else if (!city && types.includes("sublocality_level_1")) {
+          city = component.long_name;
+        } else if (!city && types.includes("administrative_area_level_2")) {
+          city = component.long_name;
+        }
+
+        if (types.includes("administrative_area_level_1")) stateProvince = component.long_name;
+        if (types.includes("postal_code")) postalCode = component.long_name;
+        if (types.includes("country")) {
+          country = component.long_name;
+          returnedCountryCode = component.short_name;
+        }
+      }
+
+      onAddressSelectRef.current({
+        streetAddress: streetNumber || route ? `${streetNumber} ${route}`.trim() : (place.name || ""),
+        city,
+        stateProvince,
+        postalCode,
+        country,
+        countryCode: returnedCountryCode,
+      });
+    });
+
+    return () => {
+      if (window.google?.maps?.event && listener) {
+        window.google.maps.event.removeListener(listener);
+      }
+      document.querySelectorAll(".pac-container").forEach((node) => node.remove());
+    };
+  }, [isLoaded, inputRef]); // 'countryCode' is removed from deps because we read it safely via countryCodeRef
+
+  // Handle dynamic country updates
+  useEffect(() => {
+    if (autocompleteRef.current) {
+      if (countryCode && countryCode.trim().length > 0) {
+        autocompleteRef.current.setComponentRestrictions({ country: countryCode.toLowerCase() });
+      } else {
+        // 5. Remove 'null as any' - passing null natively clears restrictions
+        autocompleteRef.current.setComponentRestrictions(null);
+      }
+    }
+  }, [countryCode]);
+
+  return { isLoaded };
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\use-mobile.ts
+====================================
+import * as React from "react"
+
+const MOBILE_BREAKPOINT = 768
+
+export function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    }
+    mql.addEventListener("change", onChange)
+    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return !!isMobile
+}
+.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\queryKeys.ts
+====================================
+// Centralized Query Key Factory
+export const queryKeys = {
+  mapStudio: {
+    buildings: (orgId?: number) => ["buildings", orgId] as const,
+    floorPlans: (buildingId?: number) => ["floorPlans", buildingId] as const,
+    spatialGraph: (floorPlanId?: number) => ["spatialGraph", floorPlanId] as const,
+  },
+  fleet: {
+    staffTasks: (staffId?: number) => ["staffTasks", staffId] as const,
+  },
+  staff: {
+    roster: (orgId?: number) => ["staff", "roster", orgId] as const,
+  },
+  // --- SUBTASK 2.2 FIX: Add Users Keys ---
+  users: {
+    roster: (orgId?: number) => ["users", "roster", orgId] as const,
+  },
+  auth: {
+    session: ["auth", "session"] as const,
+  },
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\useFleet.ts
+====================================
+import { fleetActions } from "@/lib/actions/fleet";
+import { CreateBatchTasksRequest, LinkBeaconRequest, UpdateTaskRequest } from "@/lib/api/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./queryKeys";
+
+export function useGetStaffTasks(staffId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.fleet.staffTasks(staffId),
+    queryFn: () => fleetActions.getStaffTasks(staffId!),
+    enabled: !!staffId && !isNaN(staffId),
+  });
+}
+
+export function useUpdateTaskStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, data }: { taskId: number; data: UpdateTaskRequest }) => 
+      fleetActions.updateTaskStatus(taskId, data),
+    onSuccess: () => {
+      // Invalidate both the specific staff tasks and the global tasks
+      queryClient.invalidateQueries({ queryKey: ["staffTasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+}
+
+export function useGetOrganizationTasks(orgId: number | undefined) {
+  return useQuery({
+    queryKey: ["tasks", orgId],
+    queryFn: () => fleetActions.getOrganizationTasks(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+export function useGetOrganizationBeacons(orgId: number | undefined) {
+  return useQuery({
+    queryKey: ["beacons", orgId],
+    queryFn: () => fleetActions.getOrganizationBeacons(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+// --- FIX: Robust Cache Invalidation for Linking ---
+export function useLinkBeacon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: LinkBeaconRequest) => fleetActions.linkBeacon(data),
+    onSuccess: () => {
+      // Instantly refresh the inventory table the second a beacon is linked
+      queryClient.invalidateQueries({ queryKey: ["beacons"] });
+    }
+  });
+}
+
+export function useCreateTasks() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateBatchTasksRequest) => fleetActions.createTasks(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.fleet.staffTasks(variables.staffId) });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] }); 
+    },
+  });
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\useMapStudio.ts
+====================================
+import { mapStudioActions } from "@/lib/actions/mapStudio";
+import {
+    RegisterBuildingRequest,
+    UpdateFloorPlanRequest,
+    UpdateGraphRequest
+} from "@/lib/api/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./queryKeys";
+
+// --- BUILDINGS ---
+
+export function useGetBuildings(orgId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.buildings(orgId),
+    queryFn: () => mapStudioActions.getBuildings(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+export function useCreateBuilding() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orgId, data }: { orgId: number; data: RegisterBuildingRequest }) => 
+      mapStudioActions.createBuilding(orgId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.buildings(variables.orgId) });
+    },
+  });
+}
+
+export function useDeleteBuilding() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ buildingId }: { buildingId: number }) => 
+      mapStudioActions.deleteBuilding(buildingId),
+    // Invalidating the base key ensures all orgs refresh if necessary
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["buildings"] });
+    },
+  });
+}
+
+// --- FLOOR PLANS ---
+
+export function useGetFloorPlans(buildingId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.floorPlans(buildingId),
+    queryFn: () => mapStudioActions.getFloorPlans(buildingId!),
+    enabled: !!buildingId && !isNaN(buildingId),
+  });
+}
+
+export function useUpdateFloorPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ floorPlanId, data }: { floorPlanId: number; data: UpdateFloorPlanRequest }) => 
+      mapStudioActions.updateFloorPlan(floorPlanId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["floorPlans"] });
+    },
+  });
+}
+
+export function useDeleteFloorPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ floorPlanId }: { floorPlanId: number }) => 
+      mapStudioActions.deleteFloorPlan(floorPlanId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["floorPlans"] });
+    },
+  });
+}
+
+// --- SPATIAL GRAPHS ---
+
+export function useGetSpatialGraph(floorPlanId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.spatialGraph(floorPlanId),
+    queryFn: () => mapStudioActions.getSpatialGraph(floorPlanId!),
+    enabled: !!floorPlanId && !isNaN(floorPlanId),
+  });
+}
+
+export function useUpdateSpatialGraph() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ floorPlanId, data }: { floorPlanId: number; data: UpdateGraphRequest }) => 
+      mapStudioActions.updateSpatialGraph(floorPlanId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.spatialGraph(variables.floorPlanId) });
+    },
+  });
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\useNavigation.ts
+====================================
+import { navigationActions } from "@/lib/actions/navigation";
+import { RouteRequest } from "@/lib/api/types";
+import { useMutation } from "@tanstack/react-query";
+
+export function useCalculateRoute() {
+  return useMutation({
+    mutationFn: (data: RouteRequest) => navigationActions.getRoute(data),
+  });
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\useStaff.ts
+====================================
+import { staffActions } from "@/lib/actions/staff";
+import { InviteStaffRequest } from "@/lib/api/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./queryKeys";
+
+export function useGetStaff(orgId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.staff.roster(orgId),
+    queryFn: () => staffActions.getStaff(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+export function useInviteStaff() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: InviteStaffRequest) => staffActions.inviteStaff(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(variables.organisationId) });
+    },
+  });
+}
+export function useGetPendingInvites(orgId: number | undefined) {
+  return useQuery({
+    queryKey: ["staff", "invites", orgId],
+    queryFn: () => staffActions.getPendingInvites(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+export function useDeleteStaff(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (staffId: number) => staffActions.deleteStaff(staffId),
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(orgId) });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["staff"] });
+      }
+    },
+  });
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\hooks\api\useUsers.ts
+====================================
+import { userActions } from "@/lib/actions/users";
+import { InviteUserRequest } from "@/lib/api/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "./queryKeys";
+
+export function useGetUsers(orgId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.users.roster(orgId),
+    queryFn: () => userActions.getUsers(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: InviteUserRequest) => userActions.inviteUser(data),
+    onSuccess: (_, variables) => {
+      // Instantly refresh the user table after a successful invite
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.roster(variables.organisationId) });
+    },
+  });
+}
+
+export function useGetPendingUserPins(orgId: number | undefined) {
+  return useQuery({
+    queryKey: ["users", "pins", orgId],
+    queryFn: () => userActions.getPendingUserPins(orgId!),
+    enabled: !!orgId && !isNaN(orgId),
+  });
+}
+
+export function useDeleteUser(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: number) => userActions.deleteUser(userId),
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.users.roster(orgId) });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["users"] });
+      }
+    },
+  });
+}.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\countries.ts
+====================================
+export const COUNTRIES = [
+  { name: "Afghanistan", code: "AF", dialCode: "+93" },
+  { name: "Albania", code: "AL", dialCode: "+355" },
+  { name: "Algeria", code: "DZ", dialCode: "+213" },
+  { name: "Andorra", code: "AD", dialCode: "+376" },
+  { name: "Angola", code: "AO", dialCode: "+244" },
+  { name: "Antigua and Barbuda", code: "AG", dialCode: "+1" },
+  { name: "Argentina", code: "AR", dialCode: "+54" },
+  { name: "Armenia", code: "AM", dialCode: "+374" },
+  { name: "Australia", code: "AU", dialCode: "+61" },
+  { name: "Austria", code: "AT", dialCode: "+43" },
+  { name: "Azerbaijan", code: "AZ", dialCode: "+994" },
+  { name: "Bahamas", code: "BS", dialCode: "+1" },
+  { name: "Bahrain", code: "BH", dialCode: "+973" },
+  { name: "Bangladesh", code: "BD", dialCode: "+880" },
+  { name: "Barbados", code: "BB", dialCode: "+1" },
+  { name: "Belarus", code: "BY", dialCode: "+375" },
+  { name: "Belgium", code: "BE", dialCode: "+32" },
+  { name: "Belize", code: "BZ", dialCode: "+501" },
+  { name: "Benin", code: "BJ", dialCode: "+229" },
+  { name: "Bhutan", code: "BT", dialCode: "+975" },
+  { name: "Bolivia", code: "BO", dialCode: "+591" },
+  { name: "Bosnia and Herzegovina", code: "BA", dialCode: "+387" },
+  { name: "Botswana", code: "BW", dialCode: "+267" },
+  { name: "Brazil", code: "BR", dialCode: "+55" },
+  { name: "Brunei", code: "BN", dialCode: "+673" },
+  { name: "Bulgaria", code: "BG", dialCode: "+359" },
+  { name: "Burkina Faso", code: "BF", dialCode: "+226" },
+  { name: "Burundi", code: "BI", dialCode: "+257" },
+  { name: "Cambodia", code: "KH", dialCode: "+855" },
+  { name: "Cameroon", code: "CM", dialCode: "+237" },
+  { name: "Canada", code: "CA", dialCode: "+1" },
+  { name: "Cape Verde", code: "CV", dialCode: "+238" },
+  { name: "Central African Republic", code: "CF", dialCode: "+236" },
+  { name: "Chad", code: "TD", dialCode: "+235" },
+  { name: "Chile", code: "CL", dialCode: "+56" },
+  { name: "China", code: "CN", dialCode: "+86" },
+  { name: "Colombia", code: "CO", dialCode: "+57" },
+  { name: "Comoros", code: "KM", dialCode: "+269" },
+  { name: "Congo", code: "CG", dialCode: "+242" },
+  { name: "Costa Rica", code: "CR", dialCode: "+506" },
+  { name: "Croatia", code: "HR", dialCode: "+385" },
+  { name: "Cuba", code: "CU", dialCode: "+53" },
+  { name: "Cyprus", code: "CY", dialCode: "+357" },
+  { name: "Czech Republic", code: "CZ", dialCode: "+420" },
+  { name: "Denmark", code: "DK", dialCode: "+45" },
+  { name: "Djibouti", code: "DJ", dialCode: "+253" },
+  { name: "Dominica", code: "DM", dialCode: "+1" },
+  { name: "Dominican Republic", code: "DO", dialCode: "+1" },
+  { name: "Ecuador", code: "EC", dialCode: "+593" },
+  { name: "Egypt", code: "EG", dialCode: "+20" },
+  { name: "El Salvador", code: "SV", dialCode: "+503" },
+  { name: "Equatorial Guinea", code: "GQ", dialCode: "+240" },
+  { name: "Eritrea", code: "ER", dialCode: "+291" },
+  { name: "Estonia", code: "EE", dialCode: "+372" },
+  { name: "Ethiopia", code: "ET", dialCode: "+251" },
+  { name: "Fiji", code: "FJ", dialCode: "+679" },
+  { name: "Finland", code: "FI", dialCode: "+358" },
+  { name: "France", code: "FR", dialCode: "+33" },
+  { name: "Gabon", code: "GA", dialCode: "+241" },
+  { name: "Gambia", code: "GM", dialCode: "+220" },
+  { name: "Georgia", code: "GE", dialCode: "+995" },
+  { name: "Germany", code: "DE", dialCode: "+49" },
+  { name: "Ghana", code: "GH", dialCode: "+233" },
+  { name: "Greece", code: "GR", dialCode: "+30" },
+  { name: "Grenada", code: "GD", dialCode: "+1" },
+  { name: "Guatemala", code: "GT", dialCode: "+502" },
+  { name: "Guinea", code: "GN", dialCode: "+224" },
+  { name: "Guinea-Bissau", code: "GW", dialCode: "+245" },
+  { name: "Guyana", code: "GY", dialCode: "+592" },
+  { name: "Haiti", code: "HT", dialCode: "+509" },
+  { name: "Honduras", code: "HN", dialCode: "+504" },
+  { name: "Hungary", code: "HU", dialCode: "+36" },
+  { name: "Iceland", code: "IS", dialCode: "+354" },
+  { name: "India", code: "IN", dialCode: "+91" },
+  { name: "Indonesia", code: "ID", dialCode: "+62" },
+  { name: "Iran", code: "IR", dialCode: "+98" },
+  { name: "Iraq", code: "IQ", dialCode: "+964" },
+  { name: "Ireland", code: "IE", dialCode: "+353" },
+  { name: "Israel", code: "IL", dialCode: "+972" },
+  { name: "Italy", code: "IT", dialCode: "+39" },
+  { name: "Jamaica", code: "JM", dialCode: "+1" },
+  { name: "Japan", code: "JP", dialCode: "+81" },
+  { name: "Jordan", code: "JO", dialCode: "+962" },
+  { name: "Kazakhstan", code: "KZ", dialCode: "+7" },
+  { name: "Kenya", code: "KE", dialCode: "+254" },
+  { name: "Kiribati", code: "KI", dialCode: "+686" },
+  { name: "Kuwait", code: "KW", dialCode: "+965" },
+  { name: "Kyrgyzstan", code: "KG", dialCode: "+996" },
+  { name: "Laos", code: "LA", dialCode: "+856" },
+  { name: "Latvia", code: "LV", dialCode: "+371" },
+  { name: "Lebanon", code: "LB", dialCode: "+961" },
+  { name: "Lesotho", code: "LS", dialCode: "+266" },
+  { name: "Liberia", code: "LR", dialCode: "+231" },
+  { name: "Libya", code: "LY", dialCode: "+218" },
+  { name: "Liechtenstein", code: "LI", dialCode: "+423" },
+  { name: "Lithuania", code: "LT", dialCode: "+370" },
+  { name: "Luxembourg", code: "LU", dialCode: "+352" },
+  { name: "Madagascar", code: "MG", dialCode: "+261" },
+  { name: "Malawi", code: "MW", dialCode: "+265" },
+  { name: "Malaysia", code: "MY", dialCode: "+60" },
+  { name: "Maldives", code: "MV", dialCode: "+960" },
+  { name: "Mali", code: "ML", dialCode: "+223" },
+  { name: "Malta", code: "MT", dialCode: "+356" },
+  { name: "Marshall Islands", code: "MH", dialCode: "+692" },
+  { name: "Mauritania", code: "MR", dialCode: "+222" },
+  { name: "Mauritius", code: "MU", dialCode: "+230" },
+  { name: "Mexico", code: "MX", dialCode: "+52" },
+  { name: "Micronesia", code: "FM", dialCode: "+691" },
+  { name: "Moldova", code: "MD", dialCode: "+373" },
+  { name: "Monaco", code: "MC", dialCode: "+377" },
+  { name: "Mongolia", code: "MN", dialCode: "+976" },
+  { name: "Montenegro", code: "ME", dialCode: "+382" },
+  { name: "Morocco", code: "MA", dialCode: "+212" },
+  { name: "Mozambique", code: "MZ", dialCode: "+258" },
+  { name: "Myanmar", code: "MM", dialCode: "+95" },
+  { name: "Namibia", code: "NA", dialCode: "+264" },
+  { name: "Nauru", code: "NR", dialCode: "+674" },
+  { name: "Nepal", code: "NP", dialCode: "+977" },
+  { name: "Netherlands", code: "NL", dialCode: "+31" },
+  { name: "New Zealand", code: "NZ", dialCode: "+64" },
+  { name: "Nicaragua", code: "NI", dialCode: "+505" },
+  { name: "Niger", code: "NE", dialCode: "+227" },
+  { name: "Nigeria", code: "NG", dialCode: "+234" },
+  { name: "North Korea", code: "KP", dialCode: "+850" },
+  { name: "Norway", code: "NO", dialCode: "+47" },
+  { name: "Oman", code: "OM", dialCode: "+968" },
+  { name: "Pakistan", code: "PK", dialCode: "+92" },
+  { name: "Palau", code: "PW", dialCode: "+680" },
+  { name: "Panama", code: "PA", dialCode: "+507" },
+  { name: "Papua New Guinea", code: "PG", dialCode: "+675" },
+  { name: "Paraguay", code: "PY", dialCode: "+595" },
+  { name: "Peru", code: "PE", dialCode: "+51" },
+  { name: "Philippines", code: "PH", dialCode: "+63" },
+  { name: "Poland", code: "PL", dialCode: "+48" },
+  { name: "Portugal", code: "PT", dialCode: "+351" },
+  { name: "Qatar", code: "QA", dialCode: "+974" },
+  { name: "Romania", code: "RO", dialCode: "+40" },
+  { name: "Russia", code: "RU", dialCode: "+7" },
+  { name: "Rwanda", code: "RW", dialCode: "+250" },
+  { name: "Saint Kitts and Nevis", code: "KN", dialCode: "+1" },
+  { name: "Saint Lucia", code: "LC", dialCode: "+1" },
+  { name: "Saint Vincent and the Grenadines", code: "VC", dialCode: "+1" },
+  { name: "Samoa", code: "WS", dialCode: "+685" },
+  { name: "San Marino", code: "SM", dialCode: "+378" },
+  { name: "Sao Tome and Principe", code: "ST", dialCode: "+239" },
+  { name: "Saudi Arabia", code: "SA", dialCode: "+966" },
+  { name: "Senegal", code: "SN", dialCode: "+221" },
+  { name: "Serbia", code: "RS", dialCode: "+381" },
+  { name: "Seychelles", code: "SC", dialCode: "+248" },
+  { name: "Sierra Leone", code: "SL", dialCode: "+232" },
+  { name: "Singapore", code: "SG", dialCode: "+65" },
+  { name: "Slovakia", code: "SK", dialCode: "+421" },
+  { name: "Slovenia", code: "SI", dialCode: "+386" },
+  { name: "Solomon Islands", code: "SB", dialCode: "+677" },
+  { name: "Somalia", code: "SO", dialCode: "+252" },
+  { name: "South Africa", code: "ZA", dialCode: "+27" },
+  { name: "South Korea", code: "KR", dialCode: "+82" },
+  { name: "South Sudan", code: "SS", dialCode: "+211" },
+  { name: "Spain", code: "ES", dialCode: "+34" },
+  { name: "Sri Lanka", code: "LK", dialCode: "+94" },
+  { name: "Sudan", code: "SD", dialCode: "+249" },
+  { name: "Suriname", code: "SR", dialCode: "+597" },
+  { name: "Swaziland", code: "SZ", dialCode: "+268" },
+  { name: "Sweden", code: "SE", dialCode: "+46" },
+  { name: "Switzerland", code: "CH", dialCode: "+41" },
+  { name: "Syria", code: "SY", dialCode: "+963" },
+  { name: "Tajikistan", code: "TJ", dialCode: "+992" },
+  { name: "Tanzania", code: "TZ", dialCode: "+255" },
+  { name: "Thailand", code: "TH", dialCode: "+66" },
+  { name: "Togo", code: "TG", dialCode: "+228" },
+  { name: "Tonga", code: "TO", dialCode: "+676" },
+  { name: "Trinidad and Tobago", code: "TT", dialCode: "+1" },
+  { name: "Tunisia", code: "TN", dialCode: "+216" },
+  { name: "Turkey", code: "TR", dialCode: "+90" },
+  { name: "Turkmenistan", code: "TM", dialCode: "+993" },
+  { name: "Tuvalu", code: "TV", dialCode: "+688" },
+  { name: "Uganda", code: "UG", dialCode: "+256" },
+  { name: "Ukraine", code: "UA", dialCode: "+380" },
+  { name: "United Arab Emirates", code: "AE", dialCode: "+971" },
+  { name: "United Kingdom", code: "GB", dialCode: "+44" },
+  { name: "United States", code: "US", dialCode: "+1" },
+  { name: "Uruguay", code: "UY", dialCode: "+598" },
+  { name: "Uzbekistan", code: "UZ", dialCode: "+998" },
+  { name: "Vanuatu", code: "VU", dialCode: "+678" },
+  { name: "Vatican City", code: "VA", dialCode: "+379" },
+  { name: "Venezuela", code: "VE", dialCode: "+58" },
+  { name: "Vietnam", code: "VN", dialCode: "+84" },
+  { name: "Yemen", code: "YE", dialCode: "+967" },
+  { name: "Zambia", code: "ZM", dialCode: "+260" },
+  { name: "Zimbabwe", code: "ZW", dialCode: "+263" }
+];.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\auth.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import {
+  LoginResponse,
+  MobileSignupRequest,
+  PairingRequest,
+  RegisterOrgRequest
+} from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const authActions = {
+  register: async (payload: RegisterOrgRequest): Promise<string> => {
+    try {
+      const response = await axiosInstance.post("/api/auth/register", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Registration failed.");
+    }
+  },
+
+  login: async (email: string, password: string): Promise<LoginResponse> => {
+    try {
+      const response = await axiosInstance.post<LoginResponse>("/api/auth/login", { email, password });
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Invalid credentials.");
+    }
+  },
+
+  pairDevice: async (payload: PairingRequest): Promise<LoginResponse> => {
+    try {
+      const response = await axiosInstance.post<LoginResponse>("/api/auth/pair", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Invalid pairing PIN.");
+    }
+  },
+
+  mobileSignup: async (payload: MobileSignupRequest): Promise<LoginResponse> => {
+    try {
+      const response = await axiosInstance.post<LoginResponse>("/api/auth/mobile-signup", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Mobile signup failed.");
+    }
+  },
+
+  logout: async (): Promise<void> => {
+    try {
+      await axiosInstance.post("/api/auth/logout");
+    } catch {
+      console.error("Server logout failed, clearing local state anyway.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\fleet.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import {
+    BeaconDto,
+    CreateBatchTasksRequest,
+    DeploymentTaskDto,
+    LinkBeaconRequest,
+    UpdateTaskRequest
+} from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const fleetActions = {
+  getStaffTasks: async (staffId: number): Promise<DeploymentTaskDto[]> => {
+    try {
+      const response = await axiosInstance.get<DeploymentTaskDto[]>(`/api/fleet/tasks/staff/${staffId}`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch tasks.");
+    }
+  },
+  // --- SUBTASK 5.3 FIX: Global Fetch Actions ---
+  getOrganizationTasks: async (orgId: number) => {
+    const response = await axiosInstance.get(`/api/fleet/tasks/organisation/${orgId}`);
+    return response.data;
+  },
+  getOrganizationBeacons: async (orgId: number) => {
+    const response = await axiosInstance.get(`/api/fleet/beacons/organisation/${orgId}`);
+    return response.data;
+  },
+  updateTaskStatus: async (taskId: number, payload: UpdateTaskRequest): Promise<DeploymentTaskDto> => {
+    try {
+      const response = await axiosInstance.put<DeploymentTaskDto>(`/api/fleet/tasks/${taskId}`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to update task status.");
+    }
+  },
+
+  linkBeacon: async (payload: LinkBeaconRequest): Promise<BeaconDto> => {
+    try {
+      const response = await axiosInstance.post<BeaconDto>("/api/fleet/beacons/link", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to link beacon.");
+    }
+  },
+
+  // --- SUBTASK 2.8 FIX: Create Batch Tasks ---
+  createTasks: async (payload: CreateBatchTasksRequest): Promise<string> => {
+    try {
+      const response = await axiosInstance.post<string>("/api/fleet/tasks", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to assign tasks.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\mapStudio.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import {
+  BuildingDto,
+  FloorPlanDto,
+  GraphDto,
+  RegisterBuildingRequest,
+  UpdateFloorPlanRequest,
+  UpdateGraphRequest
+} from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const mapStudioActions = {
+  // --- BUILDINGS ---
+  createBuilding: async (orgId: number, payload: RegisterBuildingRequest): Promise<BuildingDto> => {
+    try {
+      const response = await axiosInstance.post<BuildingDto>(`/api/mapstudio/organisations/${orgId}/buildings`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to create building.");
+    }
+  },
+
+  deleteBuilding: async (buildingId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/mapstudio/buildings/${buildingId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete building.");
+    }
+  },
+
+  getBuildings: async (orgId: number): Promise<BuildingDto[]> => {
+    try {
+      const response = await axiosInstance.get<BuildingDto[]>(`/api/mapstudio/organisations/${orgId}/buildings`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch buildings.");
+    }
+  },
+
+  // --- FLOOR PLANS ---
+  getFloorPlans: async (buildingId: number): Promise<FloorPlanDto[]> => {
+    try {
+      const response = await axiosInstance.get<FloorPlanDto[]>(`/api/mapstudio/buildings/${buildingId}/floorplans`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch floor plans.");
+    }
+  },
+
+  updateFloorPlan: async (floorPlanId: number, payload: UpdateFloorPlanRequest): Promise<FloorPlanDto> => {
+    try {
+      const response = await axiosInstance.put<FloorPlanDto>(`/api/mapstudio/floorplans/${floorPlanId}`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to update floor plan.");
+    }
+  },
+
+  deleteFloorPlan: async (floorPlanId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/mapstudio/floorplans/${floorPlanId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete floor plan.");
+    }
+  },
+
+  uploadFloorPlan: async (buildingId: number, name: string, file: File): Promise<FloorPlanDto> => {
+    try {
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("file", file);
+
+      const response = await axiosInstance.post<FloorPlanDto>(
+        `/api/mapstudio/buildings/${buildingId}/floorplans/upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to upload floor plan.");
+    }
+  },
+
+  // --- SPATIAL GRAPHS ---
+  getSpatialGraph: async (floorPlanId: number): Promise<GraphDto> => {
+    try {
+      const response = await axiosInstance.get<GraphDto>(`/api/mapstudio/floorplans/${floorPlanId}/graph`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch spatial graph.");
+    }
+  },
+
+  updateSpatialGraph: async (floorPlanId: number, payload: UpdateGraphRequest): Promise<GraphDto> => {
+    try {
+      const response = await axiosInstance.put<GraphDto>(`/api/mapstudio/floorplans/${floorPlanId}/graph`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to save vector graph.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\navigation.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import { RouteRequest, RouteResponse } from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const navigationActions = {
+  getRoute: async (payload: RouteRequest): Promise<RouteResponse> => {
+    try {
+      const response = await axiosInstance.post<RouteResponse>("/api/navigation/route", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to calculate route. Ensure nodes are saved.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\staff.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import { InviteStaffRequest, StaffDto, StaffInviteDto } from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const staffActions = {
+  getStaff: async (orgId: number): Promise<StaffDto[]> => {
+    try {
+      const response = await axiosInstance.get<StaffDto[]>(`/api/staff/organisation/${orgId}`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch staff roster.");
+    }
+  },
+
+  inviteStaff: async (payload: InviteStaffRequest): Promise<string> => {
+    try {
+      const response = await axiosInstance.post<string>("/api/staff/invite", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to invite staff.");
+    }
+  },
+  getPendingInvites: async (orgId: number): Promise<StaffInviteDto[]> => {
+    const response = await axiosInstance.get<StaffInviteDto[]>(`/api/staff/invites/organisation/${orgId}`);
+    return response.data;
+  },
+  deleteStaff: async (staffId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/staff/${staffId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete staff member.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\actions\users.ts
+====================================
+import { axiosInstance } from "@/lib/api/axios";
+import { InviteUserRequest, InviteUserResponse, PairingPinDto, UserDto } from "@/lib/api/types";
+import { AxiosError } from "axios";
+
+export const userActions = {
+  getUsers: async (orgId: number): Promise<UserDto[]> => {
+    try {
+      const response = await axiosInstance.get<UserDto[]>(`/api/users/organisation/${orgId}`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch users.");
+    }
+  },
+
+  inviteUser: async (payload: InviteUserRequest): Promise<InviteUserResponse> => {
+    try {
+      const response = await axiosInstance.post<InviteUserResponse>("/api/users/invite", payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to generate pairing PIN.");
+    }
+  },
+
+
+  getPendingUserPins: async (orgId: number): Promise<PairingPinDto[]> => {
+    const response = await axiosInstance.get<PairingPinDto[]>(`/api/users/pins/organisation/${orgId}`);
+    return response.data;
+  },
+  
+  deleteUser: async (userId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/users/${userId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete user.");
+    }
+  }
+};.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\api\axios.ts
+====================================
+import axios from 'axios';
+
+export const axiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081',
+});
+
+// Intercept all outgoing requests and attach the Bearer token dynamically
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    let token = null;
+
+    if (typeof window !== 'undefined') {
+      // Client-Side: Extract token from document.cookie
+      const match = document.cookie.match(new RegExp('(^| )echonav_token=([^;]+)'));
+      if (match) token = match[2];
+    } else {
+      // Server-Side (Next.js 16 SSR context)
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        token = cookieStore.get('echonav_token')?.value;
+      } catch (error) {
+        // Ignore if cookies() is not available in the current server context
+      }
+    }
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);.
+====================================
+FILE: C:\Users\User\Downloads\startups\EchoNav\project\echonav-web\src\lib\api\types.ts
+====================================
+// ============================================================================
+// ECHONAV DOMAIN TYPES
+// Single Source of Truth for Frontend/Backend Data Contracts
+// ============================================================================
+
+// --- USER MANAGEMENT DOMAIN ---
+
+export interface UserDto {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  // Based on Phase 1, the backend returns the raw NavigatingUser entity/DTO
+}
+
+export interface InviteUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  organisationId: number;
+  generatedById: number;
+}
+
+export interface InviteUserResponse {
+  pairingPin: string;
+}
+
+// --- AUTH DOMAIN ---
+
+export interface LoginResponse {
+  token: string;
+  role: string;
+  organisationId: number | null;
+  userId: number;
+}
+
+export interface RegisterOrgRequest {
+  orgName: string;
+  adminName: string;
+  email: string;
+  password?: string; // Optional on frontend if handling via separate state, but required by backend
+  country: string;
+  address: string;
+  contactNo: string;
+}
+
+export interface UpdateOrgRequest {
+  orgName: string;
+  contactNo: string;
+  address: string;
+}
+
+export interface MobileSignupRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string;
+}
+
+export interface PairingRequest {
+  email: string;
+  pairingPin: string;
+}
+
+export interface ActivateInviteRequest {
+  password?: string;
+}
+
+// --- MAP STUDIO DOMAIN ---
+
+export interface BuildingDto {
+  id: number;
+  name: string;
+  address: string;
+  privacyLevel: "PUBLIC" | "PRIVATE";
+}
+
+export interface RegisterBuildingRequest {
+  name: string;
+  address: string;
+  privacyLevel: "PUBLIC" | "PRIVATE";
+}
+
+export interface FloorPlanDto {
+  id: number;
+  buildingId: number | null;
+  name: string;
+  floorPlanUrl: string; // Updated from legacy floorPlanDWG
+  scale: number | null;
+  access: "PUBLIC" | "PRIVATE";
+}
+
+export interface UpdateFloorPlanRequest {
+  name?: string;
+  scale?: number;
+}
+
+export interface NodeDto {
+  id: number;
+  label: string;
+  x: number;
+  y: number;
+  ttsVerbalGuidance: string;
+  isHazard?: boolean; // <-- NEW
+}
+
+export interface EdgeDto {
+  id: number;
+  fromNodeId: number;
+  toNodeId: number;
+  weightM: number;
+  distance: number;
+  isHazard?: boolean; // <-- NEW
+}
+
+export interface UpdateGraphRequest {
+  nodes: { tempId: string; x: number; y: number; label: string; isHazard?: boolean }[]; // <-- NEW
+  edges: { tempId: string; source: string; target: string; isHazard?: boolean }[]; // <-- NEW
+}
+export interface GraphDto {
+  floorPlan: FloorPlanDto;
+  nodes: NodeDto[];
+  edges: EdgeDto[];
+}
+
+export interface GraphNodePayload {
+  tempId: string;
+  x: number;
+  y: number;
+  label: string;
+}
+
+export interface GraphEdgePayload {
+  tempId: string;
+  source: string;
+  target: string;
+}
+
+
+
+// --- FLEET DOMAIN ---
+
+export interface BeaconDto {
+  id: number;
+  nodeId: number | null;
+  nodeLabel?: string | null; // <-- FIX: Added to sync with backend Phase 1 update
+  uuid: string | null; // Mapped from Java UUID
+  major: number | null;
+  minor: number | null;
+  calibratedRssiBaseline: number | null;
+  status: string; // e.g., "ACTIVE", "UNLINKED"
+  linkedDate: string | null; // Mapped from ZonedDateTime
+}
+
+export interface DeploymentTaskDto {
+  id: number;
+  nodeId: number | null;
+  staffId: number | null;
+  status: string; // e.g., "TO_DO", "IN_PROGRESS", "VERIFIED"
+  timeAssigned: string | null; // Mapped from ZonedDateTime
+  timeCompleted: string | null; // Mapped from ZonedDateTime
+}
+
+export interface CreateBatchTasksRequest {
+  nodeIds: number[];
+  staffId: number;
+}
+
+export interface LinkBeaconRequest {
+  uuid: string; // Mapped from Java UUID
+  nodeId: number;
+}
+
+export interface UpdateTaskRequest {
+  status: string;
+}
+
+// --- NAVIGATION DOMAIN ---
+
+export interface RouteRequest {
+  floorPlanId: number;
+  startNodeId: number;
+  endNodeId: number;
+}
+
+
+
+export interface RouteResponse {
+  path: NodeDto[];
+  totalDistanceMeters: number;
+  estimatedTimeSeconds: number;
+  status: "SUCCESS" | "NO_PATH_FOUND";
+}
+
+// --- STAFF DOMAIN ---
+
+export interface StaffDto {
+  id: number;
+  email: string;
+  role: string;
+  status: string;
+  joinedDate?: string; 
+}
+
+export interface InviteStaffRequest {
+  email: string;
+  role: string;
+  organisationId: number;
+  invitedById: number;
+}
+
+export interface StaffInviteDto {
+  id: number;
+  email: string;
+  role: string;
+  status: string; // "PENDING" | "EXPIRED"
+  expirationDate: string;
+}
+
+export interface PairingPinDto {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  pinCode: string; // The concealed ****** pin
+  generatedBy: string;
+  invitedDate: string;
+}.

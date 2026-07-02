@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 const protectedRoutes = ['/dashboard', '/map-studio', '/fleet', '/staff', '/user-management', '/settings'];
 const authRoutes = ['/auth', '/reset-password'];
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   // 1. THE FIX: Read the actual JWT cookie, not a fake UI status
