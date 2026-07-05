@@ -48,6 +48,20 @@ export interface UpdateOrgRequest {
   orgName: string;
   contactNo: string;
   address: string;
+  adminName: string; // <-- ADDED FOR PHASE 2
+}
+
+export interface OrganisationDto {
+  id: number;
+  orgName: string;
+  adminName: string;
+  orgEmail: string;
+  slug: string;
+  country: string;
+  address: string;
+  contactNo: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MobileSignupRequest {
@@ -136,8 +150,6 @@ export interface GraphEdgePayload {
   target: string;
 }
 
-
-
 // --- FLEET DOMAIN ---
 
 export interface BeaconDto {
@@ -182,8 +194,6 @@ export interface RouteRequest {
   startNodeId: number;
   endNodeId: number;
 }
-
-
 
 export interface RouteResponse {
   path: NodeDto[];
