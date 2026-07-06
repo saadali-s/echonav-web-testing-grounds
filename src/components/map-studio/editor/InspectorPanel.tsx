@@ -5,10 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NodeDto, RouteResponse } from "@/lib/api/types";
-import { Clock, MapPin, MousePointer2, Navigation, Route, Ruler, Zap } from "lucide-react";
-import { useState } from "react";
+import { 
+  Clock, MapPin, MousePointer2, Navigation, Route, Ruler, Zap, 
+  Loader2, Play, Trash2, Mic 
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { ToolMode } from "./Toolbelt";
 import { NodeData } from "./vector/types";
+import { useGenerateNodeTts, useDeleteNodeTts } from "@/hooks/api/useMapStudio";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export type SelectionType = "NODE" | "EDGE" | null;
 
@@ -82,7 +97,6 @@ function RouteInspector({ start, end, route, isCalculating }: { start?: string |
             <div className="space-y-2 mt-4">
               <Label className="text-[10px] font-black uppercase text-zinc-500">Turn-by-Turn</Label>
               <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                {/* FIX: Replaced 'any' with the strict 'NodeDto' type */}
                 {route.path.map((step: NodeDto, idx: number) => (
                   <div key={idx} className="bg-zinc-100 dark:bg-zinc-900 border-2 border-zinc-200 dark:border-zinc-800 p-2.5 rounded-lg text-xs font-bold flex gap-3">
                     <span className="bg-zinc-950 text-white w-5 h-5 rounded-full flex items-center justify-center shrink-0">{idx + 1}</span>
@@ -129,19 +143,131 @@ function ScaleCalibration({ pixelDistance, onCalibrate }: { pixelDistance?: numb
   );
 }
 
-function NodeInspector({ node, updateNode, onSave }: { node?: NodeData, updateNode?: (u: Partial<NodeData>) => void, onSave?: () => void }) {
+function NodeInspector({ node, updateNode, onSave }: { node?: NodeData | any, updateNode?: (u: Partial<NodeData>) => void, onSave?: () => void }) {
+  const [ttsInput, setTtsInput] = useState(node?.ttsVerbalGuidance || "");
+  const generateMutation = useGenerateNodeTts();
+  const deleteMutation = useDeleteNodeTts();
+
+  useEffect(() => {
+    setTtsInput(node?.ttsVerbalGuidance || "");
+  }, [node]);
+
+  const handleGenerate = () => {
+    if (!node?.id) return;
+    
+    generateMutation.mutate({ nodeId: Number(node.id), text: ttsInput }, {
+      onSuccess: (updatedNodeFromDb) => {
+        if (updateNode) {
+          updateNode({ ttsAudioUrl: updatedNodeFromDb.ttsAudioUrl });
+        }
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    if (!node?.id) return;
+    
+    deleteMutation.mutate(Number(node.id), {
+      onSuccess: () => {
+        setTtsInput("");
+        if (updateNode) {
+           updateNode({ ttsVerbalGuidance: undefined, ttsAudioUrl: undefined });
+        }
+      }
+    });
+  };
+
+  const isGenerating = generateMutation.isPending;
+  const hasAudio = !!node?.ttsAudioUrl;
+  const isInputDirty = ttsInput !== node?.ttsVerbalGuidance;
+  
+  // Bug 1 Fix Logic: Prevents generating audio if the node doesn't have a numeric DB ID yet
+  const isNewNode = !node?.id || String(node.id).startsWith("n");
+
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
       <div className="p-5 space-y-6">
         <div className="space-y-3">
           <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Node Label (Name)</Label>
-          <Input value={node?.label || ""} onChange={(e) => updateNode?.({ label: e.target.value })} onBlur={onSave} placeholder="e.g., Lobby Entrance" className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none" />
+          <Input 
+            value={node?.label || ""} 
+            onChange={(e) => updateNode?.({ label: e.target.value })} 
+            onBlur={onSave} 
+            placeholder="e.g., Lobby Entrance" 
+            className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none" 
+          />
         </div>
+        
         <div className="space-y-3">
           <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Verbal Guidance (TTS)</Label>
-          <Textarea placeholder="e.g., You are passing the Science Lab on your right." className="resize-none h-24 text-sm font-medium bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl focus-visible:ring-0 dark:shadow-none p-3" />
+          <Textarea 
+            value={ttsInput}
+            onChange={(e) => {
+              setTtsInput(e.target.value);
+              // TYPE ASSERTION FIX: Force TS to accept the payload
+              updateNode?.({ ttsVerbalGuidance: e.target.value } as any);
+            }}
+            placeholder="e.g., You are passing the Science Lab on your right." 
+            className="resize-none h-24 text-sm font-medium bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl focus-visible:ring-0 dark:shadow-none p-3" 
+          />
+          
+          {/* Prevent generating audio for an unsaved node */}
+          {isNewNode ? (
+            <div className="p-3 mt-2 border-2 border-amber-500 bg-amber-50 rounded-xl text-center">
+               <p className="text-xs font-bold text-amber-700 mb-2">
+                 Save properties to register this node before generating audio.
+               </p>
+               <Button onClick={onSave} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                 Save Properties Now
+               </Button>
+            </div>
+          ) : !hasAudio || isInputDirty ? (
+            <Button 
+              onClick={handleGenerate} 
+              disabled={isGenerating || !ttsInput.trim()} 
+              className="w-full mt-2 bg-zinc-950 text-white hover:bg-zinc-800"
+            >
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+              {isGenerating ? "Generating..." : "Generate Audio"}
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 mt-2">
+              <audio src={node.ttsAudioUrl} className="hidden" id={`audio-${node.id}`} />
+              <Button 
+                variant="secondary" 
+                className="flex-1 border-2 border-zinc-950" 
+                onClick={() => {
+                  const audioEl = document.getElementById(`audio-${node.id}`) as HTMLAudioElement;
+                  if (audioEl) audioEl.play();
+                }}
+              >
+                <Play className="h-4 w-4 mr-2" /> Play Audio
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="icon" className="border-2 border-zinc-950">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this verbal guidance audio? This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </div>
-       
       </div>
     </div>
   );

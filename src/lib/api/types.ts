@@ -100,8 +100,9 @@ export interface NodeDto {
   label: string;
   x: number;
   y: number;
-  ttsVerbalGuidance: string;
-  isHazard?: boolean; // <-- NEW
+  ttsVerbalGuidance?: string;
+  ttsAudioUrl?: string;
+  isHazard?: boolean;
 }
 
 export interface EdgeDto {
@@ -110,12 +111,23 @@ export interface EdgeDto {
   toNodeId: number;
   weightM: number;
   distance: number;
-  isHazard?: boolean; // <-- NEW
+  isHazard?: boolean;
 }
 
 export interface UpdateGraphRequest {
-  nodes: { tempId: string; x: number; y: number; label: string; isHazard?: boolean }[]; // <-- NEW
-  edges: { tempId: string; source: string; target: string; isHazard?: boolean }[]; // <-- NEW
+  nodes: {
+    tempId: string;
+    x: number;
+    y: number;
+    label: string;
+    isHazard?: boolean;
+  }[];
+  edges: {
+    tempId: string;
+    source: string;
+    target: string;
+    isHazard?: boolean;
+  }[];
 }
 export interface GraphDto {
   floorPlan: FloorPlanDto;
@@ -135,8 +147,6 @@ export interface GraphEdgePayload {
   source: string;
   target: string;
 }
-
-
 
 // --- FLEET DOMAIN ---
 
@@ -183,8 +193,6 @@ export interface RouteRequest {
   endNodeId: number;
 }
 
-
-
 export interface RouteResponse {
   path: NodeDto[];
   totalDistanceMeters: number;
@@ -199,7 +207,7 @@ export interface StaffDto {
   email: string;
   role: string;
   status: string;
-  joinedDate?: string; 
+  joinedDate?: string;
 }
 
 export interface InviteStaffRequest {

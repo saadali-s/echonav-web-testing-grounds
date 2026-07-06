@@ -92,3 +92,24 @@ export function useUpdateSpatialGraph() {
     },
   });
 }
+
+export const useGenerateNodeTts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ nodeId, text }: { nodeId: number; text: string }) => 
+      mapStudioActions.generateNodeTts(nodeId, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};
+
+export const useDeleteNodeTts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nodeId: number) => mapStudioActions.deleteNodeTts(nodeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};

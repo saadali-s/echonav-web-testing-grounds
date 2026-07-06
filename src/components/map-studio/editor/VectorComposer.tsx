@@ -94,23 +94,32 @@ export function VectorComposer({
   }, [state, nodes, edges, pushHistory]);
 
   // Keyboard Listeners
-  useEffect(() => {
+useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === "Space" && e.target === document.body) {
+      const target = e.target as HTMLElement;
+      const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      if (e.code === "Space" && target === document.body) {
         e.preventDefault();
         state.setIsSpacePressed(true);
       }
-      if (e.code === "Delete" || e.code === "Backspace") handleDeleteSelection();
       
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-        e.preventDefault();
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
+      if (!isTypingInInput) {
+        if (e.code === "Delete" || e.code === "Backspace") {
+          handleDeleteSelection();
+        }
+        
+        if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+          e.preventDefault();
+          if (e.shiftKey) {
+            redo();
+          } else {
+            undo();
+          }
         }
       }
     };
+
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === "Space") state.setIsSpacePressed(false);
     };
@@ -297,7 +306,37 @@ export function VectorComposer({
     pushHistory(nodes, edges);
     if (onSaveDb) {
       try {
-        await onSaveDb(nodes, edges);
+        // 1. Capture the fresh graph data straight from Postgres
+        const updatedGraph = await onSaveDb(nodes, edges);
+        
+        // 2. THIS IS THE FIX: Instantly inject the real Database IDs into the canvas!
+        if (updatedGraph && updatedGraph.nodes) {
+           const freshNodes = updatedGraph.nodes.map((n: any) => ({
+             id: String(n.id),
+             x: n.x,
+             y: n.y,
+             label: n.label || "",
+             isHazard: n.isHazard || false,
+             ttsVerbalGuidance: n.ttsVerbalGuidance,
+             ttsAudioUrl: n.ttsAudioUrl
+           }));
+           
+           const freshEdges = updatedGraph.edges.map((e: any) => ({
+             id: String(e.id),
+             source: String(e.fromNodeId),
+             target: String(e.toNodeId),
+             isHazard: e.isHazard || false,
+             weightM: e.weightM,
+             distance: e.distance
+           }));
+           
+           // Overwrite the canvas state with the real data
+           resetHistory(freshNodes, freshEdges);
+        }
+        
+        // 3. Clear the selection so the user clicks the fresh node
+        state.clearSelection();
+        
       } catch (err) {
         console.error("Save failed", err);
       }

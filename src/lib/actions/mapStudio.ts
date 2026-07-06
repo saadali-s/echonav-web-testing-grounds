@@ -3,6 +3,7 @@ import {
   BuildingDto,
   FloorPlanDto,
   GraphDto,
+  NodeDto,
   RegisterBuildingRequest,
   UpdateFloorPlanRequest,
   UpdateGraphRequest
@@ -106,6 +107,26 @@ export const mapStudioActions = {
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || "Failed to save vector graph.");
+    }
+  },
+
+  // --- TTS INTEGRATION ---
+  generateNodeTts: async (nodeId: number, text: string): Promise<NodeDto> => {
+    try {
+      const response = await axiosInstance.post<NodeDto>(`/api/mapstudio/nodes/${nodeId}/tts/generate`, { text });
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to generate TTS audio.");
+    }
+  },
+
+  deleteNodeTts: async (nodeId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/mapstudio/nodes/${nodeId}/tts`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete TTS audio.");
     }
   }
 };

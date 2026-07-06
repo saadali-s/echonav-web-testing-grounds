@@ -45,14 +45,19 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
 const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
     try {
       const payload: UpdateGraphRequest = {
-        // THE FIX: Explicitly map the isHazard boolean into the payload
-        nodes: nodes.map((n) => ({ tempId: String(n.id), x: n.x, y: n.y, label: n.label, isHazard: n.isHazard || false })),
+        nodes: nodes.map((n) => ({ tempId: String(n.id), x: n.x, y: n.y, label: n.label, isHazard: n.isHazard || false, ttsVerbalGuidance: n.ttsVerbalGuidance, ttsAudioUrl: n.ttsAudioUrl })),
         edges: edges.map((e) => ({ tempId: String(e.id), source: String(e.source), target: String(e.target), isHazard: e.isHazard || false }))
       };
-      await updateSpatialGraphMutation.mutateAsync({ floorPlanId: idNum, data: payload });
+      
+      const result = await updateSpatialGraphMutation.mutateAsync({ floorPlanId: idNum, data: payload });
+      
       alert("Vector graph securely saved to database.");
+      
+      return result; 
+      
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "An unknown error occurred.");
+      return null;
     }
   };
 
@@ -90,14 +95,16 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
 
   const isFullyLoading = isDbLoading || isProcessing;
 
-  const initialNodes: NodeData[] = useMemo(() => {
+const initialNodes: NodeData[] = useMemo(() => {
     const nodes = graphData?.nodes || [];
     return nodes.map((n) => ({
       id: String(n.id || ""),
       x: n.x || 0,
       y: n.y || 0,
       label: n.label || "",
-      isHazard: n.isHazard || false, // <-- Pull from backend DB on load
+      isHazard: n.isHazard || false, 
+      ttsVerbalGuidance: n.ttsVerbalGuidance,
+      ttsAudioUrl: n.ttsAudioUrl
     }));
   }, [graphData]);
 
