@@ -15,29 +15,128 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Activity, AlertTriangle, ArrowRight, Map, MapPin, Shield, ShieldAlert, Trash2 } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, Loader2, Map, MapPin, Shield, ShieldAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useUpdateBuildingPrivacy } from "@/hooks/api/useMapStudio";
 
-// interface defining building properties
-export interface BuildingData { 
-  id: string; 
-  name: string; 
-  address: string; 
-  privacy: "PUBLIC" | "PRIVATE"; 
-  stats: { ActiveFloorPlans : number }; 
-  health: "ONLINE" | "MAINTENANCE"; 
-  updatedAt: string; 
+// ============================================================================
+// 1. ISOLATED PRIVACY TOGGLE COMPONENT
+// ============================================================================
+
+interface PrivacyToggleProps {
+  buildingId: string; // or number, depending on your backend id type. Make sure it matches!
+  buildingName: string;
+  currentPrivacy: "PUBLIC" | "PRIVATE";
+  orgId: number;
+}
+
+export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId }: PrivacyToggleProps) {
+  const [showDialog, setShowDialog] = useState(false);
+  const { mutate, isPending } = useUpdateBuildingPrivacy();
+
+  const targetPrivacy = currentPrivacy === "PUBLIC" ? "PRIVATE" : "PUBLIC";
+
+  const handleConfirm = (e: React.MouseEvent) => {
+    e.preventDefault(); // Keep the dialog open while loading
+    
+    mutate(
+      { buildingId: Number(buildingId), orgId, data: { privacyLevel: targetPrivacy } },
+      {
+        onSuccess: () => {
+          setShowDialog(false);
+        },
+        onError: (error) => {
+          // This will now expose exactly WHY it was failing
+          alert(`Failed to update privacy: ${error instanceof Error ? error.message : "Unknown error"}`);
+          setShowDialog(false); 
+        }
+      }
+    );
+  };
+
+  // Neo-brutalism dynamic colors for the button
+  const confirmButtonColor = targetPrivacy === "PUBLIC" 
+    ? "bg-emerald-400 hover:bg-emerald-500 text-zinc-950" 
+    : "bg-amber-400 hover:bg-amber-500 text-zinc-950";
+
+  return (
+    <>
+      <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 rounded-lg border-2 border-zinc-950 dark:border-zinc-800">
+        <span className={`text-[10px] font-black tracking-widest uppercase ${currentPrivacy === "PUBLIC" ? "text-emerald-600" : "text-amber-600"}`}>
+          {currentPrivacy}
+        </span>
+        <Switch
+          checked={currentPrivacy === "PUBLIC"}
+          disabled={isPending}
+          onClick={(e) => {
+            e.preventDefault();
+            setShowDialog(true);
+          }}
+          className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500 border-2 border-zinc-950 scale-75 m-0 cursor-pointer"
+        />
+      </div>
+
+      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="font-black uppercase tracking-tight text-xl">Confirm Privacy Change</AlertDialogTitle>
+            <AlertDialogDescription className="font-bold text-zinc-500">
+              Are you sure you want to change the privacy level of <span className="text-zinc-950 dark:text-zinc-100">{buildingName}</span> to {targetPrivacy}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3 sm:gap-4 mt-2">
+            <AlertDialogCancel 
+              disabled={isPending} 
+              className="border-2 border-zinc-950 dark:border-zinc-800 font-black uppercase text-[11px] tracking-wider h-11 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+            >
+              Cancel
+            </AlertDialogCancel>
+            
+            {/* Replaced AlertDialogAction with a standard Button to fix the click swallowing */}
+            <Button
+              disabled={isPending}
+              onClick={handleConfirm}
+              className={`border-2 border-zinc-950 font-black uppercase text-[11px] tracking-wider h-11 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none ${confirmButtonColor}`}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Confirm Change"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+}
+
+// ============================================================================
+// 2. MAIN BUILDING CARD COMPONENT
+// ============================================================================
+
+export interface BuildingData {
+  id: string;
+  name: string;
+  address: string;
+  privacy: "PUBLIC" | "PRIVATE";
+  stats: { ActiveFloorPlans: number };
+  health: "ONLINE" | "MAINTENANCE";
+  updatedAt: string;
 }
 
 interface BuildingCardProps {
   building: BuildingData;
+  orgId: number; // <-- ADDED THIS PROP
   onDelete: (id: string) => void;
 }
 
-export function BuildingCard({ building, onDelete }: BuildingCardProps) {
+export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
   const isHealthy = building.health === "ONLINE";
-  const [privacy, setPrivacy] = useState<"PUBLIC" | "PRIVATE">(building.privacy);
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
@@ -47,8 +146,8 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
         {/* Confirm Delete Popup Wrapper */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="absolute top-2 right-2 h-8 w-8 p-0 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
             >
               <Trash2 className="h-4 w-4" />
@@ -65,7 +164,7 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
               <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
                 Cancel
               </AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={() => onDelete(building.id)}
                 className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
               >
@@ -75,9 +174,9 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Badge variant={privacy === "PUBLIC" ? "default" : "secondary"} className={`absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md transition-colors ${privacy === "PRIVATE" ? "bg-amber-100 text-amber-900 hover:bg-amber-200" : ""}`}>
-          {privacy === "PRIVATE" ? <ShieldAlert className="w-3 h-3 mr-1.5" /> : <Shield className="w-3 h-3 mr-1.5" />}
-          {privacy}
+        <Badge variant={building.privacy === "PUBLIC" ? "default" : "secondary"} className={`absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md transition-colors ${building.privacy === "PRIVATE" ? "bg-amber-100 text-amber-900 hover:bg-amber-200" : ""}`}>
+          {building.privacy === "PRIVATE" ? <ShieldAlert className="w-3 h-3 mr-1.5" /> : <Shield className="w-3 h-3 mr-1.5" />}
+          {building.privacy}
         </Badge>
       </div>
 
@@ -105,10 +204,15 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
               <><div className="h-5 w-5 bg-amber-100 border-2 border-amber-900 text-amber-900 flex items-center justify-center rounded-md shrink-0"><AlertTriangle className="h-3 w-3" /></div><span className="text-amber-700 dark:text-amber-500">Maintenance</span></>
             )}
           </div>
-          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-900 px-2.5 py-1.5 rounded-lg border-2 border-zinc-950 dark:border-zinc-800">
-            <span className={`text-[10px] font-black tracking-widest uppercase ${privacy === "PUBLIC" ? "text-emerald-600" : "text-amber-600"}`}>{privacy}</span>
-            <Switch checked={privacy === "PUBLIC"} onCheckedChange={(checked) => setPrivacy(checked ? "PUBLIC" : "PRIVATE")} className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-amber-500 border-2 border-zinc-950 scale-75 m-0" />
-          </div>
+          
+          {/* Using our new isolated component here */}
+          <PrivacyToggle 
+            buildingId={building.id} 
+            buildingName={building.name} 
+            currentPrivacy={building.privacy}
+            orgId={orgId} 
+          />
+          
         </div>
       </CardContent>
 

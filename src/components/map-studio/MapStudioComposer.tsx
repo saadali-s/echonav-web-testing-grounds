@@ -104,6 +104,7 @@ export function MapStudioComposer() {
             <BuildingCard 
               key={building.id} 
               building={building} 
+             orgId={orgIdNum!}
               onDelete={handleDeleteBuilding} 
             />
           ))}

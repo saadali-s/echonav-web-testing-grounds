@@ -4,6 +4,7 @@ import {
   FloorPlanDto,
   GraphDto,
   RegisterBuildingRequest,
+  UpdateBuildingPrivacyRequest,
   UpdateFloorPlanRequest,
   UpdateGraphRequest
 } from "@/lib/api/types";
@@ -37,6 +38,16 @@ export const mapStudioActions = {
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || "Failed to fetch buildings.");
+    }
+  },
+
+  updateBuildingPrivacy: async (buildingId: number, payload: UpdateBuildingPrivacyRequest): Promise<BuildingDto> => {
+    try {
+      const response = await axiosInstance.patch<BuildingDto>(`/api/mapstudio/buildings/${buildingId}/privacy`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to update building privacy.");
     }
   },
 

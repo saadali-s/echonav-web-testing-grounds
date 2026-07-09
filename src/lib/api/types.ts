@@ -81,6 +81,10 @@ export interface RegisterBuildingRequest {
   privacyLevel: "PUBLIC" | "PRIVATE";
 }
 
+export interface UpdateBuildingPrivacyRequest {
+  privacyLevel: "PUBLIC" | "PRIVATE";
+}
+
 export interface FloorPlanDto {
   id: number;
   buildingId: number | null;
