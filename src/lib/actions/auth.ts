@@ -24,7 +24,7 @@ export const authActions = {
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Invalid credentials.");
+      throw new Error(axiosError.response?.data?.message || "Password incorrect.");
     }
   },
 

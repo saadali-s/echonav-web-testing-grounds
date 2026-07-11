@@ -23,7 +23,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -33,8 +33,8 @@ export function LoginForm() {
       await login(email, password);
     } catch (err: unknown) {
       // Catch Spring Boot's custom ErrorResponse
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        setError(err.response.data.message);
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError("Unable to connect to the server. Please check your network.");
       }
