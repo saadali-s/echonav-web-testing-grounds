@@ -1,6 +1,11 @@
 import { axiosInstance } from "@/lib/api/axios";
-import { InviteStaffRequest, StaffDto, StaffInviteDto } from "@/lib/api/types";
+import { InviteStaffRequest, StaffDto } from "@/lib/api/types";
 import { AxiosError } from "axios";
+
+interface ActivateInvitePayload {
+  role: "ADMIN" | "TECHNICIAN";
+  email: string;
+}
 
 export const staffActions = {
   getStaff: async (orgId: number): Promise<StaffDto[]> => {
@@ -12,18 +17,37 @@ export const staffActions = {
       throw new Error(axiosError.response?.data?.message || "Failed to fetch staff roster.");
     }
   },
-
-  inviteStaff: async (payload: InviteStaffRequest): Promise<string> => {
+  activateInvite: async (staffId: number, payload: ActivateInvitePayload): Promise<void> => {
     try {
-      const response = await axiosInstance.post<string>("/api/staff/invite", payload);
+      const response = await axiosInstance.put(`/api/staff/${staffId}/accept`, payload);
       return response.data;
-    } catch (err: unknown) {
+    }
+    catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Failed to invite staff.");
+      console.log("Server Status Status:", axiosError.response?.status);
+      console.log("Server Error Body:", axiosError.response?.data);
+
+      throw new Error(axiosError.response?.data?.message || "Failed to accept system invitation");
     }
   },
-  getPendingInvites: async (orgId: number): Promise<StaffInviteDto[]> => {
-    const response = await axiosInstance.get<StaffInviteDto[]>(`/api/staff/invites/organisation/${orgId}`);
+  // Inside src/lib/actions/staff.ts
+  inviteStaff: async (data: InviteStaffRequest) => {
+    try {
+      const response = await axiosInstance.post("/api/staff/invite", data);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<any>;
+      const rawErrorMessage = typeof axiosError.response?.data === 'string'
+        ? axiosError.response.data
+        : axiosError.response?.data?.message;
+
+      console.error("CRITICAL BACKEND ERROR:", rawErrorMessage || axiosError.message);
+
+      throw new Error(rawErrorMessage || axiosError.message || "Failed to invite staff.");
+    }
+  },
+  getPendingInvites: async (orgId: number): Promise<StaffDto[]> => {
+    const response = await axiosInstance.get<StaffDto[]>(`/api/staff/invites/organisation/${orgId}`);
     return response.data;
   },
   deleteStaff: async (staffId: number): Promise<void> => {

@@ -2,48 +2,16 @@
 
 import { useAuth } from "@/components/layout/auth-provider";
 import { useDeleteStaff, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
-import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
-import { InvitationQueue, PendingInvite } from "./InvitationQueue";
+import { InvitationQueue } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
+import { ActiveStaffRoster } from "./ActiveStaffRoster";
 
 export function StaffComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
-
-  // Fetch the real data from Spring Boot
-  const { data: staffDtoList, isLoading, isError } = useGetStaff(orgIdNum);
-  const { data: invitesDtoList, isLoading: invitesLoading } = useGetPendingInvites(orgIdNum);
-  const deleteStaffMutation = useDeleteStaff(orgIdNum);
-
-  // Map the backend DTO to the frontend UI interface
-  const activeStaff: ActiveStaff[] = (staffDtoList || []).map((staff) => ({
-    id: String(staff.id),
-    name: staff.email.split("@")[0], // Extracted from email since Staff table doesn't have names
-    email: staff.email,
-    role: (staff.role === "ADMIN" ? "ADMIN" : "TECHNICIAN"),
-    joinedDate: staff.joinedDate || "Recently",
-  }));
-
-  // Empty placeholder until we build the GET /invites endpoint
-  const pendingInvites: PendingInvite[] = (invitesDtoList || []).map((invite) => ({
-    id: String(invite.id),
-    email: invite.email,
-    inviteCode: "PENDING", 
-    status: (invite.status as "PENDING" | "EXPIRED"),
-    expirationDate: new Date(invite.expirationDate).toLocaleDateString(),
-  }));
-  
-  const handleDeleteStaff = async (id: string) => {
-    try {
-      await deleteStaffMutation.mutateAsync(Number(id));
-    } catch (error: unknown) {
-      if (error instanceof Error) alert(error.message);
-    }
-  };
-
-  const handleDeleteInvitedStaff = (id: string) => {
-    console.log("Invite deletion will be implemented later.", id);
-  };
+  const { data: pendingInvites = [] } = useGetPendingInvites(orgIdNum);
+  const { data: activeStaff = [], isLoading, isError} = useGetStaff(orgIdNum)
+  const deleteStaff = useDeleteStaff(Number(orgIdNum));
 
   return (
     <div className="space-y-8 pb-12">
@@ -76,8 +44,8 @@ export function StaffComposer() {
 
       {!isLoading && !isError && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
-          <InvitationQueue invites={pendingInvites} onDelete={handleDeleteInvitedStaff} />
-          <ActiveStaffRoster staff={activeStaff} onDelete={handleDeleteStaff} />
+          <InvitationQueue invites={pendingInvites} onDelete={(id) => deleteStaff.mutate(id)} />
+          <ActiveStaffRoster staff={activeStaff} onDelete={(id) => deleteStaff.mutate(id)} />
         </div>
       )}
     </div>

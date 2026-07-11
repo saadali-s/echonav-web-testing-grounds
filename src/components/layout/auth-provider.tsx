@@ -7,7 +7,7 @@ import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface User {
-  id: string;
+  id: number;
   email?: string;
   role?: string;
   user_metadata?: {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token, role, organisationId, userId } = response;
 
     const userData: User = {
-      id: String(userId),
+      id: userId,
       email: email,
       role: role,
       user_metadata: {

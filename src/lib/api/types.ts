@@ -196,26 +196,23 @@ export interface RouteResponse {
 
 export interface StaffDto {
   id: number;
+  name: string; // Maps to your backend's displayName
   email: string;
-  role: string;
-  status: string;
+  role: "ADMIN" | "TECHNICIAN";
+  status: "PENDING" | "ACTIVE";
   joinedDate?: string; 
+  inviteCode?: string;
+  expirationDate?: string; 
 }
 
 export interface InviteStaffRequest {
+  name: string;
   email: string;
-  role: string;
+  role: "ADMIN" | "TECHNICIAN";
   organisationId: number;
   invitedById: number;
 }
 
-export interface StaffInviteDto {
-  id: number;
-  email: string;
-  role: string;
-  status: string; // "PENDING" | "EXPIRED"
-  expirationDate: string;
-}
 
 export interface PairingPinDto {
   id: number;
@@ -225,4 +222,12 @@ export interface PairingPinDto {
   pinCode: string; // The concealed ****** pin
   generatedBy: string;
   invitedDate: string;
+}
+export interface BackendInviteResponse {
+  id: number;
+  email: string;
+  inviteCode: string;
+  status: string;
+  organisationId: number;
+  invitedById: number;
 }

@@ -1,21 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StaffDto } from "@/lib/api/types";
 import { ShieldCheck, Trash2 } from "lucide-react";
 
-export interface ActiveStaff {
-  id: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "TECHNICIAN";
-  joinedDate: string;
-}
-
 interface ActiveStaffRosterProps {
-  staff: ActiveStaff[];
-  onDelete: (id: string) => void;
+  staff: StaffDto[];
+  onDelete: (id: number) => void;
 }
 
 export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
+
+  const activeStaff = staff.filter((member) => member.status == 'ACTIVE')
+
   return (
     <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-950/40 py-5">
@@ -24,7 +20,6 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
           Active Staff Roster
         </CardTitle>
       </CardHeader>
-
       <CardContent className="p-0 overflow-x-auto flex-1">
         <div className="min-w-[700px]">
           <div className="grid grid-cols-[1.2fr_1.5fr_1fr_0.8fr_80px] gap-4 px-6 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-widest bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -36,13 +31,13 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
           </div>
 
           <div className="flex flex-col">
-            {staff.length === 0 ? (
+            {activeStaff.length === 0 ? (
               <div className="px-6 py-8 text-center text-sm font-bold text-zinc-500 uppercase tracking-widest">
                 No active staff found.
               </div>
             ) : (
-              staff.map((member, index) => {
-                const isLast = index === staff.length - 1;
+              activeStaff.map((member, index) => {
+                const isLast = index === activeStaff.length - 1;
                 return (
                   <div
                     key={member.id}
@@ -73,10 +68,9 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                     {/* Delete Action Button */}
                     <div className="flex justify-center">
                       <button
-                        onClick={() => onDelete(member.id)}
+                        onClick={() => onDelete(Number(member.id))}
                         className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                        title="Remove Staff"
-                      >
+                        title="Remove Staff">
                         <Trash2 className="h-5 w-5" />
                       </button>
                     </div>

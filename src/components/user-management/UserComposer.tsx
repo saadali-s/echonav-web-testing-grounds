@@ -49,12 +49,11 @@ export function UserComposer() {
   };
 
   const handleDeleteInvitedUser = (id: string) => {
-    console.log("Invited user deletion placeholder", id);
+    alert(`Invited user deletion placeholder: ${id}`);
   };
 
   const handleAddInvitedUser = (newUser: InvitedUsers) => {
-    // This will be deprecated in the next step when we wire the modal directly to the backend
-    console.log("New user invited:", newUser);
+    alert(`New user invited: ${newUser.id}`);
   };
 
   return (

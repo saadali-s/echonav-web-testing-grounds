@@ -1,21 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StaffDto } from "@/lib/api/types";
 import { Clock, Trash2 } from "lucide-react";
 
-export interface PendingInvite {
-  id: string;
-  email: string;
-  inviteCode: string;
-  status: "PENDING" | "EXPIRED";
-  expirationDate: string;
-}
-
 interface InvitationQueueProps {
-  invites: PendingInvite[];
-  onDelete: (id: string) => void;
+  invites: StaffDto[];
+  onDelete: (id: number) => void;
 }
 
-export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
+export function InvitationQueue({ invites = [], onDelete }: InvitationQueueProps) {
+
+  const pendingStaff = invites.filter((member) => member.status === "PENDING");
+
   return (
     <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-950/40 py-5">
@@ -36,13 +32,13 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
           </div>
 
           <div className="flex flex-col">
-            {invites.length === 0 ? (
+            {pendingStaff.length === 0 ? (
               <div className="p-12 text-center text-zinc-500 dark:text-zinc-400 text-sm font-black uppercase tracking-widest">
                 No pending invitations.
               </div>
             ) : (
-              invites.map((invite, index) => {
-                const isLast = index === invites.length - 1;
+              pendingStaff.map((invite, index) => {
+                const isLast = index === pendingStaff.length - 1;
                 return (
                   <div
                     key={invite.id}
@@ -52,21 +48,18 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
                       {invite.email}
                     </span>
                     <span className="font-mono text-sm font-bold text-zinc-800 dark:text-zinc-300 tracking-widest bg-zinc-100 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 rounded-md w-fit">
-                      {invite.inviteCode}
+                      {invite.inviteCode || "N/A"}
                     </span>
                     <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                      {invite.expirationDate}
+                      {invite.expirationDate ? new Date(invite.expirationDate).toLocaleDateString() : "Never"}
                     </span>
                     <div className="text-right">
                       <Badge
-                        variant={
-                          invite.status === "PENDING" ? "default" : "secondary"
-                        }
-                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${
-                          invite.status === "PENDING"
+                        variant={invite.status === "PENDING" ? "default" : "secondary"}
+                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${invite.status === "PENDING"
                             ? "bg-amber-200 text-amber-900 border-amber-400 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700"
                             : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 shadow-none"
-                        }`}
+                          }`}
                       >
                         {invite.status}
                       </Badge>
@@ -74,7 +67,7 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
 
                     <div className="flex justify-center">
                       <button
-                        onClick={() => onDelete(invite.id)}
+                        onClick={() => onDelete(Number(invite.id))}
                         className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                         title="Remove Invitation"
                       >
