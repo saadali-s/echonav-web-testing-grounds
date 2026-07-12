@@ -42,11 +42,25 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     return () => clearInterval(timer);
   }, []);
 
-const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
+  const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
     try {
       const payload: UpdateGraphRequest = {
-        nodes: nodes.map((n) => ({ tempId: String(n.id), x: n.x, y: n.y, label: n.label, isHazard: n.isHazard || false, ttsVerbalGuidance: n.ttsVerbalGuidance, ttsAudioUrl: n.ttsAudioUrl })),
-        edges: edges.map((e) => ({ tempId: String(e.id), source: String(e.source), target: String(e.target), isHazard: e.isHazard || false }))
+        nodes: nodes.map((n) => ({ 
+          tempId: String(n.id), 
+          x: n.x, 
+          y: n.y, 
+          label: n.label, 
+          isHazard: n.isHazard || false,
+          hazardType: n.hazardType,
+          ttsVerbalGuidance: n.ttsVerbalGuidance, 
+          ttsAudioUrl: n.ttsAudioUrl 
+        })),
+        edges: edges.map((e) => ({ 
+          tempId: String(e.id), 
+          source: String(e.source), 
+          target: String(e.target), 
+          isHazard: e.isHazard || false 
+        }))
       };
       
       const result = await updateSpatialGraphMutation.mutateAsync({ floorPlanId: idNum, data: payload });
@@ -61,11 +75,24 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
     }
   };
 
+  const initialNodes: NodeData[] = useMemo(() => {
+    const nodes = graphData?.nodes || [];
+    return nodes.map((n) => ({
+      id: String(n.id || ""),
+      x: n.x || 0,
+      y: n.y || 0,
+      label: n.label || "",
+      isHazard: n.isHazard || false, 
+      hazardType: n.hazardType,
+      ttsVerbalGuidance: n.ttsVerbalGuidance,
+      ttsAudioUrl: n.ttsAudioUrl
+    }));
+  }, [graphData]);
+
   const handleUpdateScale = async (newScale: number) => {
     try {
       await updateFloorPlanMutation.mutateAsync({ floorPlanId: idNum, data: { scale: newScale } });
-      
-      // Force TanStack to instantly fetch the new edge weights from Postgres
+    
       await queryClient.invalidateQueries(); 
       
       alert("Floor plan scale accurately calibrated.");
@@ -95,26 +122,13 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
 
   const isFullyLoading = isDbLoading || isProcessing;
 
-const initialNodes: NodeData[] = useMemo(() => {
-    const nodes = graphData?.nodes || [];
-    return nodes.map((n) => ({
-      id: String(n.id || ""),
-      x: n.x || 0,
-      y: n.y || 0,
-      label: n.label || "",
-      isHazard: n.isHazard || false, 
-      ttsVerbalGuidance: n.ttsVerbalGuidance,
-      ttsAudioUrl: n.ttsAudioUrl
-    }));
-  }, [graphData]);
-
- const initialEdges: EdgeData[] = useMemo(() => {
+  const initialEdges: EdgeData[] = useMemo(() => {
     const edges = graphData?.edges || [];
     return edges.map((e) => ({
       id: String(e.id || ""),
       source: String(e.fromNodeId || ""),
       target: String(e.toNodeId || ""),
-      isHazard: e.isHazard || false, // <-- Pull from backend DB on load
+      isHazard: e.isHazard || false,
       weightM: e.weightM ?? undefined, 
       distance: e.distance ?? undefined
     }));

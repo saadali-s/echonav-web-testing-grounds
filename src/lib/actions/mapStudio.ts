@@ -110,6 +110,15 @@ export const mapStudioActions = {
     }
   },
 
+  deleteNode: async (nodeId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/mapstudio/nodes/${nodeId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete node.");
+    }
+  },
+
   // --- TTS INTEGRATION ---
   generateNodeTts: async (nodeId: number, text: string): Promise<NodeDto> => {
     try {

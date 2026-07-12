@@ -5,8 +5,9 @@ export interface NodeData {
   id: string;
   x: number;
   y: number;
-  isHazard?: boolean;
   label: string;
+  isHazard?: boolean;
+  hazardType?: string;
   ttsVerbalGuidance?: string;
   ttsAudioUrl?: string;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityChartDto } from "@/lib/api/types";
 import {
   CartesianGrid,
   Legend,
@@ -12,21 +13,13 @@ import {
   YAxis,
 } from "recharts";
 
-const data = [
-  { date: "04/13", users: 22, Hazards: 4 },
-  { date: "04/14", users: 20, Hazards: 4 },
-  { date: "04/15", users: 16, Hazards: 6 },
-  { date: "04/16", users: 27, Hazards: 7 },
-  { date: "04/17", users: 30, Hazards: 5 },
-  { date: "04/18", users: 8, Hazards: 6 },
-];
-
 const textureStyle = {
   backgroundImage:
     "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 8px)",
 };
 
-export function RoutingActivityChart() {
+// Accept the dynamic data
+export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
   return (
     <Card className="relative flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none overflow-hidden h-full">
       <div
@@ -60,6 +53,7 @@ export function RoutingActivityChart() {
                 tick={{ fill: "#71717a", fontWeight: "bold", fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
+                allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{
@@ -88,7 +82,7 @@ export function RoutingActivityChart() {
               />
               <Line
                 type="step"
-                dataKey="Hazards"
+                dataKey="hazards" 
                 name="Hazards"
                 stroke="#f43f5e"
                 strokeWidth={3}

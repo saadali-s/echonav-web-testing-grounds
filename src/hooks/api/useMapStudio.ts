@@ -113,3 +113,13 @@ export const useDeleteNodeTts = () => {
     },
   });
 };
+
+export const useDeleteNode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nodeId: number) => mapStudioActions.deleteNode(nodeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};
