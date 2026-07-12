@@ -11,11 +11,14 @@ export const queryKeys = {
   staff: {
     roster: (orgId?: number) => ["staff", "roster", orgId] as const,
   },
-  // --- SUBTASK 2.2 FIX: Add Users Keys ---
   users: {
     roster: (orgId?: number) => ["users", "roster", orgId] as const,
   },
   auth: {
     session: ["auth", "session"] as const,
+  },
+  // --- DASHBOARD ADDITION ---
+  dashboard: {
+    data: (orgId?: number) => ["dashboard", orgId] as const,
   },
 };

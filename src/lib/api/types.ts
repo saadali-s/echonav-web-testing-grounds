@@ -101,7 +101,8 @@ export interface NodeDto {
   x: number;
   y: number;
   ttsVerbalGuidance: string;
-  isHazard?: boolean; // <-- NEW
+  isHazard?: boolean; 
+  hazardType?: string;
 }
 
 export interface EdgeDto {
@@ -128,6 +129,17 @@ export interface GraphNodePayload {
   x: number;
   y: number;
   label: string;
+  isHazard?: boolean;
+  hazardType?: string; 
+}
+
+export interface NodeData { 
+  id: string; 
+  x: number; 
+  y: number; 
+  label: string;
+  isHazard?: boolean; 
+  hazardType?: string; 
 }
 
 export interface GraphEdgePayload {
@@ -225,4 +237,56 @@ export interface PairingPinDto {
   pinCode: string; // The concealed ****** pin
   generatedBy: string;
   invitedDate: string;
+}
+
+// --- DASHBOARD DOMAIN ---
+
+export interface StatMetric {
+  count: number;
+  subtext: string;
+}
+
+export interface DashboardStatsDto {
+  mappedBuildings: StatMetric;
+  activeBeacons: StatMetric;
+  pendingTasks: StatMetric;
+}
+
+export interface RecentPlanDto {
+  id: number;
+  name: string;
+  building: string;
+  updatedAt: string;
+}
+
+export interface HardwareHealthDto {
+  total: number;
+  healthyCount: number;
+  warningCount: number;
+  criticalCount: number;
+  criticalItems: any[];
+}
+
+export interface SystemEventDto {
+  id: number;
+  status: 'ACTIVE' | 'RESOLVED';
+  hazardType: string;
+  nodeLabel: string;
+  buildingName: string;
+  timestamp: string;
+}
+
+export interface DashboardResponseDto {
+  userName: string;
+  stats: DashboardStatsDto;
+  recentPlans: RecentPlanDto[];
+  healthData: HardwareHealthDto;
+  systemEvents: SystemEventDto[];
+  routingActivity: ActivityChartDto[];
+}
+
+export interface ActivityChartDto {
+  date: string;
+  users: number;
+  hazards: number;
 }

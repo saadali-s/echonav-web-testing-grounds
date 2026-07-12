@@ -304,6 +304,19 @@ export function VectorComposer({
     }
   };
 
+  const handleResolveHazard = async (nodeId: string) => {
+    const newNodes = nodes.map(n => n.id === nodeId ? { ...n, isHazard: false, hazardType: undefined } : n);
+    pushHistory(newNodes, edges);
+    
+    if (onSaveDb) {
+      try {
+        await onSaveDb(newNodes, edges);
+      } catch (err) {
+        console.error("Resolve save failed", err);
+      }
+    }
+  };
+
   const handleCalibrateWrapper = async (newScaleRatio: number) => {
     if (onUpdateScale) {
       try {
@@ -357,7 +370,7 @@ export function VectorComposer({
             draftEdge={state.draftEdge} 
             selectionBox={state.selectionBox} 
             scale={scale} 
-            floorPlanScale={parsedScale} // FIXED: Passed calculated scale to EdgeLayer
+            floorPlanScale={parsedScale} 
             onEdgeClick={handleEdgeClick} 
             calibrationStart={state.calibrationStart}
             calibrationEnd={state.calibrationEnd}
@@ -382,11 +395,12 @@ export function VectorComposer({
         onDelete={handleDeleteSelection}
         calibrationPixelDistance={calibrationPixelDistance}
         onCalibrate={handleCalibrateWrapper}
-        edgeMeters={selectedEdgeDistance} // FIXED: Restored edge distance binding
+        edgeMeters={selectedEdgeDistance} 
         routeStartNode={state.routeStartNode}
         routeEndNode={state.routeEndNode}
         calculatedRoute={state.calculatedRoute}
         isCalculatingRoute={state.isCalculatingRoute}
+        onResolveHazard={handleResolveHazard}
       />
     </div>
   );

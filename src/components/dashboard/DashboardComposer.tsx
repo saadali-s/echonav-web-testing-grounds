@@ -12,6 +12,7 @@ import {
   SystemEvent,
   SystemEventsFeed,
 } from "@/components/dashboard/SystemEventsFeed";
+import { ActivityChartDto } from "@/lib/api/types"; 
 import { Button } from "@/components/ui/button";
 import { KeyRound } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ interface DashboardComposerProps {
   recentPlans: FloorPlan[];
   healthData: HardwareHealthData;
   systemEvents: SystemEvent[];
+  routingActivity: ActivityChartDto[]; 
 }
 
 export function DashboardComposer({
@@ -30,6 +32,7 @@ export function DashboardComposer({
   recentPlans,
   healthData,
   systemEvents,
+  routingActivity, 
 }: DashboardComposerProps) {
   return (
     <div className="flex flex-col min-h-full">
@@ -63,7 +66,8 @@ export function DashboardComposer({
           <StatCards stats={stats} />
 
           <div className="h-100">
-            <RoutingActivityChart />
+            {/* --- PASS THE DATA TO THE CHART --- */}
+            <RoutingActivityChart data={routingActivity} />
           </div>
 
           <div>
