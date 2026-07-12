@@ -5,16 +5,29 @@ import { useGetSpatialGraph, useUpdateFloorPlan, useUpdateSpatialGraph } from "@
 import { useCalculateRoute } from "@/hooks/api/useNavigation";
 import { UpdateGraphRequest } from "@/lib/api/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { Layers, Map } from "lucide-react";
+// ADDED NEW ICONS
+import { Layers, Map, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"; 
 import { useEffect, useMemo, useState } from "react";
 import { Toolbelt, ToolMode } from "./Toolbelt";
 import { VectorComposer } from "./VectorComposer";
 import { EdgeData, NodeData } from "./vector/types";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
   const [activeTool, setActiveTool] = useState<ToolMode>("SELECT");
   const [isProcessing, setIsProcessing] = useState(true);
   const [progress, setProgress] = useState(0);
+  
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const idNum = Number(floorPlanId);
   const queryClient = useQueryClient();
@@ -42,36 +55,33 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     return () => clearInterval(timer);
   }, []);
 
-const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
+  const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
     try {
       const payload: UpdateGraphRequest = {
-        // THE FIX: Explicitly map the isHazard boolean into the payload
         nodes: nodes.map((n) => ({ tempId: String(n.id), x: n.x, y: n.y, label: n.label, isHazard: n.isHazard || false })),
         edges: edges.map((e) => ({ tempId: String(e.id), source: String(e.source), target: String(e.target), isHazard: e.isHazard || false }))
       };
       await updateSpatialGraphMutation.mutateAsync({ floorPlanId: idNum, data: payload });
-      alert("Vector graph securely saved to database.");
+      setAlertMessage("Vector graph securely saved."); 
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "An unknown error occurred.");
+      setAlertMessage(error instanceof Error ? error.message : "An unknown error occurred."); 
     }
   };
 
   const handleUpdateScale = async (newScale: number) => {
     try {
       await updateFloorPlanMutation.mutateAsync({ floorPlanId: idNum, data: { scale: newScale } });
-      
-      // Force TanStack to instantly fetch the new edge weights from Postgres
       await queryClient.invalidateQueries(); 
-      
-      alert("Floor plan scale accurately calibrated.");
+      setAlertMessage("Floor plan scale accurately calibrated."); 
     } catch (error: unknown) {
-      alert(error instanceof Error ? error.message : "An unknown error occurred.");
+      setAlertMessage(error instanceof Error ? error.message : "An unknown error occurred."); 
     }
   };
 
   const handleCalculateRoute = async (startId: string, endId: string) => {
     if (startId.startsWith('n') || endId.startsWith('n')) {
-      alert("⚠️ Unsaved Nodes Detected!\n\nYou must click 'Save Properties' to save your new nodes to the database before the routing engine can calculate a path.");
+      // TEXT FIXED: Removed "to the database"
+      setAlertMessage("⚠️ Unsaved Nodes Detected!\n\nYou must click 'Save Properties' to save your new nodes before the routing engine can calculate a path."); 
       return null;
     }
 
@@ -83,7 +93,7 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
       });
     } catch (error) {
       console.error("Routing failed:", error);
-      alert("Failed to calculate route. Please try again.");
+      setAlertMessage("Failed to calculate route. Please try again."); 
       return null;
     }
   };
@@ -97,21 +107,30 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
       x: n.x || 0,
       y: n.y || 0,
       label: n.label || "",
-      isHazard: n.isHazard || false, // <-- Pull from backend DB on load
+      isHazard: n.isHazard || false, 
     }));
   }, [graphData]);
 
- const initialEdges: EdgeData[] = useMemo(() => {
+  const initialEdges: EdgeData[] = useMemo(() => {
     const edges = graphData?.edges || [];
     return edges.map((e) => ({
       id: String(e.id || ""),
       source: String(e.fromNodeId || ""),
       target: String(e.toNodeId || ""),
-      isHazard: e.isHazard || false, // <-- Pull from backend DB on load
+      isHazard: e.isHazard || false, 
       weightM: e.weightM ?? undefined, 
       distance: e.distance ?? undefined
     }));
   }, [graphData]);
+
+  const isSuccess = alertMessage?.includes("securely") || alertMessage?.includes("accurately");
+  const isWarning = alertMessage?.includes("⚠️");
+
+  const alertConfig = isSuccess 
+    ? { icon: <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-500" strokeWidth={2.5} />, bg: "bg-emerald-100 dark:bg-emerald-950/50", border: "border-emerald-200 dark:border-emerald-900", title: "Success" }
+    : isWarning
+    ? { icon: <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-500" strokeWidth={2.5} />, bg: "bg-amber-100 dark:bg-amber-950/50", border: "border-amber-200 dark:border-amber-900", title: "Action Required" }
+    : { icon: <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500" strokeWidth={2.5} />, bg: "bg-red-100 dark:bg-red-950/50", border: "border-red-200 dark:border-red-900", title: "System Alert" };
 
   return (
     <div className="h-full flex flex-col relative rounded-xl border-2 border-zinc-950 dark:border-zinc-800 overflow-hidden shadow-[6px_6px_0px_0px_rgba(24,24,27,1)] dark:bg-zinc-950">
@@ -158,6 +177,38 @@ const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
           />
         )}
       </div>
+
+      <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+          
+          <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
+            {/* DYNAMIC ICON & BACKGROUND */}
+            <div className={`${alertConfig.bg} p-2.5 rounded-lg border-2 ${alertConfig.border} shrink-0`}>
+              {alertConfig.icon}
+            </div>
+            {/* DYNAMIC TITLE */}
+            <AlertDialogTitle className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100 m-0">
+              {alertConfig.title}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+
+          <div className="py-2">
+            <AlertDialogDescription className="font-bold text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap text-sm leading-relaxed">
+              <span className="text-zinc-950 dark:text-zinc-200">{alertMessage}</span>
+            </AlertDialogDescription>
+          </div>
+
+          <AlertDialogFooter className="mt-2">
+            <AlertDialogAction 
+              onClick={() => setAlertMessage(null)}
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+            >
+              Acknowledge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+          
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
