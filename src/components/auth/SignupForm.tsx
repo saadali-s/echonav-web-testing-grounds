@@ -54,6 +54,7 @@ export function SignupForm() {
   const currentCountry = COUNTRIES.find((c) => c.code === selectedCountryCode);
   const currentDialCode = currentCountry?.dialCode || "";
   const streetInputRef = useRef<HTMLInputElement>(null);
+  const passwordRe = new RegExp("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/");
 
   useGooglePlacesAutocomplete(streetInputRef, selectedCountryCode, (details) => {
     setStreetAddress(details.streetAddress);
@@ -79,6 +80,11 @@ export function SignupForm() {
     if (password.length < 8) {
       setError("Password must be greater than 8 characters long");
       setIsRightLength(false);
+      setIsLoading(false);
+      return;
+    }
+    if (passwordRe.test(password)) {
+      setError("Invalid password")
       setIsLoading(false);
       return;
     }
