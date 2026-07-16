@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { queryKeys } from "@/hooks/api/queryKeys";
-import { useDeleteFloorPlan, useGetFloorPlans } from "@/hooks/api/useMapStudio";
+import { useDeleteFloorPlan, useGetFloorPlans, useGetFloorPlanStats } from "@/hooks/api/useMapStudio"; // <-- Added useGetFloorPlanStats
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateFloorPlan } from "./CreateFloorPlan";
 
@@ -115,53 +115,76 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
 
       {!isLoading && !isError && paginatedFloors.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+          {/* <-- Replaced static cards with our newly extracted FloorPlanCard --> */}
           {paginatedFloors.map((floor) => (
-            <Card key={floor.id} className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] bg-white dark:bg-zinc-950 group">
-              <CardContent className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex items-center justify-center border-2 border-zinc-950 dark:border-zinc-800">
-                    <Layers className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">{floor.name}</h3>
-                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
-                      0 Nodes | 0 Edges
-                    </p>
-                    <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${floor.scale ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
-                      <Ruler className="h-3 w-3" />
-                      {floor.scale ? `Scale: ${floor.scale.toFixed(4)}` : "Uncalibrated Scale"}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" className="h-10 w-10 p-0 border-2 border-zinc-950 text-zinc-500 hover:text-red-600 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="border-2 border-zinc-950 rounded-xl">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="font-black uppercase">Remove Floor Plan?</AlertDialogTitle>
-                        <AlertDialogDescription className="font-bold">This cannot be undone.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="border-2 border-zinc-950">Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDeleteFloor(floor.id)} className="bg-red-600 border-2 border-zinc-950">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-
-                  <Button asChild variant="outline" className="border-2 border-zinc-950 font-bold uppercase text-[11px] h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
-                    <Link href={`/map-studio/${buildingId}/${floor.id}`}>Edit Canvas <ArrowRight className="w-4 h-4 ml-2" /></Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <FloorPlanCard 
+              key={floor.id} 
+              buildingId={buildingId} 
+              floor={floor} 
+              onDelete={handleDeleteFloor} 
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+// --- TICKET 8 EXTRACTED COMPONENT ---
+interface FloorPlanCardProps {
+  buildingId: string;
+  floor: FloorData;
+  onDelete: (id: string) => void;
+}
+
+function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
+  // <-- Safe hook call inside isolated component
+  const { data: stats } = useGetFloorPlanStats(Number(floor.id));
+
+  return (
+    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] bg-white dark:bg-zinc-950 group">
+      <CardContent className="p-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex items-center justify-center border-2 border-zinc-950 dark:border-zinc-800">
+            <Layers className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
+          </div>
+          <div>
+            <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">{floor.name}</h3>
+            {/* <-- Dynamic UI mapped to backend counts --> */}
+            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
+              {stats?.nodeCount || 0} Nodes | {stats?.edgeCount || 0} Edges
+            </p>
+            <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider ${floor.scale ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}`}>
+              <Ruler className="h-3 w-3" />
+              {floor.scale ? `Scale: ${floor.scale.toFixed(4)}` : "Uncalibrated Scale"}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="h-10 w-10 p-0 border-2 border-zinc-950 text-zinc-500 hover:text-red-600 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="border-2 border-zinc-950 rounded-xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-black uppercase">Remove Floor Plan?</AlertDialogTitle>
+                <AlertDialogDescription className="font-bold">This cannot be undone.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="border-2 border-zinc-950">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(floor.id)} className="bg-red-600 border-2 border-zinc-950">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <Button asChild variant="outline" className="border-2 border-zinc-950 font-bold uppercase text-[11px] h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+            <Link href={`/map-studio/${buildingId}/${floor.id}`}>Edit Canvas <ArrowRight className="w-4 h-4 ml-2" /></Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

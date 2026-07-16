@@ -92,3 +92,52 @@ export function useUpdateSpatialGraph() {
     },
   });
 }
+
+export const useGenerateNodeTts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ nodeId, text }: { nodeId: number; text: string }) => 
+      mapStudioActions.generateNodeTts(nodeId, text),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};
+
+export const useDeleteNodeTts = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nodeId: number) => mapStudioActions.deleteNodeTts(nodeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};
+
+export const useDeleteNode = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (nodeId: number) => mapStudioActions.deleteNode(nodeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
+    },
+  });
+};
+
+// --- STATS (TICKET 8) ---
+
+export function useGetBuildingStats(buildingId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.buildingStats(buildingId),
+    queryFn: () => mapStudioActions.getBuildingStats(buildingId!),
+    enabled: !!buildingId && !isNaN(buildingId),
+  });
+}
+
+export function useGetFloorPlanStats(floorPlanId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.floorPlanStats(floorPlanId),
+    queryFn: () => mapStudioActions.getFloorPlanStats(floorPlanId!),
+    enabled: !!floorPlanId && !isNaN(floorPlanId),
+  });
+}

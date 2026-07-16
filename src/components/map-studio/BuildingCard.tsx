@@ -18,6 +18,7 @@ import {
 import { Activity, AlertTriangle, ArrowRight, Map, MapPin, Shield, ShieldAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useGetBuildingStats } from "@/hooks/api/useMapStudio"; 
 
 // interface defining building properties
 export interface BuildingData { 
@@ -38,6 +39,9 @@ interface BuildingCardProps {
 export function BuildingCard({ building, onDelete }: BuildingCardProps) {
   const isHealthy = building.health === "ONLINE";
   const [privacy, setPrivacy] = useState<"PUBLIC" | "PRIVATE">(building.privacy);
+  
+  // <-- Fetches live stats using Ticket 8 backend logic
+  const { data: stats } = useGetBuildingStats(Number(building.id)); 
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
@@ -93,7 +97,8 @@ export function BuildingCard({ building, onDelete }: BuildingCardProps) {
         <div className="flex items-center gap-4 text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none uppercase tracking-wider">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-zinc-500" />
-            <span className="text-lg font-black">{building.stats.ActiveFloorPlans}</span> Floor Plans
+            {/* <-- UI updated with dynamic data mapping */}
+            <span className="text-lg font-black">{stats?.activeFloorPlans || 0}</span> Floor Plans
           </div>
         </div>
 

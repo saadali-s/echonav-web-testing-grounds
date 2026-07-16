@@ -75,6 +75,15 @@ export interface BuildingDto {
   privacyLevel: "PUBLIC" | "PRIVATE";
 }
 
+export interface BuildingStatsDto {
+  activeFloorPlans: number;
+}
+
+export interface FloorPlanStatsDto {
+  nodeCount: number;
+  edgeCount: number;
+}
+
 export interface RegisterBuildingRequest {
   name: string;
   address: string;

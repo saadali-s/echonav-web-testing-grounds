@@ -4,6 +4,9 @@ export const queryKeys = {
     buildings: (orgId?: number) => ["buildings", orgId] as const,
     floorPlans: (buildingId?: number) => ["floorPlans", buildingId] as const,
     spatialGraph: (floorPlanId?: number) => ["spatialGraph", floorPlanId] as const,
+    // --- STATS (TICKET 8) ---
+    buildingStats: (buildingId?: number) => ["buildingStats", buildingId] as const,
+    floorPlanStats: (floorPlanId?: number) => ["floorPlanStats", floorPlanId] as const,
   },
   fleet: {
     staffTasks: (staffId?: number) => ["staffTasks", staffId] as const,
@@ -11,11 +14,13 @@ export const queryKeys = {
   staff: {
     roster: (orgId?: number) => ["staff", "roster", orgId] as const,
   },
-  // --- SUBTASK 2.2 FIX: Add Users Keys ---
   users: {
     roster: (orgId?: number) => ["users", "roster", orgId] as const,
   },
   auth: {
     session: ["auth", "session"] as const,
+  },
+  dashboard: {
+    data: (orgId?: number) => ["dashboard", orgId] as const,
   },
 };
