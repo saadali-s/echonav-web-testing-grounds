@@ -71,22 +71,31 @@ export const mapStudioActions = {
     }
   },
 
-  uploadFloorPlan: async (buildingId: number, name: string, file: File): Promise<FloorPlanDto> => {
+  uploadFloorPlan: async (buildingId: number, name: string, file: File) => {
     try {
       const formData = new FormData();
       formData.append("name", name);
       formData.append("file", file);
 
-      const response = await axiosInstance.post<FloorPlanDto>(
-        `/api/mapstudio/buildings/${buildingId}/floorplans/upload`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-      return response.data;
+      const res = await axiosInstance.post(`/api/mapstudio/buildings/${buildingId}/floorplans/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return res.data;
     } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Failed to upload floor plan.");
+      const axiosError = err as AxiosError<{ message?: string }>;
+      const rawData = axiosError.response?.data;
+      const errorMessage = typeof rawData === "string" ? rawData : rawData?.message;
+      
+      throw new Error(errorMessage || "Failed to upload floor plan.");
     }
+  },
+
+  downloadExportZip: async (orgId: number) => {
+    // FIXED: Using axiosInstance instead of api
+    const res = await axiosInstance.get(`/api/exportmap/organisations/${orgId}/export`, {
+      responseType: 'blob'
+    });
+    return res.data;
   },
 
   // --- SPATIAL GRAPHS ---

@@ -43,8 +43,15 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
 
     setIsUploading(true);
     try {
-      // Use the raw Axios action to bypass Kubb typing errors
-      await mapStudioActions.uploadFloorPlan(buildingId, newFloorLabel, selectedFile);
+      const res = await mapStudioActions.uploadFloorPlan(buildingId, newFloorLabel, selectedFile);
+      
+      // If we just uploaded an .echonav file, catch the transient nodes before switching screens
+      if (res.transientNodes || res.transientEdges) {
+        sessionStorage.setItem(`echonav_import_${res.id}`, JSON.stringify({
+          nodes: res.transientNodes || [],
+          edges: res.transientEdges || []
+        }));
+      }
       
       onUploadSuccess();
       setOpen(false);
@@ -100,7 +107,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
               type="file" 
               ref={fileInputRef} 
               className="hidden" 
-              accept=".dwg,.svg,.pdf,.png"
+              accept=".dwg,.svg,.pdf,.png,.echonav"
               onChange={handleFileSelect}
             />
             <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>

@@ -1,12 +1,35 @@
 "use client";
 
+import { useAuth } from "@/components/layout/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { mapStudioActions } from "@/lib/actions/mapStudio";
 import { DownloadCloud, FileJson, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 
 export function DataExport() {
-  const handleExport = () => {
-    console.log("Triggering master JSON export...");
+  const { activeOrgId } = useAuth();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!activeOrgId) return;
+    setIsExporting(true);
+    try {
+      const blob = await mapStudioActions.downloadExportZip(Number(activeOrgId));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Backup.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export failed", error);
+      alert("Failed to export maps. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -31,17 +54,18 @@ export function DataExport() {
             <div className="space-y-1">
               <h4 className="font-black text-sm text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">Master System Backup</h4>
               <p className="text-[11px] font-bold text-zinc-500 mt-1 max-w-md leading-relaxed uppercase tracking-wider">
-                Download JSON bundle: <span className="font-mono text-zinc-950 dark:text-zinc-300">.ECHOMAP</span> files, Adjacency Lists, and Hardware Bindings.
+                Download JSON bundle: <span className="font-mono text-zinc-950 dark:text-zinc-300">.ECHONAV</span> files, Adjacency Lists, and Hardware Bindings.
               </p>
             </div>
           </div>
 
           <Button 
             onClick={handleExport}
-            className="w-full sm:w-auto shrink-0 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border-2 border-zinc-950 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-black uppercase tracking-wider h-12 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none"
+            disabled={isExporting}
+            className="w-full sm:w-auto shrink-0 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border-2 border-zinc-950 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-black uppercase tracking-wider h-12 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none disabled:opacity-50"
           >
             <DownloadCloud className="h-4 w-4 mr-2" />
-            Trigger Export
+            {isExporting ? "Exporting..." : "Trigger Export"}
           </Button>
         </div>
       </CardContent>
