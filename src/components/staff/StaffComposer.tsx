@@ -1,19 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/layout/auth-provider";
 import { useDeleteStaff, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 export function StaffComposer() {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
+
   // Fetch the real data from Spring Boot
   const { data: staffDtoList, isLoading, isError } = useGetStaff(orgIdNum);
+
+  const [showError, setShowError] = useState(false);
+
   const { data: invitesDtoList, isLoading: invitesLoading } = useGetPendingInvites(orgIdNum);
   const deleteStaffMutation = useDeleteStaff(orgIdNum);
+
 
   // Map the backend DTO to the frontend UI interface
   const activeStaff: ActiveStaff[] = (staffDtoList || []).map((staff) => ({
@@ -28,21 +45,31 @@ export function StaffComposer() {
   const pendingInvites: PendingInvite[] = (invitesDtoList || []).map((invite) => ({
     id: String(invite.id),
     email: invite.email,
-    inviteCode: "PENDING", 
+    inviteCode: "PENDING",
     status: (invite.status as "PENDING" | "EXPIRED"),
     expirationDate: new Date(invite.expirationDate).toLocaleDateString(),
   }));
-  
+
   const handleDeleteStaff = async (id: string) => {
     try {
       await deleteStaffMutation.mutateAsync(Number(id));
     } catch (error: unknown) {
-      if (error instanceof Error) alert(error.message);
+      if (error instanceof Error) setErrorMessage(error.message);
     }
   };
 
   const handleDeleteInvitedStaff = (id: string) => {
     console.log("Invite deletion will be implemented later.", id);
+  };
+
+  useEffect(() => {
+    if (isError) {
+      setShowError(true);
+    }
+  }, [isError]);
+
+  const handleCloseError = () => {
+    setShowError(false);
   };
 
   return (
@@ -68,11 +95,35 @@ export function StaffComposer() {
         </div>
       )}
 
-      {isError && (
-        <div className="p-8 text-center text-red-700 bg-red-50 border-2 border-red-500 font-bold uppercase tracking-widest rounded-xl">
-          Failed to load staff directory. Please check your connection.
-        </div>
-      )}
+      <AlertDialog open={isError} onOpenChange={(open) => !open && handleCloseError}>
+        <AlertDialogContent className="max-w-[400px] border-2 border-red-500 bg-red-50 p-8 text-center rounded-xl">
+          <AlertDialogHeader className="flex flex-col items-center justify-center space-y-4">
+            {/* Warning Shield Icon */}
+            <div className="p-3 bg-red-100 text-red-700 rounded-full">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+
+            <AlertDialogTitle className="text-red-700 font-bold uppercase tracking-widest text-sm">
+              Failed to load staff directory
+            </AlertDialogTitle>
+
+            <AlertDialogDescription className="text-xs text-red-600/80 font-medium">
+              We encountered a network issue trying to sync the roster. Please check your internet connection.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="sm:justify-center mt-2">
+            <AlertDialogAction
+              onClick={handleCloseError}
+              className="px-6 py-2 bg-red-700 hover:bg-red-800 text-white font-bold uppercase tracking-wider text-xs rounded-md transition-colors shadow-md"
+            >
+              Acknowledge & Close
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {!isLoading && !isError && (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start">
