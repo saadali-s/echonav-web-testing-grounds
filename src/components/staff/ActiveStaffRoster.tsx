@@ -100,7 +100,7 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => onDelete(member.id)} // or invite.id
+                              onClick={() => onDelete(member.id)}
                               className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
                             >
                               Delete

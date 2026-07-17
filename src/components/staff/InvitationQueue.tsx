@@ -101,7 +101,7 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => onDelete(invite.id)} // or invite.id
+                              onClick={() => onDelete(invite.id)}
                               className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
                             >
                               Delete
