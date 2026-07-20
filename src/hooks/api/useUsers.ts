@@ -16,8 +16,9 @@ export function useInviteUser() {
   return useMutation({
     mutationFn: (data: InviteUserRequest) => userActions.inviteUser(data),
     onSuccess: (_, variables) => {
-      // Instantly refresh the user table after a successful invite
+      // Refresh both tables to update the queue instantly
       queryClient.invalidateQueries({ queryKey: queryKeys.users.roster(variables.organisationId) });
+      queryClient.invalidateQueries({ queryKey: ["users", "pins", variables.organisationId] });
     },
   });
 }
@@ -33,10 +34,11 @@ export function useGetPendingUserPins(orgId: number | undefined) {
 export function useDeleteUser(orgId: number | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (userId: number) => userActions.deleteUser(userId),
+    mutationFn: (pinId: number) => userActions.deleteUser(pinId),
     onSuccess: () => {
       if (orgId) {
         queryClient.invalidateQueries({ queryKey: queryKeys.users.roster(orgId) });
+        queryClient.invalidateQueries({ queryKey: ["users", "pins", orgId] });
       } else {
         queryClient.invalidateQueries({ queryKey: ["users"] });
       }

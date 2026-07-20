@@ -13,29 +13,26 @@ export function UserComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-  // Fetch the real data from Spring Boot
   const { data: usersDtoList, isLoading, isError } = useGetUsers(orgIdNum);
   const { data: pinsDtoList, isLoading: pinsLoading } = useGetPendingUserPins(orgIdNum);
   const deleteUserMutation = useDeleteUser(orgIdNum);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
-  // Map the backend DTO to the frontend UI interface
   const activeUsers: ActiveUsers[] = (usersDtoList || []).map((user) => ({
     id: String(user.id),
     name: `${user.firstName} ${user.lastName}`.trim(),
     email: user.email,
-    pin: "******", // Concealed for security after generation
+    pin: "******", 
     generatedBy: "System Admin",
     joinedDate: "Recently",
   }));
 
-  // Empty placeholder. Concierge pairing pins are handled directly in the modal flow.
   const invitedUsers: InvitedUsers[] = (pinsDtoList || []).map((pin) => ({
     id: String(pin.id),
     name: `${pin.firstName} ${pin.lastName}`.trim(),
     email: pin.email,
-    pin: pin.pinCode,
+    pin: pin.pinCode, // THE FIX: This will render the 6-digit pin if Concierge Mode is active
     generatedBy: pin.generatedBy,
     invitedDate: new Date(pin.invitedDate).toLocaleDateString(),
   }));
@@ -48,12 +45,15 @@ export function UserComposer() {
     }
   };
 
-  const handleDeleteInvitedUser = (id: string) => {
-    console.log("Invited user deletion placeholder", id);
+  const handleDeleteInvitedUser = async (id: string) => {
+    try {
+      await deleteUserMutation.mutateAsync(Number(id));
+    } catch (error: unknown) {
+      if (error instanceof Error) alert(error.message);
+    }
   };
 
   const handleAddInvitedUser = (newUser: InvitedUsers) => {
-    // This will be deprecated in the next step when we wire the modal directly to the backend
     console.log("New user invited:", newUser);
   };
 

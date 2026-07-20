@@ -16,10 +16,13 @@ export function useInviteStaff() {
   return useMutation({
     mutationFn: (data: InviteStaffRequest) => staffActions.inviteStaff(data),
     onSuccess: (_, variables) => {
+      // THE FIX: Refreshes both tables automatically without needing an F5 manual refresh
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(variables.organisationId) });
+      queryClient.invalidateQueries({ queryKey: ["staff", "invites", variables.organisationId] });
     },
   });
 }
+
 export function useGetPendingInvites(orgId: number | undefined) {
   return useQuery({
     queryKey: ["staff", "invites", orgId],
@@ -27,6 +30,7 @@ export function useGetPendingInvites(orgId: number | undefined) {
     enabled: !!orgId && !isNaN(orgId),
   });
 }
+
 export function useDeleteStaff(orgId: number | undefined) {
   const queryClient = useQueryClient();
   return useMutation({

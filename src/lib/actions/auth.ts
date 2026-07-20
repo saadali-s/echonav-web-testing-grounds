@@ -1,5 +1,6 @@
 import { axiosInstance } from "@/lib/api/axios";
 import {
+  ActivateInviteRequest,
   LoginResponse,
   MobileSignupRequest,
   PairingRequest,
@@ -45,6 +46,17 @@ export const authActions = {
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || "Mobile signup failed.");
+    }
+  },
+
+  // THE FIX: Added the activation action
+  activateInvite: async (token: string, payload: ActivateInviteRequest): Promise<string> => {
+    try {
+      const response = await axiosInstance.post(`/api/auth/activate/${token}`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Activation failed.");
     }
   },
 

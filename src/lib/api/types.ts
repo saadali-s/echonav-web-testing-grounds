@@ -19,6 +19,7 @@ export interface InviteUserRequest {
   email: string;
   organisationId: number;
   generatedById: number;
+  requiresConcierge: boolean;
 }
 
 export interface InviteUserResponse {
@@ -63,6 +64,8 @@ export interface PairingRequest {
 }
 
 export interface ActivateInviteRequest {
+  email: string;
+  name: string;
   password?: string;
 }
 
@@ -276,7 +279,7 @@ export interface HardwareHealthDto {
   healthyCount: number;
   warningCount: number;
   criticalCount: number;
-  criticalItems: any[];
+  criticalItems: unknown[];
 }
 
 export interface SystemEventDto {

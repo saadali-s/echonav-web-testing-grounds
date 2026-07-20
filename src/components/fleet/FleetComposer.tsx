@@ -28,10 +28,12 @@ export function FleetComposer() {
 
   const isLoading = staffLoading || tasksLoading || beaconsLoading;
 
-  const staffOptions = staffData.map((staff) => ({
-    id: String(staff.id),
-    name: staff.email,
-  }));
+  const staffOptions = staffData
+    .filter(staff => staff.role === "TECHNICIAN")
+    .map((staff) => ({
+      id: String(staff.id),
+      name: staff.email,
+    }));
 
   const mappedTasks: Task[] = tasksData.map((task: DeploymentTaskDto) => {
     const assignedStaff = staffData.find((s) => s.id === task.staffId);
@@ -55,7 +57,6 @@ export function FleetComposer() {
     status: beacon.status as "ACTIVE" | "UNLINKED",
   }));
 
-  // Hub Stats
   const activeTasksCount = activeNodeIds.length;
   const unlinkedBeaconsCount = mappedInventory.filter((i) => i.status === "UNLINKED").length;
 
@@ -90,7 +91,6 @@ export function FleetComposer() {
           Command Center for Physical Deployments
         </p>
 
-        {/* Top Overview Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Active Tasks</span>
@@ -111,13 +111,8 @@ export function FleetComposer() {
         </div>
       </div>
 
-      {/* Main Workspaces Selection */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-8">
-        {/* Assignment Workspace Card */}
-        <Card 
-          onClick={() => setActiveView("ASSIGN")}
-          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-indigo-500 transition-all flex flex-col"
-        >
+        <Card onClick={() => setActiveView("ASSIGN")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-indigo-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-950/50 border-2 border-indigo-200 dark:border-indigo-900 flex items-center justify-center">
@@ -134,11 +129,7 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        {/* Task Board Workspace Card */}
-        <Card 
-          onClick={() => setActiveView("BOARD")}
-          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-amber-500 transition-all flex flex-col"
-        >
+        <Card onClick={() => setActiveView("BOARD")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-amber-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-amber-100 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-900 flex items-center justify-center">
@@ -155,11 +146,7 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        {/* Hardware Inventory Workspace Card */}
-        <Card 
-          onClick={() => setActiveView("INVENTORY")}
-          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-emerald-500 transition-all flex flex-col"
-        >
+        <Card onClick={() => setActiveView("INVENTORY")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-emerald-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 border-2 border-emerald-200 dark:border-emerald-900 flex items-center justify-center">
