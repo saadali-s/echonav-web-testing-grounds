@@ -49,6 +49,20 @@ export interface UpdateOrgRequest {
   orgName: string;
   contactNo: string;
   address: string;
+  adminName: string; // <-- ADDED FOR PHASE 2
+}
+
+export interface OrganisationDto {
+  id: number;
+  orgName: string;
+  adminName: string;
+  orgEmail: string;
+  slug: string;
+  country: string;
+  address: string;
+  contactNo: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface MobileSignupRequest {

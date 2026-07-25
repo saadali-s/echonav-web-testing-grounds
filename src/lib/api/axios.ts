@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 export const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
 });
 
 // Intercept all outgoing requests and attach the Bearer token dynamically

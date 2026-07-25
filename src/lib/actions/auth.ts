@@ -4,7 +4,9 @@ import {
   LoginResponse,
   MobileSignupRequest,
   PairingRequest,
-  RegisterOrgRequest
+  RegisterOrgRequest,
+  UpdateOrgRequest,
+  OrganisationDto
 } from "@/lib/api/types";
 import { AxiosError } from "axios";
 
@@ -65,6 +67,28 @@ export const authActions = {
       await axiosInstance.post("/api/auth/logout");
     } catch {
       console.error("Server logout failed, clearing local state anyway.");
+    }
+  },
+
+  // --- NEW: Fetch Organisation Details ---
+  getOrganisation: async (orgId: number): Promise<OrganisationDto> => {
+    try {
+      const response = await axiosInstance.get<OrganisationDto>(`/api/auth/organisations/${orgId}`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch organisation details.");
+    }
+  },
+
+  // --- NEW: Update Organisation ---
+  updateOrganisation: async (orgId: number, payload: UpdateOrgRequest): Promise<OrganisationDto> => {
+    try {
+      const response = await axiosInstance.put<OrganisationDto>(`/api/auth/organisations/${orgId}`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to update organisation.");
     }
   }
 };
