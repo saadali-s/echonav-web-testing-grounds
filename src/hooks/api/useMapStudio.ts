@@ -1,6 +1,7 @@
 import { mapStudioActions } from "@/lib/actions/mapStudio";
 import {
     RegisterBuildingRequest,
+    UpdateBuildingPrivacyRequest,
     UpdateFloorPlanRequest,
     UpdateGraphRequest
 } from "@/lib/api/types";
@@ -36,6 +37,18 @@ export function useDeleteBuilding() {
     // Invalidating the base key ensures all orgs refresh if necessary
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["buildings"] });
+    },
+  });
+}
+
+export function useUpdateBuildingPrivacy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ buildingId, orgId, data }: { buildingId: number; orgId: number; data: UpdateBuildingPrivacyRequest }) => 
+      mapStudioActions.updateBuildingPrivacy(buildingId, data),
+    onSuccess: (_, variables) => {
+      // Instantly refreshes the building list UI without a page reload
+      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.buildings(variables.orgId) });
     },
   });
 }
