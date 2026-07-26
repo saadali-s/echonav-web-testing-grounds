@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Layers, Map, Ruler, Trash2 } from "lucide-react";
+import { ArrowRight, Layers, Map, Ruler, Trash2, AlertCircle } from "lucide-react"; // <-- Added AlertCircle
 import Link from "next/link";
 import { useState } from "react";
 
@@ -38,6 +38,9 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
   const queryClient = useQueryClient();
   const buildingIdNum = Number(buildingId);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // NEW: Alert State for Errors
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const { data: floorPlansDto, isLoading, isError } = useGetFloorPlans(buildingIdNum);
   const deleteMutation = useDeleteFloorPlan();
@@ -65,7 +68,7 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
     try {
       await deleteMutation.mutateAsync({ floorPlanId: Number(id) });
     } catch (error: unknown) {
-      if (error instanceof Error) alert(error.message);
+      if (error instanceof Error) setAlertMessage(error.message); // REPLACED NATIVE ALERT
     }
   };
 
@@ -162,6 +165,39 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
           ))}
         </div>
       )}
+
+      {/* FINAL SHADCN ALERT DIALOG */}
+      <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+          
+          <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
+            <div className="bg-red-100 dark:bg-red-950/50 p-2.5 rounded-lg border-2 border-red-200 dark:border-red-900 shrink-0">
+              <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500" strokeWidth={2.5} />
+            </div>
+            <AlertDialogTitle className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100 m-0">
+              System Alert
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+
+          <div className="py-2">
+            <AlertDialogDescription className="font-bold text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap text-sm leading-relaxed">
+              <span className="text-zinc-950 dark:text-zinc-200">{alertMessage}</span>
+              {"\n\nPlease verify your connection."}
+            </AlertDialogDescription>
+          </div>
+
+          <AlertDialogFooter className="mt-2">
+            <AlertDialogAction 
+              onClick={() => setAlertMessage(null)}
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+            >
+              Acknowledge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+          
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
