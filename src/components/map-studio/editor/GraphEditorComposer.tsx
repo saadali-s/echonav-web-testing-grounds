@@ -28,6 +28,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
   const floorName = graphData?.floorPlan?.name || "Loading Floor Plan...";
   const initialScale = graphData?.floorPlan?.scale ? String(graphData.floorPlan.scale) : "";
 
+  // Progress Bar Simulation
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((oldProgress) => {
@@ -41,6 +42,19 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     }, 300);
     return () => clearInterval(timer);
   }, []);
+
+  // HYDRATION: Check for imported .echonav transient data
+  const importedDataStr = typeof window !== 'undefined' ? sessionStorage.getItem(`echonav_import_${idNum}`) : null;
+  const importedData = useMemo(() => {
+    if (importedDataStr) {
+      try {
+        return JSON.parse(importedDataStr);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }, [importedDataStr]);
 
   const handleSaveToDb = async (nodes: NodeData[], edges: EdgeData[]) => {
     try {
@@ -65,6 +79,8 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
       
       const result = await updateSpatialGraphMutation.mutateAsync({ floorPlanId: idNum, data: payload });
       
+      // Cleanup hydration buffer explicitly after the transient maps hit the database tables
+      sessionStorage.removeItem(`echonav_import_${idNum}`);
       alert("Vector graph securely saved to database.");
       
       return result; 
@@ -76,6 +92,18 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
   };
 
   const initialNodes: NodeData[] = useMemo(() => {
+    if (importedData && importedData.nodes) {
+      return importedData.nodes.map((n: any) => ({
+        id: String(n.tempId || ""),
+        x: n.x || 0,
+        y: n.y || 0,
+        label: n.label || "",
+        isHazard: n.isHazard || false,
+        hazardType: n.hazardType,
+        ttsVerbalGuidance: n.ttsVerbalGuidance,
+        ttsAudioUrl: n.ttsAudioUrl
+      }));
+    }
     const nodes = graphData?.nodes || [];
     return nodes.map((n) => ({
       id: String(n.id || ""),
@@ -87,7 +115,29 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
       ttsVerbalGuidance: n.ttsVerbalGuidance,
       ttsAudioUrl: n.ttsAudioUrl
     }));
-  }, [graphData]);
+  }, [graphData, importedData]);
+
+  const initialEdges: EdgeData[] = useMemo(() => {
+    if (importedData && importedData.edges) {
+      return importedData.edges.map((e: any) => ({
+        id: String(e.tempId || ""),
+        source: String(e.source || ""),
+        target: String(e.target || ""),
+        isHazard: e.isHazard || false,
+        weightM: e.weightM,
+        distance: e.distance
+      }));
+    }
+    const edges = graphData?.edges || [];
+    return edges.map((e) => ({
+      id: String(e.id || ""),
+      source: String(e.fromNodeId || ""),
+      target: String(e.toNodeId || ""),
+      isHazard: e.isHazard || false,
+      weightM: e.weightM ?? undefined, 
+      distance: e.distance ?? undefined
+    }));
+  }, [graphData, importedData]);
 
   const handleUpdateScale = async (newScale: number) => {
     try {
@@ -121,18 +171,6 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
   };
 
   const isFullyLoading = isDbLoading || isProcessing;
-
-  const initialEdges: EdgeData[] = useMemo(() => {
-    const edges = graphData?.edges || [];
-    return edges.map((e) => ({
-      id: String(e.id || ""),
-      source: String(e.fromNodeId || ""),
-      target: String(e.toNodeId || ""),
-      isHazard: e.isHazard || false,
-      weightM: e.weightM ?? undefined, 
-      distance: e.distance ?? undefined
-    }));
-  }, [graphData]);
 
   return (
     <div className="h-full flex flex-col relative rounded-xl border-2 border-zinc-950 dark:border-zinc-800 overflow-hidden shadow-[6px_6px_0px_0px_rgba(24,24,27,1)] dark:bg-zinc-950">
