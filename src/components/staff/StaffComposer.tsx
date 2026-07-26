@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/layout/auth-provider";
-import { useDeleteStaff, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
+import { useDeleteStaff, useDeleteStaffInvite, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
@@ -22,26 +22,21 @@ export function StaffComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-
-  // Fetch the real data from Spring Boot
   const { data: staffDtoList, isLoading, isError } = useGetStaff(orgIdNum);
-
   const [showError, setShowError] = useState(false);
 
-  const { data: invitesDtoList, isLoading: invitesLoading } = useGetPendingInvites(orgIdNum);
+  const { data: invitesDtoList } = useGetPendingInvites(orgIdNum);
   const deleteStaffMutation = useDeleteStaff(orgIdNum);
+  const deleteStaffInviteMutation = useDeleteStaffInvite(orgIdNum);
 
-
-  // Map the backend DTO to the frontend UI interface
   const activeStaff: ActiveStaff[] = (staffDtoList || []).map((staff) => ({
     id: String(staff.id),
-    name: staff.email.split("@")[0], // Extracted from email since Staff table doesn't have names
+    name: staff.email.split("@")[0],
     email: staff.email,
     role: (staff.role === "ADMIN" ? "ADMIN" : "TECHNICIAN"),
     joinedDate: staff.joinedDate || "Recently",
   }));
 
-  // Empty placeholder until we build the GET /invites endpoint
   const pendingInvites: PendingInvite[] = (invitesDtoList || []).map((invite) => ({
     id: String(invite.id),
     email: invite.email,
@@ -58,8 +53,12 @@ export function StaffComposer() {
     }
   };
 
-  const handleDeleteInvitedStaff = (id: string) => {
-    console.log("Invite deletion will be implemented later.", id);
+  const handleDeleteInvitedStaff = async (id: string) => {
+    try {
+      await deleteStaffInviteMutation.mutateAsync(Number(id));
+    } catch (error: unknown) {
+      if (error instanceof Error) setErrorMessage(error.message);
+    }
   };
 
   useEffect(() => {
@@ -73,8 +72,9 @@ export function StaffComposer() {
   };
 
   return (
-    <div className="space-y-8 pb-12">
-      <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-zinc-950 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5 mb-8">
+    <div className="space-y-6 pb-12">
+      
+      <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-zinc-950 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
             Staff Management
@@ -98,7 +98,6 @@ export function StaffComposer() {
       <AlertDialog open={isError} onOpenChange={(open) => !open && handleCloseError}>
         <AlertDialogContent className="max-w-[400px] border-2 border-red-500 bg-red-50 p-8 text-center rounded-xl">
           <AlertDialogHeader className="flex flex-col items-center justify-center space-y-4">
-            {/* Warning Shield Icon */}
             <div className="p-3 bg-red-100 text-red-700 rounded-full">
               <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />

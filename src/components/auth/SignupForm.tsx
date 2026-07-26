@@ -46,7 +46,6 @@ export function SignupForm() {
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [length, setIsRightLength] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -54,7 +53,9 @@ export function SignupForm() {
   const currentCountry = COUNTRIES.find((c) => c.code === selectedCountryCode);
   const currentDialCode = currentCountry?.dialCode || "";
   const streetInputRef = useRef<HTMLInputElement>(null);
-  const passwordRe = new RegExp("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/");
+  
+  // Clean string pattern without regex slashes
+  const passwordRe = new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
 
   useGooglePlacesAutocomplete(streetInputRef, selectedCountryCode, (details) => {
     setStreetAddress(details.streetAddress);
@@ -67,7 +68,7 @@ export function SignupForm() {
     }
   });
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -78,18 +79,15 @@ export function SignupForm() {
       return;
     }
     if (password.length < 8) {
-      setError("Password must be greater than 8 characters long");
-      setIsRightLength(false);
+      setError("Password must be at least 8 characters long.");
       setIsLoading(false);
       return;
     }
-    if (passwordRe.test(password)) {
-      setError("Invalid password")
+    // Corrected logic: trigger error when validation FAILS (!test)
+    if (!passwordRe.test(password)) {
+      setError("Password must contain an uppercase letter, lowercase letter, number, and special character.");
       setIsLoading(false);
       return;
-    }
-    else {
-      setIsRightLength(true);
     }
 
     try {
@@ -104,7 +102,6 @@ export function SignupForm() {
       });
       
     } catch (err: unknown) {
-      // Replaced 'any' with 'unknown' and typecast to a standard Error object
       if (err instanceof Error) {
         setError(err.message);
       } else {

@@ -134,6 +134,7 @@ export interface NodeDto {
   ttsAudioUrl?: string;
   isHazard?: boolean;
   hazardType?: string;
+  rssiBaseline?: number;
 }
 
 export interface EdgeDto {

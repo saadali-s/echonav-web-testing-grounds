@@ -2,6 +2,17 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, UserCog2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export interface InvitedUsers {
   id: string;
@@ -72,13 +83,35 @@ export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
                     </span>
 
                     <div className="flex justify-center">
-                      <button
-                        onClick={() => onDelete(member.id)}
-                        className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                        title="Delete User"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="font-black uppercase tracking-tight">Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription className="font-bold text-zinc-500">
+                              Are you sure you want to remove this record? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(member.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 );

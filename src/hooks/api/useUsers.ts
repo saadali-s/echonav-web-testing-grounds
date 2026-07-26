@@ -8,6 +8,8 @@ export function useGetUsers(orgId: number | undefined) {
     queryKey: queryKeys.users.roster(orgId),
     queryFn: () => userActions.getUsers(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Refreshes active roster every 10 seconds
+    refetchInterval: 10000,
   });
 }
 
@@ -28,6 +30,8 @@ export function useGetPendingUserPins(orgId: number | undefined) {
     queryKey: ["users", "pins", orgId],
     queryFn: () => userActions.getPendingUserPins(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Aggressively checks for PIN activation every 3 seconds
+    refetchInterval: 3000,
   });
 }
 

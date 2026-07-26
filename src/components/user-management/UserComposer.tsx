@@ -32,7 +32,7 @@ export function UserComposer() {
     id: String(pin.id),
     name: `${pin.firstName} ${pin.lastName}`.trim(),
     email: pin.email,
-    pin: pin.pinCode, // THE FIX: This will render the 6-digit pin if Concierge Mode is active
+    pin: pin.pinCode, 
     generatedBy: pin.generatedBy,
     invitedDate: new Date(pin.invitedDate).toLocaleDateString(),
   }));

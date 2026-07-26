@@ -45,9 +45,13 @@ export function FleetComposer() {
     };
   });
 
-  const activeNodeIds = tasksData
-    .filter((task: DeploymentTaskDto) => task.status === "TO_DO" || task.status === "IN_PROGRESS")
-    .map((task: DeploymentTaskDto) => Number(task.nodeId));
+  // THE FIX: Prevent Ghost Tasks by excluding nodes that have ANY task or beacon history
+  const taskNodeIds = tasksData.map((task: DeploymentTaskDto) => Number(task.nodeId));
+  const inventoryNodeIds = beaconsData
+    .filter((b: BeaconDto) => b.nodeId != null && b.status !== "UNLINKED")
+    .map((b: BeaconDto) => Number(b.nodeId));
+    
+  const unavailableNodeIds = Array.from(new Set([...taskNodeIds, ...inventoryNodeIds]));
 
   const mappedInventory: InventoryItem[] = beaconsData.map((beacon: BeaconDto) => ({
     id: String(beacon.id),
@@ -57,7 +61,7 @@ export function FleetComposer() {
     status: beacon.status as "ACTIVE" | "UNLINKED",
   }));
 
-  const activeTasksCount = activeNodeIds.length;
+  const activeTasksCount = tasksData.filter((task: DeploymentTaskDto) => task.status === "TO_DO" || task.status === "IN_PROGRESS").length;
   const unlinkedBeaconsCount = mappedInventory.filter((i) => i.status === "UNLINKED").length;
 
   if (activeView !== "HUB") {
@@ -73,7 +77,7 @@ export function FleetComposer() {
           </button>
         </div>
         <div className="flex-1 min-h-0">
-          {activeView === "ASSIGN" && <AssignmentEngine staff={staffOptions} activeNodeIds={activeNodeIds} />}
+          {activeView === "ASSIGN" && <AssignmentEngine staff={staffOptions} activeNodeIds={unavailableNodeIds} />}
           {activeView === "BOARD" && <KanbanBoard tasks={mappedTasks} />}
           {activeView === "INVENTORY" && <HardwareInventory items={mappedInventory} isLoading={isLoading} />}
         </div>

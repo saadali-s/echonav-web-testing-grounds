@@ -10,7 +10,7 @@ interface EdgeLayerProps {
   draftEdge: { source: string; currentX: number; currentY: number } | null;
   selectionBox: { startX: number; startY: number; currentX: number; currentY: number } | null;
   scale: number;
-  floorPlanScale: number; // FIXED: Injecting parsed real-world scale
+  floorPlanScale: number; 
   onEdgeClick: (e: React.PointerEvent, edgeId: string) => void;
   calibrationStart?: { x: number; y: number } | null;
   calibrationEnd?: { x: number; y: number } | null;
@@ -32,19 +32,22 @@ export function EdgeLayer({
         const isSelected = selectedEdgeIds.includes(edge.id) && selection === "EDGE";
         const isHazard = edge.isHazard;
         
-        // FIXED: Realtime Thick-Client Mathematics for smooth dragging UX
         const pixelDistance = Math.hypot(target.x - source.x, target.y - source.y);
         const realtimeWeightM = !isNaN(floorPlanScale) ? (pixelDistance * floorPlanScale) : null;
         const displayWeight = realtimeWeightM ? `${realtimeWeightM.toFixed(1)}m` : 'Uncalibrated';
         
         return (
           <g key={edge.id} className="pointer-events-auto cursor-pointer" onPointerDown={(e) => onEdgeClick(e, edge.id)}>
-            <line x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke="transparent" strokeWidth={20} />
+            <line 
+                x1={source.x} y1={source.y} x2={target.x} y2={target.y} 
+                stroke="transparent" 
+                strokeWidth={20 / scale} 
+            />
             <line 
                 x1={source.x} y1={source.y} x2={target.x} y2={target.y} 
                 stroke={isHazard ? "#ef4444" : isSelected ? "#6366f1" : "#10b981"} 
-                strokeWidth={isSelected ? 6 : 4} 
-                strokeDasharray={isHazard ? "8 8" : "none"}
+                strokeWidth={(isSelected ? 6 : 4) / scale} 
+                strokeDasharray={isHazard ? `${8 / scale} ${8 / scale}` : "none"}
                 className="transition-colors hover:stroke-indigo-400" 
             />
             {/* Realtime Label Rendering */}
@@ -66,26 +69,27 @@ export function EdgeLayer({
         );
       })}
   
-     {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
-    <polyline
-
-        points={calculatedRoute.path.map((step: NodeDto) => `${step.x},${step.y}`).join(" ")}
-        fill="none"
-        stroke="#a855f7"
-        strokeWidth={8 / scale}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="animate-pulse"
-        style={{ filter: "drop-shadow(0px 0px 8px rgba(168,85,247,0.8))" }}
-    />
-)}
+      {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
+        <polyline
+            points={calculatedRoute.path.map((step: NodeDto) => `${step.x},${step.y}`).join(" ")}
+            fill="none"
+            stroke="#a855f7"
+            strokeWidth={8 / scale}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="animate-pulse"
+            style={{ filter: "drop-shadow(0px 0px 8px rgba(168,85,247,0.8))" }}
+        />
+      )}
 
       {draftEdge && (
           <line 
               x1={nodes.find(n => n.id === draftEdge.source)?.x || 0} 
               y1={nodes.find(n => n.id === draftEdge.source)?.y || 0} 
               x2={draftEdge.currentX} y2={draftEdge.currentY} 
-              stroke="#10b981" strokeWidth={4} strokeDasharray="6 6" 
+              stroke="#10b981" 
+              strokeWidth={4 / scale} 
+              strokeDasharray={`${6 / scale} ${6 / scale}`} 
           />
       )}
 
