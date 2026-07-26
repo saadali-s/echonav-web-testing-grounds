@@ -7,7 +7,9 @@ import {
   RegisterBuildingRequest,
   UpdateBuildingPrivacyRequest,
   UpdateFloorPlanRequest,
-  UpdateGraphRequest
+  UpdateGraphRequest,
+  BuildingStatsDto, // <-- Added
+  FloorPlanStatsDto // <-- Added
 } from "@/lib/api/types";
 import { AxiosError } from "axios";
 
@@ -156,6 +158,27 @@ export const mapStudioActions = {
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || "Failed to delete TTS audio.");
+    }
+  },
+
+  // --- STATS (TICKET 8) ---
+  getBuildingStats: async (buildingId: number): Promise<BuildingStatsDto> => {
+    try {
+      const response = await axiosInstance.get<BuildingStatsDto>(`/api/mapstudio/buildings/${buildingId}/stats`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch building stats.");
+    }
+  },
+
+  getFloorPlanStats: async (floorPlanId: number): Promise<FloorPlanStatsDto> => {
+    try {
+      const response = await axiosInstance.get<FloorPlanStatsDto>(`/api/mapstudio/floorplans/${floorPlanId}/stats`);
+      return response.data;
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to fetch floor plan stats.");
     }
   }
 };

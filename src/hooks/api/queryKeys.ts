@@ -4,6 +4,8 @@ export const queryKeys = {
     buildings: (orgId?: number) => ["buildings", orgId] as const,
     floorPlans: (buildingId?: number) => ["floorPlans", buildingId] as const,
     spatialGraph: (floorPlanId?: number) => ["spatialGraph", floorPlanId] as const,
+    buildingStats: (buildingId?: number) => ["buildingStats", buildingId] as const,
+    floorPlanStats: (floorPlanId?: number) => ["floorPlanStats", floorPlanId] as const,
   },
   fleet: {
     staffTasks: (staffId?: number) => ["staffTasks", staffId] as const,
@@ -17,7 +19,6 @@ export const queryKeys = {
   auth: {
     session: ["auth", "session"] as const,
   },
-  // --- DASHBOARD ADDITION ---
   dashboard: {
     data: (orgId?: number) => ["dashboard", orgId] as const,
   },

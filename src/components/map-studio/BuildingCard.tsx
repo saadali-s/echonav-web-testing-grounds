@@ -18,14 +18,15 @@ import {
 import { Activity, AlertTriangle, ArrowRight, Loader2, Map, MapPin, Shield, ShieldAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
-import { useUpdateBuildingPrivacy } from "@/hooks/api/useMapStudio";
+// THE FIX: Combined both hooks from alphas and Ticket-8
+import { useUpdateBuildingPrivacy, useGetBuildingStats } from "@/hooks/api/useMapStudio";
 
 // ============================================================================
-// 1. ISOLATED PRIVACY TOGGLE COMPONENT
+// 1. ISOLATED PRIVACY TOGGLE COMPONENT (From alphas)
 // ============================================================================
 
 interface PrivacyToggleProps {
-  buildingId: string; // or number, depending on your backend id type. Make sure it matches!
+  buildingId: string;
   buildingName: string;
   currentPrivacy: "PUBLIC" | "PRIVATE";
   orgId: number;
@@ -38,7 +39,7 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
   const targetPrivacy = currentPrivacy === "PUBLIC" ? "PRIVATE" : "PUBLIC";
 
   const handleConfirm = (e: React.MouseEvent) => {
-    e.preventDefault(); // Keep the dialog open while loading
+    e.preventDefault(); 
     
     mutate(
       { buildingId: Number(buildingId), orgId, data: { privacyLevel: targetPrivacy } },
@@ -47,7 +48,6 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
           setShowDialog(false);
         },
         onError: (error) => {
-          // This will now expose exactly WHY it was failing
           alert(`Failed to update privacy: ${error instanceof Error ? error.message : "Unknown error"}`);
           setShowDialog(false); 
         }
@@ -55,7 +55,6 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
     );
   };
 
-  // Neo-brutalism dynamic colors for the button
   const confirmButtonColor = targetPrivacy === "PUBLIC" 
     ? "bg-emerald-400 hover:bg-emerald-500 text-zinc-950" 
     : "bg-amber-400 hover:bg-amber-500 text-zinc-950";
@@ -93,7 +92,6 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
               Cancel
             </AlertDialogCancel>
             
-            {/* Replaced AlertDialogAction with a standard Button to fix the click swallowing */}
             <Button
               disabled={isPending}
               onClick={handleConfirm}
@@ -131,12 +129,15 @@ export interface BuildingData {
 
 interface BuildingCardProps {
   building: BuildingData;
-  orgId: number; // <-- ADDED THIS PROP
+  orgId: number; 
   onDelete: (id: string) => void;
 }
 
 export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
   const isHealthy = building.health === "ONLINE";
+  
+  // THE FIX: Brought in the live stats from Ticket-8, while dropping the duplicate privacy state
+  const { data: stats } = useGetBuildingStats(Number(building.id)); 
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
@@ -192,7 +193,7 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
         <div className="flex items-center gap-4 text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none uppercase tracking-wider">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-zinc-500" />
-            <span className="text-lg font-black">{building.stats.ActiveFloorPlans}</span> Floor Plans
+            <span className="text-lg font-black">{stats?.activeFloorPlans || 0}</span> Floor Plans
           </div>
         </div>
 
@@ -205,7 +206,6 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
             )}
           </div>
           
-          {/* Using our new isolated component here */}
           <PrivacyToggle 
             buildingId={building.id} 
             buildingName={building.name} 

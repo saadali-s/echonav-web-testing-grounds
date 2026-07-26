@@ -136,3 +136,21 @@ export const useDeleteNode = () => {
     },
   });
 };
+
+// --- STATS (TICKET 8) ---
+
+export function useGetBuildingStats(buildingId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.buildingStats(buildingId),
+    queryFn: () => mapStudioActions.getBuildingStats(buildingId!),
+    enabled: !!buildingId && !isNaN(buildingId),
+  });
+}
+
+export function useGetFloorPlanStats(floorPlanId: number | undefined) {
+  return useQuery({
+    queryKey: queryKeys.mapStudio.floorPlanStats(floorPlanId),
+    queryFn: () => mapStudioActions.getFloorPlanStats(floorPlanId!),
+    enabled: !!floorPlanId && !isNaN(floorPlanId),
+  });
+}
