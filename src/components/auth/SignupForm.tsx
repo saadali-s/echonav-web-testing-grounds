@@ -46,14 +46,15 @@ export function SignupForm() {
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [password, setPassword] = useState("");
+  const [length, setIsRightLength] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const currentCountry = COUNTRIES.find((c) => c.code === selectedCountryCode);
   const currentDialCode = currentCountry?.dialCode || "";
   const streetInputRef = useRef<HTMLInputElement>(null);
+  const passwordRe = new RegExp("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/");
 
   useGooglePlacesAutocomplete(streetInputRef, selectedCountryCode, (details) => {
     setStreetAddress(details.streetAddress);
@@ -66,7 +67,7 @@ export function SignupForm() {
     }
   });
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -75,6 +76,20 @@ export function SignupForm() {
       setError("Passwords do not match.");
       setIsLoading(false);
       return;
+    }
+    if (password.length < 8) {
+      setError("Password must be greater than 8 characters long");
+      setIsRightLength(false);
+      setIsLoading(false);
+      return;
+    }
+    if (passwordRe.test(password)) {
+      setError("Invalid password")
+      setIsLoading(false);
+      return;
+    }
+    else {
+      setIsRightLength(true);
     }
 
     try {
