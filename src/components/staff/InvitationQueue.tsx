@@ -1,6 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export interface PendingInvite {
   id: string;
@@ -62,24 +73,43 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
                         variant={
                           invite.status === "PENDING" ? "default" : "secondary"
                         }
-                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${
-                          invite.status === "PENDING"
+                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${invite.status === "PENDING"
                             ? "bg-amber-200 text-amber-900 border-amber-400 dark:bg-amber-900/50 dark:text-amber-100 dark:border-amber-700"
                             : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 shadow-none"
-                        }`}
+                          }`}
                       >
                         {invite.status}
                       </Badge>
                     </div>
 
                     <div className="flex justify-center">
-                      <button
-                        onClick={() => onDelete(invite.id)}
-                        className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                        title="Remove Invitation"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button className="p-2 text-zinc-400 hover:text-red-600..." title="Remove">
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="font-black uppercase tracking-tight">Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription className="font-bold text-zinc-500">
+                              Are you sure you want to remove this record? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(invite.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                     </div>
                   </div>
                 );
