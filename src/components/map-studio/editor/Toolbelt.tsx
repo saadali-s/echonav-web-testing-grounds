@@ -1,8 +1,11 @@
-import { AlertTriangle, Hand, MapPin, MousePointer2, Navigation, Route, Ruler } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, ArrowLeft, Hand, MapPin, MousePointer2, Navigation, Route, Ruler } from "lucide-react";
 
 export type ToolMode = "SELECT" | "PAN" | "NODE" | "EDGE" | "HAZARD" | "SCALE" | "ROUTE";
 
 export function Toolbelt({ activeTool, setActiveTool }: { activeTool: ToolMode, setActiveTool: (t: ToolMode) => void }) {
+  const router = useRouter();
+
   const tools = [
     { id: "SELECT", icon: MousePointer2, label: "Select (V)" },
     { id: "PAN", icon: Hand, label: "Pan (Space)" },
@@ -15,6 +18,19 @@ export function Toolbelt({ activeTool, setActiveTool }: { activeTool: ToolMode, 
 
   return (
     <div className="w-16 bg-zinc-950 flex flex-col items-center py-4 gap-2 border-r-2 border-zinc-800 z-20 shrink-0">
+      
+      {/* Navigation Action */}
+      <div className="w-full flex justify-center border-b-2 border-zinc-800 pb-4 mb-2">
+        <button
+          onClick={() => router.back()}
+          title="Go Back"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-white text-zinc-950 shadow-[2px_2px_0px_0px_rgba(161,161,170,1)] hover:bg-zinc-200"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Existing Canvas Tools */}
       {tools.map((t) => {
         const Icon = t.icon;
         const isActive = activeTool === t.id;
