@@ -200,7 +200,7 @@ export interface GraphEdgePayload {
 export interface BeaconDto {
   id: number;
   nodeId: number | null;
-  nodeLabel?: string | null; // <-- FIX: Added to sync with backend Phase 1 update
+  nodeLabel?: string | null; 
   uuid: string | null; // Mapped from Java UUID
   major: number | null;
   minor: number | null;

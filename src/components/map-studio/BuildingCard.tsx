@@ -18,12 +18,9 @@ import {
 import { Activity, AlertTriangle, ArrowRight, Loader2, Map, MapPin, Shield, ShieldAlert, Trash2 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
-// THE FIX: Combined both hooks from alphas and Ticket-8
 import { useUpdateBuildingPrivacy, useGetBuildingStats } from "@/hooks/api/useMapStudio";
 
-// ============================================================================
 // 1. ISOLATED PRIVACY TOGGLE COMPONENT (From alphas)
-// ============================================================================
 
 interface PrivacyToggleProps {
   buildingId: string;
@@ -113,9 +110,7 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
   );
 }
 
-// ============================================================================
 // 2. MAIN BUILDING CARD COMPONENT
-// ============================================================================
 
 export interface BuildingData {
   id: string;
@@ -136,7 +131,6 @@ interface BuildingCardProps {
 export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
   const isHealthy = building.health === "ONLINE";
   
-  // THE FIX: Brought in the live stats from Ticket-8, while dropping the duplicate privacy state
   const { data: stats } = useGetBuildingStats(Number(building.id)); 
 
   return (

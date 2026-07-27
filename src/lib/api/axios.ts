@@ -7,7 +7,6 @@ export const axiosInstance = axios.create({
 // Intercept all outgoing requests and attach the Bearer token dynamically
 axiosInstance.interceptors.request.use(
   (config) => {
-    // THE FIX: Strict Client-Side Cookie Parsing.
     // Removes the dynamic `next/headers` import that causes Webpack/SSR compilation crashes.
     if (typeof window !== 'undefined') {
       const match = document.cookie.match(new RegExp('(^| )echonav_token=([^;]+)'));

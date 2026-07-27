@@ -18,7 +18,6 @@ export const fleetActions = {
       throw new Error(axiosError.response?.data?.message || "Failed to fetch tasks.");
     }
   },
-  // --- SUBTASK 5.3 FIX: Global Fetch Actions ---
   getOrganizationTasks: async (orgId: number) => {
     const response = await axiosInstance.get(`/api/fleet/tasks/organisation/${orgId}`);
     return response.data;
@@ -47,7 +46,6 @@ export const fleetActions = {
     }
   },
 
-  // --- SUBTASK 2.8 FIX: Create Batch Tasks ---
   createTasks: async (payload: CreateBatchTasksRequest): Promise<string> => {
     try {
       const response = await axiosInstance.post<string>("/api/fleet/tasks", payload);

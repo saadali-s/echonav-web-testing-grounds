@@ -6,7 +6,7 @@ import { useCalculateRoute } from "@/hooks/api/useNavigation";
 import { UpdateGraphRequest } from "@/lib/api/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { Layers, Map, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react"; 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Toolbelt, ToolMode } from "./Toolbelt";
 import { VectorComposer } from "./VectorComposer";
 import { EdgeData, NodeData } from "./vector/types";
@@ -27,6 +27,12 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
   const [progress, setProgress] = useState(0);
   
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+
+  const lastMessageRef = useRef<string>("");
+  if (alertMessage) {
+    lastMessageRef.current = alertMessage;
+  }
+  const displayMsg = alertMessage || lastMessageRef.current;
 
   const idNum = Number(floorPlanId);
   const queryClient = useQueryClient();
@@ -93,13 +99,13 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
       
       // Cleanup hydration buffer explicitly after the transient maps hit the database tables
       sessionStorage.removeItem(`echonav_import_${idNum}`);
-      setAlertMessage("Vector graph securely saved to database."); // REPLACED NATIVE ALERT
+      setAlertMessage("Vector graph securely saved to database."); 
       
       return result; 
       
     } catch (error: unknown) {
-      setAlertMessage(error instanceof Error ? error.message : "An unknown error occurred."); // REPLACED NATIVE ALERT
-      return null;
+      setAlertMessage(error instanceof Error ? error.message : "An unknown error occurred."); 
+            return null;
     }
   };
 
@@ -182,8 +188,8 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
 
   const isFullyLoading = isDbLoading || isProcessing;
 
-  const isSuccess = alertMessage?.includes("securely") || alertMessage?.includes("accurately");
-  const isWarning = alertMessage?.includes("⚠️");
+  const isSuccess = displayMsg?.includes("securely") || displayMsg?.includes("accurately");
+  const isWarning = displayMsg?.includes("⚠️");
 
   const alertConfig = isSuccess 
     ? { icon: <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-500" strokeWidth={2.5} />, bg: "bg-emerald-100 dark:bg-emerald-950/50", border: "border-emerald-200 dark:border-emerald-900", title: "Success" }
@@ -253,7 +259,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
 
           <div className="py-2">
             <AlertDialogDescription className="font-bold text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap text-sm leading-relaxed">
-              <span className="text-zinc-950 dark:text-zinc-200">{alertMessage}</span>
+              <span className="text-zinc-950 dark:text-zinc-200">{displayMsg}</span>
             </AlertDialogDescription>
           </div>
 

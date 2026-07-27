@@ -111,6 +111,36 @@ export function VectorComposer({
     }
   };
 
+  const handleDeleteNodeAndSave = async (nodeId: string) => {
+    const newNodes = nodes.filter((n) => n.id !== nodeId);
+    const newEdges = edges.filter((e) => e.source !== nodeId && e.target !== nodeId);
+    pushHistory(newNodes, newEdges);
+    
+    if (onSaveDb) {
+      try {
+        const updatedGraph = await onSaveDb(newNodes, newEdges);
+        if (updatedGraph && updatedGraph.nodes) {
+           const freshNodes = updatedGraph.nodes.map((n: any) => ({
+             id: String(n.id), x: n.x, y: n.y, label: n.label || "",
+             isHazard: n.isHazard || false, ttsVerbalGuidance: n.ttsVerbalGuidance, ttsAudioUrl: n.ttsAudioUrl
+           }));
+           
+           const freshEdges = updatedGraph.edges.map((e: any) => ({
+             id: String(e.id), source: String(e.fromNodeId), target: String(e.toNodeId),
+             isHazard: e.isHazard || false, weightM: e.weightM, distance: e.distance
+           }));
+           
+           resetHistory(freshNodes, freshEdges);
+        }
+        state.clearSelection();
+      } catch (err) {
+        console.error("Delete & Save failed", err);
+      }
+    } else {
+      state.clearSelection();
+    }
+  };
+
   const handleResolveHazard = async (nodeId: string) => {
     const newNodes = nodes.map(n => n.id === nodeId ? { ...n, isHazard: false, hazardType: undefined } : n);
     pushHistory(newNodes, edges);
@@ -176,6 +206,7 @@ export function VectorComposer({
       <InspectorPanel
         selectionType={state.selection} activeTool={state.activeTool} floorPlanScale={initialScale} 
         selectedNode={state.selectedNodeIds.length === 1 ? nodes.find((n) => n.id === state.selectedNodeIds[0]) : undefined}
+        
         updateNode={(updates) => {
           if (state.selectedNodeIds.length === 1) {
              pushHistory(nodes.map((n) => n.id === state.selectedNodeIds[0] ? { ...n, ...updates } : n), edges);
@@ -186,6 +217,7 @@ export function VectorComposer({
             const e = new KeyboardEvent("keydown", { code: "Delete" });
             window.dispatchEvent(e);
         }}
+        onDeleteAndSave={handleDeleteNodeAndSave}
         calibrationPixelDistance={calibrationPixelDistance} onCalibrate={handleCalibrateWrapper} edgeMeters={selectedEdgeDistance} 
         routeStartNode={state.routeStartNode} routeEndNode={state.routeEndNode} calculatedRoute={state.calculatedRoute}
         isCalculatingRoute={state.isCalculatingRoute} onResolveHazard={handleResolveHazard}

@@ -45,7 +45,6 @@ export function FleetComposer() {
     };
   });
 
-  // THE FIX: Prevent Ghost Tasks by excluding nodes that have ANY task or beacon history
   const taskNodeIds = tasksData.map((task: DeploymentTaskDto) => Number(task.nodeId));
   const inventoryNodeIds = beaconsData
     .filter((b: BeaconDto) => b.nodeId != null && b.status !== "UNLINKED")

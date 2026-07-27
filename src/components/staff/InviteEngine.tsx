@@ -56,7 +56,6 @@ export function InviteEngine() {
   };
 
   return (
-    // THE FIX: Removed 'min-h-screen p-6' so it sizes naturally
     <div className="relative">
       <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none overflow-hidden rounded-xl transition-all">
         <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-950/40 py-5">

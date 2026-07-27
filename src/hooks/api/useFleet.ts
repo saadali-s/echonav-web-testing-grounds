@@ -40,7 +40,6 @@ export function useGetOrganizationBeacons(orgId: number | undefined) {
   });
 }
 
-// --- FIX: Robust Cache Invalidation for Linking ---
 export function useLinkBeacon() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -14,6 +14,18 @@ import { NodeInspector } from "./inspectors/NodeInspector";
 import { RouteInspector } from "./inspectors/RouteInspector";
 import { ScaleCalibration } from "./inspectors/ScaleCalibration";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 export type SelectionType = "NODE" | "EDGE" | null;
 
 interface InspectorProps {
@@ -24,6 +36,7 @@ interface InspectorProps {
   updateNode?: (updates: Partial<NodeData>) => void;
   onSave?: () => void;
   onDelete: () => void;
+  onDeleteAndSave?: (nodeId: string) => void;
   calibrationPixelDistance?: number | null;
   onCalibrate?: (scale: number) => void;
   edgeMeters?: number | null;
@@ -35,7 +48,8 @@ interface InspectorProps {
 }
 
 export function InspectorPanel({ 
-  selectionType, activeTool, selectedNode, updateNode, onSave, onDelete, calibrationPixelDistance, onCalibrate, edgeMeters, routeStartNode, routeEndNode, calculatedRoute, isCalculatingRoute, onResolveHazard 
+  selectionType, activeTool, selectedNode, updateNode, onSave, onDelete, onDeleteAndSave,
+  calibrationPixelDistance, onCalibrate, edgeMeters, routeStartNode, routeEndNode, calculatedRoute, isCalculatingRoute, onResolveHazard 
 }: InspectorProps) {
   const isScaling = activeTool === "SCALE";
   const isRouting = activeTool === "ROUTE";
@@ -43,11 +57,17 @@ export function InspectorPanel({
   const isEdge = selectionType === "EDGE";
 
   const deleteNodeMutation = useDeleteNode();
+  
   const handleNodeDelete = () => {
     if (selectedNode?.id && (typeof selectedNode.id === 'number' || !String(selectedNode.id).startsWith('n'))) {
        deleteNodeMutation.mutate(Number(selectedNode.id));
     }
-    onDelete(); 
+    
+    if (onDeleteAndSave && selectedNode) {
+      onDeleteAndSave(selectedNode.id);
+    } else {
+      onDelete(); 
+    }
   };
 
   return (
@@ -59,6 +79,7 @@ export function InspectorPanel({
         <h3 className="font-black text-sm uppercase">{isScaling ? "Scale" : isRouting ? "Path Simulation" : isNode ? "Node" : "Path"}</h3>
       </div>
 
+      {/* Dynamic Inspector Content */}
       {isScaling ? (
         <ScaleCalibration pixelDistance={calibrationPixelDistance} onCalibrate={onCalibrate} />
       ) : isRouting ? (
@@ -71,9 +92,37 @@ export function InspectorPanel({
         <EmptyState />
       )}
 
+      {/* Bottom Action Bar */}
       {(isNode || isEdge) && !isScaling && !isRouting && (
         <div className="p-5 border-t-2 border-zinc-950 bg-zinc-50 space-y-3 mt-auto">
-          <Button variant="destructive" onClick={isNode ? handleNodeDelete : onDelete} className="w-full border-2 border-zinc-950">Delete</Button>
+          {isNode ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full border-2 border-zinc-950">Delete</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-black uppercase tracking-tight">Delete Node</AlertDialogTitle>
+                  <AlertDialogDescription className="font-bold text-zinc-500">
+                    Are you sure you want to delete node?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleNodeDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Button variant="destructive" onClick={onDelete} className="w-full border-2 border-zinc-950">Delete</Button>
+          )}
           <Button onClick={onSave} className="w-full bg-zinc-950 text-white border-2 border-zinc-950">Save Properties</Button>
         </div>
       )}

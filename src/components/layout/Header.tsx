@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserAccountNav } from "./UserAccountNav";
 
 export function Header() {
@@ -51,7 +50,6 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-3 sm:gap-5">
-              <NotificationBell />
               <ModeToggle />
               <div className="h-6 w-0.5 bg-border mx-1 hidden sm:block"></div>
               <UserAccountNav />

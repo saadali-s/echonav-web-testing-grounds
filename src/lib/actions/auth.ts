@@ -51,7 +51,6 @@ export const authActions = {
     }
   },
 
-  // THE FIX: Added the activation action
   activateInvite: async (token: string, payload: ActivateInviteRequest): Promise<string> => {
     try {
       const response = await axiosInstance.post(`/api/auth/activate/${token}`, payload);

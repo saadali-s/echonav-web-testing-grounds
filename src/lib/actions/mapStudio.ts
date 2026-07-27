@@ -104,7 +104,6 @@ export const mapStudioActions = {
   },
 
   downloadExportZip: async (orgId: number) => {
-    // FIXED: Using axiosInstance instead of api
     const res = await axiosInstance.get(`/api/exportmap/organisations/${orgId}/export`, {
       responseType: 'blob'
     });

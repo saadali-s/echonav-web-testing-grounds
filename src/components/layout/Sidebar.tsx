@@ -31,7 +31,7 @@ export function Sidebar() {
   const [manualCollapsed, setManualCollapsed] = useState(false);
   const { isLoggedIn } = useAuth();
 
-  // THE FIX: Completely hide the sidebar if we are on an auth/activation page
+  // Completely hide the sidebar if we are on an auth/activation page
   const isPublicRoute = pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/reset-password");
   
   if (!isLoggedIn || isPublicRoute) return null;

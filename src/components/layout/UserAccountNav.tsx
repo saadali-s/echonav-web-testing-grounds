@@ -19,7 +19,6 @@ export function UserAccountNav() {
   const { user, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Fixes the Hydration Mismatch AND satisfies the linter by making it asynchronous
   useEffect(() => {
     const timer = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(timer);

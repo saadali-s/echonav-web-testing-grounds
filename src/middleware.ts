@@ -30,7 +30,6 @@ export function middleware(request: NextRequest) {
   if (tokenCookie) {
     const decoded = parseJwt(tokenCookie);
     
-    // THE FIX: RBAC - Block Technicians from the Web Dashboard
     if (isProtectedRoute && decoded?.role === 'TECHNICIAN') {
       // Clear their token and kick them out. They belong on mobile.
       const response = NextResponse.redirect(new URL('/auth?tab=login&error=mobile_only', request.url));

@@ -1,7 +1,6 @@
 "use client";
 
 import { authActions } from "@/lib/actions/auth";
-// FIXED: Import the strictly typed DTO from our centralized types file
 import { RegisterOrgRequest } from "@/lib/api/types";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -25,7 +24,6 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  // FIXED: Updated payload type
   register: (payload: RegisterOrgRequest) => Promise<void>;
 }
 
@@ -69,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 1. Store the UI user state
     localStorage.setItem("echonav_user", JSON.stringify(userData));
     
-    // 2. THE FIX: Store the REAL JWT in a standard cookie so both Client and Server can read it
+    // 2. Store the REAL JWT in a standard cookie so both Client and Server can read it
     document.cookie = `echonav_token=${token}; path=/; max-age=86400; SameSite=Lax`;
 
     setAuthState({
@@ -81,7 +79,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/dashboard";
   }, []);
 
-  // FIXED: Updated parameter type
   const register = useCallback(async (payload: RegisterOrgRequest) => {
     await authActions.register(payload);
     // The backend login requires a password, which is optional on the frontend type but required here
@@ -102,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // 1. Clear Local Storage
       localStorage.removeItem("echonav_user");
       
-      // 2. THE FIX: Destroy the real JWT cookie
+      // Destroy the real JWT cookie
       document.cookie = `echonav_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
       setAuthState({ isLoggedIn: false, user: null, activeOrgId: null });

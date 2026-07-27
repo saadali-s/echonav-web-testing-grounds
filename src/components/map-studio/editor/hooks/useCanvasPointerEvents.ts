@@ -183,8 +183,6 @@ export function useCanvasPointerEvents({
   const handleEdgeClick = (e: React.PointerEvent, edgeId: string) => {
     const logical = getLogicalCoords(e.clientX, e.clientY);
 
-    // THE FIX: Check if the edge click physically overlaps a node's hit-box.
-    // If it does, we DO NOT stop propagation, allowing the event to bubble to handlePointerDown for node selection.
     const clickedNode = nodes.find((n) => {
       const dx = n.x - logical.x;
       const dy = n.y - (16 / scale) - logical.y;
