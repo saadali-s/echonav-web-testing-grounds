@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateTasks } from "@/hooks/api/useFleet";
-import { useGetBuildings, useGetFloorPlans, useGetSpatialGraph } from "@/hooks/api/useMapStudio";
+import {
+  useGetBuildings,
+  useGetFloorPlans,
+  useGetSpatialGraph,
+} from "@/hooks/api/useMapStudio";
 import { Loader2, Map, MapPin, Send, User, Users } from "lucide-react";
 import { useState } from "react";
 
@@ -22,20 +26,24 @@ interface AssignmentProps {
   activeNodeIds?: number[];
 }
 
-export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps) {
+export function AssignmentEngine({
+  staff,
+  activeNodeIds = [],
+}: AssignmentProps) {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
   const { data: buildings } = useGetBuildings(orgIdNum);
   const firstBuildingId = buildings?.[0]?.id;
-  const { data: floorPlans, isLoading: isFloorPlansLoading } = useGetFloorPlans(firstBuildingId);
+  const { data: floorPlans, isLoading: isFloorPlansLoading } =
+    useGetFloorPlans(firstBuildingId);
 
   const [selectedFloorPlanId, setSelectedFloorPlanId] = useState<string>("");
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
 
   const { data: graphData, isLoading: isGraphLoading } = useGetSpatialGraph(
-    selectedFloorPlanId ? Number(selectedFloorPlanId) : undefined
+    selectedFloorPlanId ? Number(selectedFloorPlanId) : undefined,
   );
 
   const createTasksMutation = useCreateTasks();
@@ -97,25 +105,31 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
             <Send className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
             Assignment Workspace
           </h2>
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">Select location, pick nodes, and assign a technician.</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mt-1">
+            Select location, pick nodes, and assign a technician.
+          </p>
         </div>
       </div>
 
       {/* 3-Column Grid for step-by-step selection */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-        
         {/* Column 1: Floor Plans */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+        <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
               <Map className="h-4 w-4" /> Step 1: Location
             </CardTitle>
           </CardHeader>
           <CardContent className="flex-1 p-4 overflow-y-auto space-y-2">
-            {isFloorPlansLoading && <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />}
-            {(!floorPlans || floorPlans.length === 0) && !isFloorPlansLoading && (
-              <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">No Floor Plans Found</div>
+            {isFloorPlansLoading && (
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />
             )}
+            {(!floorPlans || floorPlans.length === 0) &&
+              !isFloorPlansLoading && (
+                <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                  No Floor Plans Found
+                </div>
+              )}
             {floorPlans?.map((fp) => (
               <div
                 key={fp.id}
@@ -127,14 +141,16 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
                 }`}
               >
                 <div className="font-black text-sm uppercase">{fp.name}</div>
-                <div className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest mt-1">ID: {fp.id}</div>
+                <div className="font-bold text-[10px] text-zinc-500 uppercase tracking-widest mt-1">
+                  ID: {fp.id}
+                </div>
               </div>
             ))}
           </CardContent>
         </Card>
 
         {/* Column 2: Nodes */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+        <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <div className="flex items-center justify-between">
               <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
@@ -145,7 +161,10 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
                 disabled={dynamicNodes.length === 0}
                 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors disabled:opacity-50"
               >
-                {selectedNodes.size === dynamicNodes.length && dynamicNodes.length > 0 ? "Deselect All" : "Select All"}
+                {selectedNodes.size === dynamicNodes.length &&
+                dynamicNodes.length > 0
+                  ? "Deselect All"
+                  : "Select All"}
               </button>
             </div>
           </CardHeader>
@@ -155,12 +174,16 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
                 Select a floor plan first
               </div>
             )}
-            {isGraphLoading && selectedFloorPlanId && <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />}
-            {!isGraphLoading && dynamicNodes.length === 0 && selectedFloorPlanId && (
-              <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
-                No unassigned nodes available.
-              </div>
+            {isGraphLoading && selectedFloorPlanId && (
+              <Loader2 className="h-5 w-5 animate-spin text-zinc-500 m-auto mt-4" />
             )}
+            {!isGraphLoading &&
+              dynamicNodes.length === 0 &&
+              selectedFloorPlanId && (
+                <div className="text-center p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-lg">
+                  No unassigned nodes available.
+                </div>
+              )}
             {dynamicNodes.map((node) => (
               <div
                 key={node.id}
@@ -178,8 +201,12 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
                     className="border-2 border-zinc-950 dark:border-zinc-700 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                   />
                   <div>
-                    <div className="font-black text-sm uppercase">{node.label}</div>
-                    <div className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">ID: {node.id}</div>
+                    <div className="font-black text-sm uppercase">
+                      {node.label}
+                    </div>
+                    <div className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">
+                      ID: {node.id}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -188,7 +215,7 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
         </Card>
 
         {/* Column 3: Staff & Dispatch */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
+        <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
               <Users className="h-4 w-4" /> Step 3: Technician
@@ -206,19 +233,27 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
                 }`}
               >
                 <User className="h-5 w-5 opacity-70" />
-                <span className="font-black text-sm uppercase break-all">{s.name}</span>
+                <span className="font-black text-sm uppercase break-all">
+                  {s.name}
+                </span>
               </div>
             ))}
           </CardContent>
-          
+
           {/* Sticky Summary / Action Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-zinc-50 dark:bg-zinc-900 border-t-2 border-zinc-950 dark:border-zinc-800">
             <Button
               onClick={handleAssign}
-              disabled={selectedNodes.size === 0 || !selectedStaffId || createTasksMutation.isPending}
-              className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black h-12 tracking-widest uppercase text-xs shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)]"
+              disabled={
+                selectedNodes.size === 0 ||
+                !selectedStaffId ||
+                createTasksMutation.isPending
+              }
+              className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black h-12 tracking-widest uppercase text-xs  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:"
             >
-              {createTasksMutation.isPending ? "Dispatching..." : `Create ${selectedNodes.size} Task${selectedNodes.size !== 1 ? 's' : ''}`}
+              {createTasksMutation.isPending
+                ? "Dispatching..."
+                : `Create ${selectedNodes.size} Task${selectedNodes.size !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </Card>

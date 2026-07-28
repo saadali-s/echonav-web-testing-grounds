@@ -47,9 +47,22 @@ interface InspectorProps {
   onResolveHazard?: (nodeId: string) => void;
 }
 
-export function InspectorPanel({ 
-  selectionType, activeTool, selectedNode, updateNode, onSave, onDelete, onDeleteAndSave,
-  calibrationPixelDistance, onCalibrate, edgeMeters, routeStartNode, routeEndNode, calculatedRoute, isCalculatingRoute, onResolveHazard 
+export function InspectorPanel({
+  selectionType,
+  activeTool,
+  selectedNode,
+  updateNode,
+  onSave,
+  onDelete,
+  onDeleteAndSave,
+  calibrationPixelDistance,
+  onCalibrate,
+  edgeMeters,
+  routeStartNode,
+  routeEndNode,
+  calculatedRoute,
+  isCalculatingRoute,
+  onResolveHazard,
 }: InspectorProps) {
   const isScaling = activeTool === "SCALE";
   const isRouting = activeTool === "ROUTE";
@@ -57,16 +70,20 @@ export function InspectorPanel({
   const isEdge = selectionType === "EDGE";
 
   const deleteNodeMutation = useDeleteNode();
-  
+
   const handleNodeDelete = () => {
-    if (selectedNode?.id && (typeof selectedNode.id === 'number' || !String(selectedNode.id).startsWith('n'))) {
-       deleteNodeMutation.mutate(Number(selectedNode.id));
+    if (
+      selectedNode?.id &&
+      (typeof selectedNode.id === "number" ||
+        !String(selectedNode.id).startsWith("n"))
+    ) {
+      deleteNodeMutation.mutate(Number(selectedNode.id));
     }
-    
+
     if (onDeleteAndSave && selectedNode) {
       onDeleteAndSave(selectedNode.id);
     } else {
-      onDelete(); 
+      onDelete();
     }
   };
 
@@ -74,18 +91,47 @@ export function InspectorPanel({
     <div className="w-80 shrink-0 bg-white dark:bg-zinc-950 border-l-2 border-zinc-950 flex flex-col z-10">
       <div className="p-5 border-b-2 border-zinc-950 flex items-center gap-4 bg-zinc-50/50">
         <div className="w-12 h-12 rounded-xl border-2 border-zinc-950 bg-white flex items-center justify-center shrink-0">
-          {isScaling ? <Ruler className="h-5 w-5" /> : isRouting ? <Navigation className="h-5 w-5 text-purple-600" /> : isNode ? <MapPin className="h-5 w-5" /> : <Route className="h-5 w-5" />}
+          {isScaling ? (
+            <Ruler className="h-5 w-5" />
+          ) : isRouting ? (
+            <Navigation className="h-5 w-5 text-purple-600" />
+          ) : isNode ? (
+            <MapPin className="h-5 w-5" />
+          ) : (
+            <Route className="h-5 w-5" />
+          )}
         </div>
-        <h3 className="font-black text-sm uppercase">{isScaling ? "Scale" : isRouting ? "Path Simulation" : isNode ? "Node" : "Path"}</h3>
+        <h3 className="font-black text-sm uppercase">
+          {isScaling
+            ? "Scale"
+            : isRouting
+              ? "Path Simulation"
+              : isNode
+                ? "Node"
+                : "Path"}
+        </h3>
       </div>
 
       {/* Dynamic Inspector Content */}
       {isScaling ? (
-        <ScaleCalibration pixelDistance={calibrationPixelDistance} onCalibrate={onCalibrate} />
+        <ScaleCalibration
+          pixelDistance={calibrationPixelDistance}
+          onCalibrate={onCalibrate}
+        />
       ) : isRouting ? (
-        <RouteInspector start={routeStartNode} end={routeEndNode} route={calculatedRoute} isCalculating={isCalculatingRoute} />
+        <RouteInspector
+          start={routeStartNode}
+          end={routeEndNode}
+          route={calculatedRoute}
+          isCalculating={isCalculatingRoute}
+        />
       ) : isNode ? (
-        <NodeInspector node={selectedNode} updateNode={updateNode} onSave={onSave} onResolveHazard={onResolveHazard} />
+        <NodeInspector
+          node={selectedNode}
+          updateNode={updateNode}
+          onSave={onSave}
+          onResolveHazard={onResolveHazard}
+        />
       ) : isEdge ? (
         <EdgeInspector meters={edgeMeters} />
       ) : (
@@ -98,22 +144,29 @@ export function InspectorPanel({
           {isNode ? (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full border-2 border-zinc-950">Delete</Button>
+                <Button
+                  variant="destructive"
+                  className="w-full border-2 border-zinc-950"
+                >
+                  Delete
+                </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+              <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl  dark:shadow-none">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="font-black uppercase tracking-tight">Delete Node</AlertDialogTitle>
+                  <AlertDialogTitle className="font-black uppercase tracking-tight">
+                    Delete Node
+                  </AlertDialogTitle>
                   <AlertDialogDescription className="font-bold text-zinc-500">
                     Are you sure you want to delete node?
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                  <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                     Cancel
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleNodeDelete}
-                    className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                    className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                   >
                     Delete
                   </AlertDialogAction>
@@ -121,9 +174,20 @@ export function InspectorPanel({
               </AlertDialogContent>
             </AlertDialog>
           ) : (
-            <Button variant="destructive" onClick={onDelete} className="w-full border-2 border-zinc-950">Delete</Button>
+            <Button
+              variant="destructive"
+              onClick={onDelete}
+              className="w-full border-2 border-zinc-950"
+            >
+              Delete
+            </Button>
           )}
-          <Button onClick={onSave} className="w-full bg-zinc-950 text-white border-2 border-zinc-950">Save Properties</Button>
+          <Button
+            onClick={onSave}
+            className="w-full bg-zinc-950 text-white border-2 border-zinc-950"
+          >
+            Save Properties
+          </Button>
         </div>
       )}
     </div>

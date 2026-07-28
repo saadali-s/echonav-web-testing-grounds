@@ -62,11 +62,7 @@ export function HardwareHealthChart({
   );
 
   return (
-    <Card className="relative flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-        style={textureStyle}
-      />
+    <Card className="relative p-0 flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
 
       <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-sky-300 dark:bg-sky-900 px-5 py-3 shrink-0">
         <CardTitle className="font-black uppercase tracking-wider text-sm text-sky-1050 dark:text-sky-100">

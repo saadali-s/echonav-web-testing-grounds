@@ -10,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 export interface ActiveStaff {
@@ -28,7 +28,7 @@ interface ActiveStaffRosterProps {
 
 export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
   return (
-    <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border-2 p-0 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950  dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-950/40 py-5">
         <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-widest text-emerald-1050 dark:text-emerald-500">
           <ShieldCheck className="h-5 w-5" />
@@ -68,10 +68,11 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                     <div>
                       <Badge
                         variant="default"
-                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${member.role === "ADMIN"
+                        className={`text-[10px] font-black uppercase tracking-widest border px-2 py-1 ${
+                          member.role === "ADMIN"
                             ? "bg-indigo-100 border-indigo-300 text-indigo-900 dark:bg-indigo-900/50 dark:border-indigo-700 dark:text-indigo-100"
                             : "bg-zinc-100 border-zinc-300 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300"
-                          }`}
+                        }`}
                       >
                         {member.role}
                       </Badge>
@@ -84,31 +85,36 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                     <div className="flex justify-center">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <button className="p-2 text-zinc-400 hover:text-red-600..." title="Remove">
+                          <button
+                            className="p-2 text-zinc-400 hover:text-red-600..."
+                            title="Remove"
+                          >
                             <Trash2 className="h-5 w-5" />
                           </button>
                         </AlertDialogTrigger>
                         <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="font-black uppercase tracking-tight">Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogTitle className="font-black uppercase tracking-tight">
+                              Confirm Deletion
+                            </AlertDialogTitle>
                             <AlertDialogDescription className="font-bold text-zinc-500">
-                              Are you sure you want to remove this record? This action cannot be undone.
+                              Are you sure you want to remove this record? This
+                              action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDelete(member.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                             >
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-
                     </div>
                   </div>
                 );

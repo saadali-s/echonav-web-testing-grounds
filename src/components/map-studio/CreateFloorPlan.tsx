@@ -101,12 +101,12 @@ export function CreateFloorPlan({
         }}
       >
         <DialogTrigger asChild>
-          <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
+          <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
             <Plus className="h-4 w-4 mr-2" />
             ADD NEW MAP
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-0 overflow-hidden">
           <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
             <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">
               Add Floor Plan
@@ -129,7 +129,7 @@ export function CreateFloorPlan({
                 value={newFloorLabel}
                 onChange={(e) => setNewFloorLabel(e.target.value)}
                 placeholder="e.g., Ground Floor"
-                className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium"
+                className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  dark:shadow-none focus-visible:ring-0 font-medium"
               />
             </div>
 
@@ -145,7 +145,7 @@ export function CreateFloorPlan({
                 onChange={handleFileSelect}
               />
               <div
-                className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none ${selectedFile ? "border-indigo-500 bg-indigo-500 text-white" : "border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110"}`}
+                className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform  dark:shadow-none ${selectedFile ? "border-indigo-500 bg-indigo-500 text-white" : "border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110"}`}
               >
                 {selectedFile ? (
                   <FileText className="h-6 w-6" />
@@ -168,14 +168,14 @@ export function CreateFloorPlan({
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+              className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none"
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpload}
               disabled={isUploading || !newFloorLabel.trim() || !selectedFile}
-              className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50"
+              className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50"
             >
               {isUploading ? "Uploading..." : "Upload Floor Plan"}
             </Button>
@@ -188,7 +188,7 @@ export function CreateFloorPlan({
         open={!!alertMessage}
         onOpenChange={(open) => !open && setAlertMessage(null)}
       >
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
             <div className="bg-red-100 dark:bg-red-950/50 p-2.5 rounded-lg border-2 border-red-200 dark:border-red-900 shrink-0">
               <AlertCircle
@@ -213,7 +213,7 @@ export function CreateFloorPlan({
           <AlertDialogFooter className="mt-2">
             <AlertDialogAction
               onClick={() => setAlertMessage(null)}
-              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
             >
               Acknowledge
             </AlertDialogAction>

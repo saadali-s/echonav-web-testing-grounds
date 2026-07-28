@@ -15,12 +15,8 @@ const textureStyle = {
 export function StatCards({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      {/* Card 1: Mapped Buildings (Indigo Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      {/* Card 1: Mapped Buildings */}
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-indigo-1050 dark:text-indigo-100">
             Mapped Buildings
@@ -37,12 +33,8 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
         </CardContent>
       </Card>
 
-      {/* Card 2: Active Beacons (Emerald Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      {/* Card 2: Active Beacons */}
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-emerald-1050 dark:text-emerald-100">
             Active Beacons
@@ -59,12 +51,8 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
         </CardContent>
       </Card>
 
-      {/* Card 3: Pending Tasks (Amber Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      {/* Card 3: Pending Tasks */}
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-amber-1050 dark:text-amber-100">
             Pending Tasks

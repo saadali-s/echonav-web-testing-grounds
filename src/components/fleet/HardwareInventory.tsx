@@ -2,7 +2,13 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle2, Loader2, RadioTower, Search } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  RadioTower,
+  Search,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 export interface InventoryItem {
@@ -21,14 +27,18 @@ export function HardwareInventory({
   isLoading?: boolean;
 }) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "UNLINKED">("ALL");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "ACTIVE" | "UNLINKED"
+  >("ALL");
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
     return items.filter((item) => {
-      const matchStatus = statusFilter === "ALL" || item.status === statusFilter;
-      const matchSearch = !q || 
-        item.nodeLabel.toLowerCase().includes(q) || 
+      const matchStatus =
+        statusFilter === "ALL" || item.status === statusFilter;
+      const matchSearch =
+        !q ||
+        item.nodeLabel.toLowerCase().includes(q) ||
         (item.beaconId && item.beaconId.toLowerCase().includes(q));
       return matchStatus && matchSearch;
     });
@@ -38,8 +48,7 @@ export function HardwareInventory({
   const unlinkedCount = items.filter((i) => i.status === "UNLINKED").length;
 
   return (
-    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
-      
+    <Card className="h-full p-0 flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       {/* Header & Controls Area */}
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 pb-6 p-6">
         <div className="flex flex-col gap-6">
@@ -47,18 +56,29 @@ export function HardwareInventory({
             <CardTitle className="font-black uppercase tracking-wider text-xl flex items-center gap-3 text-emerald-950 dark:text-emerald-100">
               <RadioTower className="h-6 w-6" />
               Hardware Databank
-              {isLoading && <Loader2 className="h-5 w-5 animate-spin text-emerald-800 dark:text-emerald-200 ml-2" />}
+              {isLoading && (
+                <Loader2 className="h-5 w-5 animate-spin text-emerald-800 dark:text-emerald-200 ml-2" />
+              )}
             </CardTitle>
-            
+
             {/* Summary Chips */}
             <div className="flex gap-2">
-              <Badge variant="outline" className="bg-white/50 dark:bg-zinc-950/50 border-2 border-emerald-950 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest">
+              <Badge
+                variant="outline"
+                className="bg-white/50 dark:bg-zinc-950/50 border-2 border-emerald-950 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest"
+              >
                 Total: {items.length}
               </Badge>
-              <Badge variant="outline" className="bg-emerald-100 dark:bg-emerald-800 border-2 border-emerald-950 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest">
+              <Badge
+                variant="outline"
+                className="bg-emerald-100 dark:bg-emerald-800 border-2 border-emerald-950 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest"
+              >
                 Active: {activeCount}
               </Badge>
-              <Badge variant="outline" className="bg-amber-100 dark:bg-amber-900 border-2 border-amber-900 dark:border-amber-600 text-amber-900 dark:text-amber-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest">
+              <Badge
+                variant="outline"
+                className="bg-amber-100 dark:bg-amber-900 border-2 border-amber-900 dark:border-amber-600 text-amber-900 dark:text-amber-100 px-3 py-1 font-black uppercase text-[10px] tracking-widest"
+              >
                 Unlinked: {unlinkedCount}
               </Badge>
             </div>
@@ -97,7 +117,10 @@ export function HardwareInventory({
         {isLoading ? (
           <div className="flex flex-col p-6 space-y-6">
             {[1, 2, 3, 4].map((skeleton) => (
-              <div key={skeleton} className="flex justify-between items-center animate-pulse border-b-2 border-zinc-100 dark:border-zinc-800 pb-4">
+              <div
+                key={skeleton}
+                className="flex justify-between items-center animate-pulse border-b-2 border-zinc-100 dark:border-zinc-800 pb-4"
+              >
                 <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
                 <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-20"></div>
                 <div className="h-6 bg-zinc-200 dark:bg-zinc-800 rounded w-32"></div>
@@ -129,7 +152,7 @@ export function HardwareInventory({
               {filteredItems.map((item, index) => {
                 const isLast = index === filteredItems.length - 1;
                 const isActive = item.status === "ACTIVE";
-                
+
                 return (
                   <div
                     key={item.id}
@@ -138,24 +161,28 @@ export function HardwareInventory({
                     <span className="font-black text-sm text-zinc-950 dark:text-zinc-100 uppercase">
                       {item.nodeLabel}
                     </span>
-                    
+
                     <div>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`font-black text-[10px] uppercase tracking-wider border-2 flex items-center gap-1.5 w-fit ${
-                          isActive 
-                            ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800" 
+                          isActive
+                            ? "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-800"
                             : "bg-zinc-100 text-zinc-600 border-zinc-300 dark:bg-zinc-900 dark:text-zinc-400 dark:border-zinc-700"
                         }`}
                       >
-                        {isActive ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                        {isActive ? (
+                          <CheckCircle2 className="h-3 w-3" />
+                        ) : (
+                          <AlertCircle className="h-3 w-3" />
+                        )}
                         {item.status}
                       </Badge>
                     </div>
 
                     <div>
                       {item.beaconId ? (
-                        <span className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-950 dark:border-zinc-700 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none px-3 py-1.5 rounded-md inline-flex w-fit uppercase">
+                        <span className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-950 dark:border-zinc-700  dark:shadow-none px-3 py-1.5 rounded-md inline-flex w-fit uppercase">
                           {item.beaconId}
                         </span>
                       ) : (
@@ -165,7 +192,9 @@ export function HardwareInventory({
                       )}
                     </div>
 
-                    <span className={`text-lg font-black text-right ${isActive ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-300 dark:text-zinc-700"}`}>
+                    <span
+                      className={`text-lg font-black text-right ${isActive ? "text-emerald-600 dark:text-emerald-500" : "text-zinc-300 dark:text-zinc-700"}`}
+                    >
                       {item.rssi ? `${item.rssi} dBm` : "---"}
                     </span>
                   </div>

@@ -41,14 +41,9 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
               key={plan.id}
               className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
             >
-              <Card className="overflow-hidden border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 transition-transform hover:-translate-y-1">
-                {/* Textured Vibrant Map Thumbnail Area */}
+              <Card className="overflow-hidden p-0 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 transition-transform hover:-translate-y-1">
                 <div className="relative h-32 bg-amber-300 dark:bg-amber-500 flex items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800">
-                  <div
-                    className="absolute inset-0 opacity-[0.15] text-zinc-950 pointer-events-none"
-                    style={textureStyle}
-                  />
-                  <div className="relative z-10 h-12 w-12 bg-white border-2 border-zinc-950 rounded-xl shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center transform -rotate-6">
+                  <div className="relative z-10 h-12 w-12 bg-white border-2 border-zinc-950 rounded-xl  flex items-center justify-center transform -rotate-6">
                     <Map className="h-6 w-6 text-zinc-950" />
                   </div>
                 </div>
@@ -81,8 +76,8 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
         </CarouselContent>
         {/* Navigation Arrows */}
         <div className="absolute -top-10 right-12 flex gap-2">
-          <CarouselPrevious className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
-          <CarouselNext className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
+          <CarouselPrevious className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
+          <CarouselNext className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
         </div>
       </Carousel>
     </div>

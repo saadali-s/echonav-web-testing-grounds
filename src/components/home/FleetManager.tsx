@@ -82,7 +82,7 @@ export default function FleetManager() {
         viewport={{ once: true }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="w-full max-w-5xl mx-auto border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-2xl overflow-hidden bg-white dark:bg-black backdrop-blur-xl transition-colors">
+        <Card className="w-full p-0 max-w-5xl mx-auto border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl overflow-hidden bg-white dark:bg-black backdrop-blur-xl transition-colors">
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 py-6 px-8 transition-colors">
             <div className="space-y-1">
               <CardTitle className="text-xl font-bold text-zinc-950 dark:text-white transition-colors">
@@ -191,7 +191,7 @@ export default function FleetManager() {
               className={cn(
                 "w-full sm:w-auto h-10 px-8 rounded-lg font-bold text-sm transition-all duration-300",
                 canCreateTasks
-                  ? "bg-black text-white hover:bg-zinc-800 shadow-md dark:bg-white dark:hover:bg-zinc-200 dark:text-black dark:shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                  ? "bg-black text-white hover:bg-zinc-800 shadow-md dark:bg-white dark:hover:bg-zinc-200 dark:text-black "
                   : "bg-zinc-100 text-zinc-400 border border-zinc-200 dark:bg-zinc-900 dark:text-zinc-600 dark:border-zinc-800 cursor-not-allowed hover:bg-zinc-100 dark:hover:bg-zinc-900",
               )}
               disabled={!canCreateTasks}

@@ -1387,7 +1387,7 @@ export function HardwareHealthChart({
   );
 
   return (
-    <Card className="relative flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="relative flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <div
         className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
         style={textureStyle}
@@ -1550,14 +1550,14 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
               key={plan.id}
               className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
             >
-              <Card className="overflow-hidden border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 transition-transform hover:-translate-y-1">
+              <Card className="overflow-hidden border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 transition-transform hover:-translate-y-1">
                 {/* Textured Vibrant Map Thumbnail Area */}
                 <div className="relative h-32 bg-amber-300 dark:bg-amber-500 flex items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800">
                   <div
                     className="absolute inset-0 opacity-[0.15] text-zinc-950 pointer-events-none"
                     style={textureStyle}
                   />
-                  <div className="relative z-10 h-12 w-12 bg-white border-2 border-zinc-950 rounded-xl shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] flex items-center justify-center transform -rotate-6">
+                  <div className="relative z-10 h-12 w-12 bg-white border-2 border-zinc-950 rounded-xl  flex items-center justify-center transform -rotate-6">
                     <Map className="h-6 w-6 text-zinc-950" />
                   </div>
                 </div>
@@ -1590,8 +1590,8 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
         </CarouselContent>
         {/* Navigation Arrows */}
         <div className="absolute -top-10 right-12 flex gap-2">
-          <CarouselPrevious className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
-          <CarouselNext className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
+          <CarouselPrevious className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
+          <CarouselNext className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
         </div>
       </Carousel>
     </div>
@@ -1631,7 +1631,7 @@ const textureStyle = {
 // Accept the dynamic data
 export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
   return (
-    <Card className="relative flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none overflow-hidden h-full">
+    <Card className="relative flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl  dark:shadow-none overflow-hidden h-full">
       <div
         className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
         style={textureStyle}
@@ -1734,11 +1734,7 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
       {/* Card 1: Mapped Buildings (Indigo Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-indigo-1050 dark:text-indigo-100">
             Mapped Buildings
@@ -1756,11 +1752,7 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
       </Card>
 
       {/* Card 2: Active Beacons (Emerald Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-emerald-1050 dark:text-emerald-100">
             Active Beacons
@@ -1778,11 +1770,7 @@ export function StatCards({ stats }: { stats: DashboardStats }) {
       </Card>
 
       {/* Card 3: Pending Tasks (Amber Pastel) */}
-      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-          style={textureStyle}
-        />
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950">
         <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-900 rounded-t-lg px-5 py-3">
           <CardTitle className="text-[11px] font-black uppercase tracking-wider text-amber-1050 dark:text-amber-100">
             Pending Tasks
@@ -1828,7 +1816,7 @@ export interface SystemEvent {
 
 export function SystemEventsFeed({ events }: { events: SystemEvent[] }) {
   return (
-    <Card className="relative h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="relative h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       
       <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-rose-100 dark:bg-rose-900 px-5 py-3 shrink-0">
         <CardTitle className="font-black uppercase tracking-wider text-sm text-rose-950 dark:text-rose-100">
@@ -1986,7 +1974,7 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
         
         {/* Column 1: Floor Plans */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
               <Map className="h-4 w-4" /> Step 1: Location
@@ -2015,7 +2003,7 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
         </Card>
 
         {/* Column 2: Nodes */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <div className="flex items-center justify-between">
               <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
@@ -2069,7 +2057,7 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
         </Card>
 
         {/* Column 3: Staff & Dispatch */}
-        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
+        <Card className="flex flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
               <Users className="h-4 w-4" /> Step 3: Technician
@@ -2097,7 +2085,7 @@ export function AssignmentEngine({ staff, activeNodeIds = [] }: AssignmentProps)
             <Button
               onClick={handleAssign}
               disabled={selectedNodes.size === 0 || !selectedStaffId || createTasksMutation.isPending}
-              className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black h-12 tracking-widest uppercase text-xs shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)]"
+              className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black h-12 tracking-widest uppercase text-xs  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50 disabled:active:translate-x-0 disabled:active:translate-y-0 disabled:active:"
             >
               {createTasksMutation.isPending ? "Dispatching..." : `Create ${selectedNodes.size} Task${selectedNodes.size !== 1 ? 's' : ''}`}
             </Button>
@@ -2215,19 +2203,19 @@ export function FleetComposer() {
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Active Tasks</span>
             <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{activeTasksCount}</span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Available Staff</span>
             <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">{staffOptions.length}</span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Total Hardware</span>
             <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">{mappedInventory.length}</span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Pending Links</span>
             <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{unlinkedBeaconsCount}</span>
           </div>
@@ -2235,7 +2223,7 @@ export function FleetComposer() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-8">
-        <Card onClick={() => setActiveView("ASSIGN")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-indigo-500 transition-all flex flex-col">
+        <Card onClick={() => setActiveView("ASSIGN")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-indigo-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-950/50 border-2 border-indigo-200 dark:border-indigo-900 flex items-center justify-center">
@@ -2252,7 +2240,7 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        <Card onClick={() => setActiveView("BOARD")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-amber-500 transition-all flex flex-col">
+        <Card onClick={() => setActiveView("BOARD")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-amber-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-amber-100 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-900 flex items-center justify-center">
@@ -2269,7 +2257,7 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        <Card onClick={() => setActiveView("INVENTORY")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-emerald-500 transition-all flex flex-col">
+        <Card onClick={() => setActiveView("INVENTORY")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-emerald-500 transition-all flex flex-col">
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 border-2 border-emerald-200 dark:border-emerald-900 flex items-center justify-center">
@@ -2339,7 +2327,7 @@ export function HardwareInventory({
   const unlinkedCount = items.filter((i) => i.status === "UNLINKED").length;
 
   return (
-    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       
       {/* Header & Controls Area */}
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 pb-6 p-6">
@@ -2456,7 +2444,7 @@ export function HardwareInventory({
 
                     <div>
                       {item.beaconId ? (
-                        <span className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-950 dark:border-zinc-700 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none px-3 py-1.5 rounded-md inline-flex w-fit uppercase">
+                        <span className="font-mono text-xs font-black text-zinc-950 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-800 border-2 border-zinc-950 dark:border-zinc-700  dark:shadow-none px-3 py-1.5 rounded-md inline-flex w-fit uppercase">
                           {item.beaconId}
                         </span>
                       ) : (
@@ -2552,7 +2540,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
   }, [tasks, query, statusFilter]);
 
   return (
-    <Card className="h-full min-h-0 flex flex-col rounded-3xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="h-full min-h-0 flex flex-col rounded-3xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-950/40 p-5 md:p-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -2570,7 +2558,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
                     onClick={() => setStatusFilter(opt)}
                     className={`rounded-full border-2 px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] font-black transition-all ${
                       active
-                        ? "border-zinc-950 bg-zinc-950 text-white shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:border-zinc-100 dark:bg-zinc-950 dark:text-zinc-50 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.2)]"
+                        ? "border-zinc-950 bg-zinc-950 text-white  dark:border-zinc-100 dark:bg-zinc-950 dark:text-zinc-50 "
                         : "border-zinc-950/20 bg-white/50 text-zinc-700 hover:border-zinc-950 hover:bg-white dark:border-zinc-800 dark:bg-zinc-950/40 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
                     }`}
                   >
@@ -2607,7 +2595,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
             return (
               <div
                 key={col.id}
-                className={`flex flex-col rounded-3xl border-2 ${col.border} overflow-hidden bg-white dark:bg-zinc-950 h-full shadow-[4px_4px_0px_0px_rgba(24,24,27,0.05)] dark:shadow-none`}
+                className={`flex flex-col rounded-3xl border-2 ${col.border} overflow-hidden bg-white dark:bg-zinc-950 h-full  dark:shadow-none`}
               >
                 <div className={`p-5 border-b-2 ${col.border} flex items-center justify-between ${col.bg}`}>
                   <div className="flex items-center gap-3">
@@ -2633,7 +2621,7 @@ export function KanbanBoard({ tasks }: { tasks: Task[] }) {
                     columnTasks.map((task) => (
                       <div
                         key={task.id}
-                        className="bg-white dark:bg-zinc-900/80 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl p-5 hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:shadow-none cursor-pointer"
+                        className="bg-white dark:bg-zinc-900/80 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl p-5 hover:-translate-y-1 hover: dark:hover:shadow-none cursor-pointer"
                       >
                         <div className="flex items-start gap-3 mb-4">
                           <MapPin className="h-5 w-5 text-zinc-400 dark:text-zinc-100 shrink-0 mt-0.5" />
@@ -3026,7 +3014,7 @@ export default function HeroSection() {
         <Card className="border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl overflow-hidden rounded-2xl bg-white/60 dark:bg-black/40 backdrop-blur-xl transition-colors">
           <CardHeader className="border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 py-5 px-8 transition-colors">
             <CardTitle className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse shadow-[0_0_10px_rgba(0,0,0,0.5)] dark:shadow-[0_0_10px_rgba(255,255,255,0.8)]" />{" "}
+              <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse  dark:shadow-[0_0_10px_rgba(255,255,255,0.8)]" />{" "}
               Live Telemetry
             </CardTitle>
           </CardHeader>
@@ -3776,7 +3764,7 @@ export function NotificationBell() {
       <div className="md:hidden">
         <Dialog open={isMobileOpen} onOpenChange={setIsMobileOpen}>
           <DialogTrigger asChild>{triggerButton}</DialogTrigger>
-          <DialogContent className="w-[90%] rounded-2xl p-0 gap-0 overflow-hidden border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950">
+          <DialogContent className="w-[90%] rounded-2xl p-0 gap-0 overflow-hidden border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950">
             <DialogHeader className="px-4 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-left">
               <DialogTitle className="font-black uppercase tracking-wider text-sm text-zinc-950 dark:text-zinc-100">
                 Notifications
@@ -4308,7 +4296,7 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
       </div>
 
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-black uppercase tracking-tight text-xl">Confirm Privacy Change</AlertDialogTitle>
             <AlertDialogDescription className="font-bold text-zinc-500">
@@ -4318,7 +4306,7 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
           <AlertDialogFooter className="gap-3 sm:gap-4 mt-2">
             <AlertDialogCancel 
               disabled={isPending} 
-              className="border-2 border-zinc-950 dark:border-zinc-800 font-black uppercase text-[11px] tracking-wider h-11 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none hover:bg-zinc-100 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+              className="border-2 border-zinc-950 dark:border-zinc-800 font-black uppercase text-[11px] tracking-wider h-11 px-6  dark:shadow-none hover:bg-zinc-100 transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
             >
               Cancel
             </AlertDialogCancel>
@@ -4326,7 +4314,7 @@ export function PrivacyToggle({ buildingId, buildingName, currentPrivacy, orgId 
             <Button
               disabled={isPending}
               onClick={handleConfirm}
-              className={`border-2 border-zinc-950 font-black uppercase text-[11px] tracking-wider h-11 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none ${confirmButtonColor}`}
+              className={`border-2 border-zinc-950 font-black uppercase text-[11px] tracking-wider h-11 px-6  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none ${confirmButtonColor}`}
             >
               {isPending ? (
                 <>
@@ -4371,7 +4359,7 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
   const { data: stats } = useGetBuildingStats(Number(building.id)); 
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
+    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 group transition-all">
       <div className="h-40 bg-zinc-50 dark:bg-zinc-900/50 flex flex-col items-center justify-center border-b-2 border-zinc-950 dark:border-zinc-800 relative overflow-hidden">
         <Map className="h-12 w-12 text-zinc-950 dark:text-zinc-100 group-hover:scale-110 transition-transform duration-300" strokeWidth={1.5} />
         
@@ -4385,7 +4373,7 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
-          <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl">
+          <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl">
             <AlertDialogHeader>
               <AlertDialogTitle className="font-black uppercase tracking-tight">Are you absolutely sure?</AlertDialogTitle>
               <AlertDialogDescription className="font-bold text-zinc-500">
@@ -4393,12 +4381,12 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2 sm:gap-0">
-              <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+              <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                 Cancel
               </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => onDelete(building.id)}
-                className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
               >
                 Delete Building
               </AlertDialogAction>
@@ -4406,7 +4394,7 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
           </AlertDialogContent>
         </AlertDialog>
 
-        <Badge variant={building.privacy === "PUBLIC" ? "default" : "secondary"} className={`absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-md transition-colors ${building.privacy === "PRIVATE" ? "bg-amber-100 text-amber-900 hover:bg-amber-200" : ""}`}>
+        <Badge variant={building.privacy === "PUBLIC" ? "default" : "secondary"} className={`absolute top-3 left-3 text-[10px] font-black tracking-widest uppercase border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-md transition-colors ${building.privacy === "PRIVATE" ? "bg-amber-100 text-amber-900 hover:bg-amber-200" : ""}`}>
           {building.privacy === "PRIVATE" ? <ShieldAlert className="w-3 h-3 mr-1.5" /> : <Shield className="w-3 h-3 mr-1.5" />}
           {building.privacy}
         </Badge>
@@ -4421,7 +4409,7 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none uppercase tracking-wider">
+        <div className="flex items-center gap-4 text-xs font-bold text-zinc-950 dark:text-zinc-100 bg-white dark:bg-zinc-900 p-3 rounded-lg border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none uppercase tracking-wider">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-zinc-500" />
             <span className="text-lg font-black">{stats?.activeFloorPlans || 0}</span> Floor Plans
@@ -4575,7 +4563,7 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
 
       {!isLoading && !isError && mappedFloors.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 mt-8">
-          <div className="h-16 w-16 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+          <div className="h-16 w-16 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl flex items-center justify-center mb-4  dark:shadow-none">
             <Layers className="h-8 w-8 text-zinc-400 dark:text-zinc-600" />
           </div>
           <h3 className="text-lg font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">No Floors Found</h3>
@@ -4599,7 +4587,7 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
 
       {/* FINAL SHADCN ALERT DIALOG */}
       <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
             <div className="bg-red-100 dark:bg-red-950/50 p-2.5 rounded-lg border-2 border-red-200 dark:border-red-900 shrink-0">
@@ -4620,7 +4608,7 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
           <AlertDialogFooter className="mt-2">
             <AlertDialogAction 
               onClick={() => setAlertMessage(null)}
-              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
             >
               Acknowledge
             </AlertDialogAction>
@@ -4645,7 +4633,7 @@ function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
   const { data: stats } = useGetFloorPlanStats(Number(floor.id));
 
   return (
-    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] bg-white dark:bg-zinc-950 group">
+    <Card className="flex flex-col overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800  bg-white dark:bg-zinc-950 group">
       <CardContent className="p-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 bg-zinc-100 dark:bg-zinc-900 rounded-lg flex items-center justify-center border-2 border-zinc-950 dark:border-zinc-800">
@@ -4667,7 +4655,7 @@ function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
         <div className="flex items-center gap-3">
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="h-10 w-10 p-0 border-2 border-zinc-950 text-zinc-500 hover:text-red-600 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+              <Button variant="outline" className="h-10 w-10 p-0 border-2 border-zinc-950 text-zinc-500 hover:text-red-600 ">
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
@@ -4683,7 +4671,7 @@ function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
             </AlertDialogContent>
           </AlertDialog>
 
-          <Button asChild variant="outline" className="border-2 border-zinc-950 font-bold uppercase text-[11px] h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+          <Button asChild variant="outline" className="border-2 border-zinc-950 font-bold uppercase text-[11px] h-10 ">
             <Link href={`/map-studio/${buildingId}/${floor.id}`}>Edit Canvas <ArrowRight className="w-4 h-4 ml-2" /></Link>
           </Button>
         </div>
@@ -4768,7 +4756,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Science Block"
-            className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] focus-visible:ring-0 font-medium"
+            className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  focus-visible:ring-0 font-medium"
           />
         </div>
 
@@ -4781,7 +4769,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
             value={street}
             onChange={(e) => setStreet(e.target.value)}
             placeholder="Search address..."
-            className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] focus-visible:ring-0 font-medium"
+            className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  focus-visible:ring-0 font-medium"
             autoComplete="off"
           />
         </div>
@@ -4792,7 +4780,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
             <Input
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] focus-visible:ring-0 font-medium"
+              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  focus-visible:ring-0 font-medium"
             />
           </div>
           <div className="space-y-2">
@@ -4800,7 +4788,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
             <Input
               value={stateProv}
               onChange={(e) => setStateProv(e.target.value)}
-              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] focus-visible:ring-0 font-medium"
+              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  focus-visible:ring-0 font-medium"
             />
           </div>
           <div className="space-y-2">
@@ -4808,7 +4796,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
             <Input
               value={zip}
               onChange={(e) => setZip(e.target.value)}
-              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] focus-visible:ring-0 font-medium"
+              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  focus-visible:ring-0 font-medium"
             />
           </div>
         </div>
@@ -4817,7 +4805,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
           <Label className="font-black uppercase text-[11px] tracking-wider text-zinc-600 dark:text-zinc-400">
             Privacy Level
           </Label>
-          <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-900 px-3 py-2.5 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] w-fit">
+          <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-900 px-3 py-2.5 rounded-lg border-2 border-zinc-950 dark:border-zinc-800  w-fit">
             <span className={`text-[11px] font-black tracking-widest uppercase ${privacy === "PUBLIC" ? "text-emerald-600" : "text-amber-600"}`}>
               {privacy}
             </span>
@@ -4834,7 +4822,7 @@ function BuildingForm({ onAdd, onClose }: { onAdd: (building: Omit<BuildingData,
         <Button 
           type="button"
           onClick={handleRegister} 
-          className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+          className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10  transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
         >
           Register Building
         </Button>
@@ -4849,7 +4837,7 @@ export function CreateBuilding({ onAdd }: CreateBuildingProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
+        <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
           <Plus className="h-4 w-4 mr-2" />
           ADD NEW BUILDING
         </Button>
@@ -4859,7 +4847,7 @@ export function CreateBuilding({ onAdd }: CreateBuildingProps) {
         onFocusOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
         onInteractOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
         onPointerDownOutside={(e) => { if (e.target instanceof Element && e.target.closest(".pac-container")) e.preventDefault(); }}
-        className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden"
+        className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-0 overflow-hidden"
       >
         <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
           <DialogTitle className="font-black uppercase tracking-wider text-lg">Add New Building</DialogTitle>
@@ -4970,12 +4958,12 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
         if (!isOpen) { setNewFloorLabel(""); setSelectedFile(null); }
       }}>
         <DialogTrigger asChild>
-          <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
+          <Button className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0 uppercase tracking-wider text-xs">
             <Plus className="h-4 w-4 mr-2" />
             ADD NEW MAP
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-0 overflow-hidden">
+        <DialogContent className="sm:max-w-125 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-0 overflow-hidden">
           <DialogHeader className="bg-zinc-50/50 dark:bg-zinc-900/50 border-b-2 border-zinc-950 dark:border-zinc-800 p-6 pb-5">
             <DialogTitle className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100">
               Add Floor Plan
@@ -4995,7 +4983,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
               value={newFloorLabel}
               onChange={(e) => setNewFloorLabel(e.target.value)}
               placeholder="e.g., Ground Floor"
-              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none focus-visible:ring-0 font-medium"
+              className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  dark:shadow-none focus-visible:ring-0 font-medium"
             />
           </div>
 
@@ -5010,7 +4998,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
               accept=".dwg,.svg,.pdf,.png,.echonav"
               onChange={handleFileSelect}
             />
-            <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>
+            <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform  dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>
               {selectedFile ? <FileText className="h-6 w-6" /> : <UploadCloud className="h-6 w-6" />}
             </div>
 
@@ -5025,7 +5013,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
                 accept=".dwg,.svg,.pdf,.png"
                 onChange={handleFileSelect}
               />
-              <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>
+              <div className={`h-12 w-12 rounded-lg border-2 flex items-center justify-center mb-4 transition-transform  dark:shadow-none ${selectedFile ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-zinc-950 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100 group-hover:scale-110'}`}>
                 {selectedFile ? <FileText className="h-6 w-6" /> : <UploadCloud className="h-6 w-6" />}
               </div>
               <p className="text-sm font-black uppercase tracking-wider text-zinc-950 dark:text-zinc-100">
@@ -5040,13 +5028,13 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
           </div>
 
           <DialogFooter className="p-6 pt-0 border-t-2 border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 mt-auto flex-row justify-end gap-3 sm:gap-0">
-            <Button variant="outline" onClick={() => setOpen(false)} className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+            <Button variant="outline" onClick={() => setOpen(false)} className="border-2 border-zinc-950 dark:border-zinc-700 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
               Cancel
             </Button>
             <Button 
               onClick={handleUpload} 
               disabled={isUploading || !newFloorLabel.trim() || !selectedFile}
-              className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50"
+              className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-black uppercase text-[11px] tracking-wider h-10  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none disabled:opacity-50"
             >
               {isUploading ? 'Uploading...' : 'Upload Floor Plan'}
             </Button>
@@ -5056,7 +5044,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
 
       {/* FINAL SHADCN ALERT DIALOG */}
       <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
             <div className="bg-red-100 dark:bg-red-950/50 p-2.5 rounded-lg border-2 border-red-200 dark:border-red-900 shrink-0">
@@ -5077,7 +5065,7 @@ export function CreateFloorPlan({ buildingId, onUploadSuccess }: CreateFloorPlan
           <AlertDialogFooter className="mt-2">
             <AlertDialogAction 
               onClick={() => setAlertMessage(null)}
-              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
             >
               Acknowledge
             </AlertDialogAction>
@@ -5292,7 +5280,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     : { icon: <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500" strokeWidth={2.5} />, bg: "bg-red-100 dark:bg-red-950/50", border: "border-red-200 dark:border-red-900", title: "System Alert" };
 
   return (
-    <div className="h-full flex flex-col relative rounded-xl border-2 border-zinc-950 dark:border-zinc-800 overflow-hidden shadow-[6px_6px_0px_0px_rgba(24,24,27,1)] dark:bg-zinc-950">
+    <div className="h-full flex flex-col relative rounded-xl border-2 border-zinc-950 dark:border-zinc-800 overflow-hidden  dark:bg-zinc-950">
       <div className="h-14 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 flex items-center justify-between px-4 z-10 shrink-0">
         <div className="flex items-center gap-3">
           <Map className="h-5 w-5 text-zinc-500 dark:text-zinc-400" />
@@ -5304,7 +5292,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
 
       {isFullyLoading && (
         <div className="absolute inset-0 z-50 bg-zinc-950 flex flex-col items-center justify-center p-6">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mb-6 border-2 border-zinc-700 shadow-[4px_4px_0px_0px_rgba(63,63,70,1)]">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-900 flex items-center justify-center mb-6 border-2 border-zinc-700 ">
             <Layers className="h-8 w-8 text-white animate-pulse" />
           </div>
           <h2 className="text-2xl font-black tracking-tight text-white mb-2 uppercase">Fetching Vector Map</h2>
@@ -5338,7 +5326,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
       </div>
 
       <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
             {/* DYNAMIC ICON & BACKGROUND */}
@@ -5360,7 +5348,7 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
           <AlertDialogFooter className="mt-2">
             <AlertDialogAction 
               onClick={() => setAlertMessage(null)}
-              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
             >
               Acknowledge
             </AlertDialogAction>
@@ -6110,7 +6098,7 @@ export function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { n
             onChange={(e) => updateNode?.({ label: e.target.value })} 
             onBlur={onSave} 
             placeholder="e.g., Lobby Entrance" 
-            className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none" 
+            className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0  dark:shadow-none" 
           />
         </div>
         
@@ -6186,7 +6174,7 @@ export function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { n
               <div className="space-y-3">
                 <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Hazard Type</Label>
                 <Select value={node?.hazardType || "Fire"} onValueChange={(val) => updateNode?.({ hazardType: val } as any)}>
-                  <SelectTrigger className="h-11 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold  dark:shadow-none">
                     <SelectValue placeholder="Select type..." />
                   </SelectTrigger>
                   <SelectContent className="border-2 border-zinc-950 rounded-xl font-bold">
@@ -6200,11 +6188,11 @@ export function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { n
 
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="w-full h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold shadow-[2px_2px_0px_0px_rgba(16,185,129,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
+                  <Button variant="outline" className="w-full h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
                     <CheckCircle2 className="w-4 h-4 mr-2" /> Resolve Hazard
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl  dark:shadow-none">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="font-black uppercase tracking-tight">Resolve Hazard?</AlertDialogTitle>
                     <AlertDialogDescription className="font-bold text-zinc-500">
@@ -6212,10 +6200,10 @@ export function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { n
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">Cancel</AlertDialogCancel>
                     <AlertDialogAction 
                       onClick={() => { if (node?.id) onResolveHazard?.(node.id); }}
-                      className="bg-emerald-600 hover:bg-emerald-700 dark:text-black text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                      className="bg-emerald-600 hover:bg-emerald-700 dark:text-black text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                     >
                       Confirm & Resolve
                     </AlertDialogAction>
@@ -6272,11 +6260,11 @@ export function RouteInspector({ start, end, route, isCalculating }: { start?: s
         {route && !isCalculating && route.status !== "NO_PATH_FOUND" && (
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
             <div className="grid grid-cols-2 gap-3">
-               <div className="bg-purple-600 text-white p-3 rounded-xl border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+               <div className="bg-purple-600 text-white p-3 rounded-xl border-2 border-zinc-950 ">
                   <div className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Distance</div>
                   <div className="text-lg font-black">{route.totalDistanceMeters.toFixed(1)}m</div>
                </div>
-               <div className="bg-zinc-950 text-white p-3 rounded-xl border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)]">
+               <div className="bg-zinc-950 text-white p-3 rounded-xl border-2 border-zinc-950 ">
                   <div className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1 flex items-center"><Clock className="w-3 h-3 mr-1"/> ETA</div>
                   <div className="text-lg font-black">{Math.ceil(route.estimatedTimeSeconds)}s</div>
                </div>
@@ -6382,7 +6370,7 @@ export function Toolbelt({ activeTool, setActiveTool }: { activeTool: ToolMode, 
         <button
           onClick={() => router.back()}
           title="Go Back"
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-white text-zinc-950 shadow-[2px_2px_0px_0px_rgba(161,161,170,1)] hover:bg-zinc-200"
+          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all bg-white text-zinc-950  hover:bg-zinc-200"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -6398,7 +6386,7 @@ export function Toolbelt({ activeTool, setActiveTool }: { activeTool: ToolMode, 
             onClick={() => setActiveTool(t.id)}
             title={t.label}
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-              isActive ? "bg-white text-zinc-950 shadow-[2px_2px_0px_0px_rgba(161,161,170,1)]" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
+              isActive ? "bg-white text-zinc-950 " : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
             }`}
           >
             <Icon className="h-5 w-5" />
@@ -6595,7 +6583,7 @@ interface HistoryControlsProps {
 export function HistoryControls({ undo, redo, canUndo, canRedo }: HistoryControlsProps) {
   return (
     <div 
-      className="absolute top-4 left-4 flex items-center gap-1 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl p-1 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none z-50 pointer-events-auto"
+      className="absolute top-4 left-4 flex items-center gap-1 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl p-1  dark:shadow-none z-50 pointer-events-auto"
       onPointerDown={(e) => e.stopPropagation()} // <-- THIS FIXES THE CLICKS
     >
       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={undo} disabled={!canUndo}>
@@ -6645,7 +6633,7 @@ export function NodeLayer({ nodes, selectedNodeIds, scale }: NodeLayerProps) {
               }}
           >
             {/* The Dynamic Label Box */}
-            <div className={`mb-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border-2 whitespace-nowrap transition-colors ${isSelected ? 'bg-indigo-500 text-white border-indigo-700 shadow-[2px_2px_0px_0px_rgba(49,46,129,1)]' : 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white border-zinc-950 dark:border-zinc-800 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none'}`}>
+            <div className={`mb-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border-2 whitespace-nowrap transition-colors ${isSelected ? 'bg-indigo-500 text-white border-indigo-700 ' : 'bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white border-zinc-950 dark:border-zinc-800  dark:shadow-none'}`}>
               {node.label}
             </div>
             
@@ -6747,7 +6735,7 @@ interface ZoomControlsProps {
 export function ZoomControls({ scale, adjustZoomCentered, resetZoom }: ZoomControlsProps) {
   return (
     <div 
-      className="absolute top-4 right-4 flex items-center gap-1 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl p-1 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none z-50 pointer-events-auto"
+      className="absolute top-4 right-4 flex items-center gap-1 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl p-1  dark:shadow-none z-50 pointer-events-auto"
       onPointerDown={(e) => e.stopPropagation()} // <-- THIS FIXES THE CLICKS
     >
       <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" onClick={() => adjustZoomCentered(0.8)}>
@@ -6909,7 +6897,7 @@ export function VectorComposer({
   return (
     <div className="flex flex-1 overflow-hidden relative">
       {isUncalibrated && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-amber-950 px-6 py-3 rounded-xl border-2 border-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] flex items-center gap-3 font-black tracking-wide uppercase text-xs animate-bounce pointer-events-none">
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50 bg-amber-400 text-amber-950 px-6 py-3 rounded-xl border-2 border-zinc-950  flex items-center gap-3 font-black tracking-wide uppercase text-xs animate-bounce pointer-events-none">
            <Ruler className="h-5 w-5" />
            Calibration Required: Draw a line between two known points to establish real-world scale.
         </div>
@@ -7085,7 +7073,7 @@ export function MapStudioComposer() {
 
       {!isLoading && !isError && mappedBuildings.length === 0 && (
         <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50 mt-8">
-          <div className="h-16 w-16 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+          <div className="h-16 w-16 bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 rounded-2xl flex items-center justify-center mb-4  dark:shadow-none">
             <Map className="h-8 w-8 text-zinc-400 dark:text-zinc-600" />
           </div>
           <h3 className="text-lg font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">No Buildings Found</h3>
@@ -7144,7 +7132,7 @@ export function MapStudioComposer() {
 
       {/* SHADCN ALERT DIALOG COMPONENT */}
       <AlertDialog open={!!alertMessage} onOpenChange={(open) => !open && setAlertMessage(null)}>
-        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
+        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
             <div className="bg-red-100 dark:bg-red-950/50 p-2.5 rounded-lg border-2 border-red-200 dark:border-red-900 shrink-0">
@@ -7165,7 +7153,7 @@ export function MapStudioComposer() {
           <AlertDialogFooter className="mt-2">
             <AlertDialogAction 
               onClick={() => setAlertMessage(null)}
-              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
+              className="bg-zinc-950 hover:bg-zinc-800 text-white font-black uppercase text-sm tracking-wider h-11 px-8 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none w-full sm:w-auto"
             >
               Acknowledge
             </AlertDialogAction>
@@ -7222,7 +7210,7 @@ export function DataExport() {
   };
 
   return (
-    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden border-l-12 border-l-zinc-950 dark:border-l-zinc-100">
+    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden border-l-12 border-l-zinc-950 dark:border-l-zinc-100">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-5">
         <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2.5">
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
@@ -7237,7 +7225,7 @@ export function DataExport() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 bg-zinc-50 dark:bg-zinc-900/50 p-6 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px]">
           
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 flex items-center justify-center shrink-0 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+            <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 flex items-center justify-center shrink-0  dark:shadow-none">
               <FileJson className="h-6 w-6 text-zinc-950 dark:text-zinc-100" />
             </div>
             <div className="space-y-1">
@@ -7251,7 +7239,7 @@ export function DataExport() {
           <Button 
             onClick={handleExport}
             disabled={isExporting}
-            className="w-full sm:w-auto shrink-0 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border-2 border-zinc-950 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-black uppercase tracking-wider h-12 px-6 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none disabled:opacity-50"
+            className="w-full sm:w-auto shrink-0 bg-white dark:bg-zinc-800 text-zinc-950 dark:text-zinc-100 border-2 border-zinc-950 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 font-black uppercase tracking-wider h-12 px-6  dark:shadow-none transition-all active:translate-y-0.5 active:translate-x-0.5 active:shadow-none disabled:opacity-50"
           >
             <DownloadCloud className="h-4 w-4 mr-2" />
             {isExporting ? "Exporting..." : "Trigger Export"}
@@ -7330,7 +7318,7 @@ function ProfileForm({ activeOrgId, initialData, updateOrg, isPending }: Profile
   };
 
   return (
-    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 p-5">
         <CardTitle className="text-sm font-black uppercase tracking-wider flex items-center gap-2.5">
           <Building2 className="h-4 w-4 text-zinc-950 dark:text-zinc-100" />
@@ -7365,7 +7353,7 @@ function ProfileForm({ activeOrgId, initialData, updateOrg, isPending }: Profile
         </div>
 
         <div className="pt-4 flex justify-end">
-          <Button onClick={handleSave} disabled={isPending} className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black uppercase tracking-wider h-12 px-8 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed">
+          <Button onClick={handleSave} disabled={isPending} className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-black uppercase tracking-wider h-12 px-8  dark:shadow-none transition-transform active:translate-y-1 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed">
             {isPending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : <><Save className="h-4 w-4 mr-2" /> Save Profile</>}
           </Button>
         </div>
@@ -7450,7 +7438,7 @@ interface ActiveStaffRosterProps {
 
 export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
   return (
-    <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950  dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-950/40 py-5">
         <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-widest text-emerald-1050 dark:text-emerald-500">
           <ShieldCheck className="h-5 w-5" />
@@ -7518,12 +7506,12 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDelete(member.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                             >
                               Delete
                             </AlertDialogAction>
@@ -7583,7 +7571,7 @@ interface InvitationQueueProps {
 
 export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
   return (
-    <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
+    <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950  dark:shadow-none rounded-xl overflow-hidden h-full flex flex-col">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-950/40 py-5">
         <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-widest text-amber-1050 dark:text-amber-500">
           <Clock className="h-5 w-5" />
@@ -7652,12 +7640,12 @@ export function InvitationQueue({ invites, onDelete }: InvitationQueueProps) {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDelete(invite.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                             >
                               Delete
                             </AlertDialogAction>
@@ -7746,7 +7734,7 @@ export function InviteEngine() {
   return (
     // THE FIX: Removed 'min-h-screen p-6' so it sizes naturally
     <div className="relative">
-      <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none overflow-hidden rounded-xl transition-all">
+      <Card className="border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950  dark:shadow-none overflow-hidden rounded-xl transition-all">
         <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-950/40 py-5">
           <CardTitle className="text-sm font-black flex items-center gap-3 uppercase tracking-widest text-zinc-950 dark:text-indigo-500">
             <UserPlus className="h-5 w-5" />
@@ -7766,10 +7754,10 @@ export function InviteEngine() {
                     Assign Role
                   </label>
                   <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger className="w-full border-2 border-zinc-950 dark:border-zinc-800 focus:ring-0 focus:ring-offset-0 focus:border-indigo-400 dark:focus:border-indigo-500 bg-zinc-50 dark:bg-zinc-900 h-12 text-sm font-bold rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all">
+                    <SelectTrigger className="w-full border-2 border-zinc-950 dark:border-zinc-800 focus:ring-0 focus:ring-offset-0 focus:border-indigo-400 dark:focus:border-indigo-500 bg-zinc-50 dark:bg-zinc-900 h-12 text-sm font-bold rounded-lg  dark:shadow-none transition-all">
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
-                    <SelectContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none font-bold">
+                    <SelectContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-lg  dark:shadow-none font-bold">
                       <SelectItem value="technician">Technician</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>
                     </SelectContent>
@@ -7786,7 +7774,7 @@ export function InviteEngine() {
                     <Input
                       type="email"
                       placeholder="staff.name@institution.edu"
-                      className="pl-12 w-full border-2 border-zinc-950 dark:border-zinc-800 focus-visible:ring-0 focus-visible:border-indigo-400 dark:focus-visible:border-indigo-500 bg-zinc-50 dark:bg-zinc-900 h-12 text-sm font-bold rounded-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-all"
+                      className="pl-12 w-full border-2 border-zinc-950 dark:border-zinc-800 focus-visible:ring-0 focus-visible:border-indigo-400 dark:focus-visible:border-indigo-500 bg-zinc-50 dark:bg-zinc-900 h-12 text-sm font-bold rounded-lg  dark:shadow-none transition-all"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={inviteMutation.isPending}
@@ -12680,7 +12668,7 @@ interface ActiveUserListProps {
 
 export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
   return (
-    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-green-300 dark:bg-green-950/40 py-5">
         <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-3 text-green-950 dark:text-green-500">
           <UserCog2 className="h-5 w-5" />
@@ -12752,12 +12740,12 @@ export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDelete(member.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                             >
                               Delete
                             </AlertDialogAction>
@@ -12817,7 +12805,7 @@ interface InvitedUserListProps {
 
 export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
   return (
-    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
+    <Card className="h-full flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-blue-400 dark:bg-blue-950/40 py-5">
         <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-3 text-blue-950 dark:text-blue-500">
           <UserCog2 className="h-5 w-5" />
@@ -12887,12 +12875,12 @@ export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10  dark:shadow-none">
                               Cancel
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => onDelete(member.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950  dark:shadow-none"
                             >
                               Delete
                             </AlertDialogAction>
@@ -12992,7 +12980,7 @@ export function InviteNewUser({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center px-6 py-5 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
           <h2 className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100 flex items-center gap-2">
             {successStatus ? <MailCheck className="w-5 h-5 text-emerald-600" /> : <KeyRound className="w-5 h-5" />}
@@ -13124,7 +13112,7 @@ export function InviteNewUser({
               <Button
                 type="submit"
                 disabled={inviteMutation.isPending}
-                className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-bold h-11 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+                className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-bold h-11  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
               >
                 {inviteMutation.isPending ? "Generating..." : "Generate & Dispatch PIN"}
               </Button>

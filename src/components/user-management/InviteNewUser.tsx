@@ -14,16 +14,15 @@ interface InviteNewUserProps {
   isOpen: boolean;
   onClose: () => void;
   onSendInvite: (newUser: InvitedUsers) => void;
-  pairingPin: string; 
+  pairingPin: string;
 }
 
-export function InviteNewUser({
-  isOpen,
-  onClose,
-}: InviteNewUserProps) {
+export function InviteNewUser({ isOpen, onClose }: InviteNewUserProps) {
   const { activeOrgId, user } = useAuth();
   const inviteMutation = useInviteUser();
-  const [successStatus, setSuccessStatus] = useState<"EMAILED" | "CONCIERGE" | null>(null);
+  const [successStatus, setSuccessStatus] = useState<
+    "EMAILED" | "CONCIERGE" | null
+  >(null);
   const [generatedPin, setGeneratedPin] = useState<string | null>(null);
   const [isConcierge, setIsConcierge] = useState(false);
 
@@ -55,14 +54,13 @@ export function InviteNewUser({
         generatedById: Number(user.id),
         requiresConcierge: isConcierge,
       });
-      
+
       if (response.pairingPin === "EMAILED") {
         setSuccessStatus("EMAILED");
       } else {
         setSuccessStatus("CONCIERGE");
         setGeneratedPin(response.pairingPin);
       }
-
     } catch (error: unknown) {
       if (error instanceof Error) alert(error.message);
     }
@@ -70,10 +68,14 @@ export function InviteNewUser({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 dark:bg-zinc-950/80 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-md bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex justify-between items-center px-6 py-5 border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
           <h2 className="font-black uppercase tracking-wider text-lg text-zinc-950 dark:text-zinc-100 flex items-center gap-2">
-            {successStatus ? <MailCheck className="w-5 h-5 text-emerald-600" /> : <KeyRound className="w-5 h-5" />}
+            {successStatus ? (
+              <MailCheck className="w-5 h-5 text-emerald-600" />
+            ) : (
+              <KeyRound className="w-5 h-5" />
+            )}
             {successStatus ? "Access Granted" : "Invite A New User"}
           </h2>
 
@@ -88,15 +90,19 @@ export function InviteNewUser({
 
         {successStatus === "EMAILED" && (
           <div className="p-8 space-y-8 flex flex-col items-center">
-             <div className="flex flex-col items-center w-full p-6 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30">
+            <div className="flex flex-col items-center w-full p-6 rounded-xl border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30">
               <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest text-center">
                 Access Token Dispatched
               </p>
               <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 text-center mt-3">
-                An email containing the 6-digit access PIN has been successfully sent to the user.
+                An email containing the 6-digit access PIN has been successfully
+                sent to the user.
               </p>
             </div>
-            <Button onClick={handleClose} className="w-full bg-zinc-950 text-white font-bold h-11 uppercase tracking-widest">
+            <Button
+              onClick={handleClose}
+              className="w-full bg-zinc-950 text-white font-bold h-11 uppercase tracking-widest"
+            >
               Close Window
             </Button>
           </div>
@@ -104,18 +110,22 @@ export function InviteNewUser({
 
         {successStatus === "CONCIERGE" && (
           <div className="p-6 space-y-8 flex flex-col items-center">
-             <div className="flex flex-col items-center w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-size-[16px_16px] p-6 rounded-xl border-2 border-zinc-200 dark:border-zinc-800">
+            <div className="flex flex-col items-center w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#27272a_1px,transparent_1px)] bg-size-[16px_16px] p-6 rounded-xl border-2 border-zinc-200 dark:border-zinc-800">
               <p className="text-[10px] font-black text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-4 text-center">
-                Instruct the user to enter this PIN in their EchoNav mobile app. This code will self-destruct from the dashboard once used.
+                Instruct the user to enter this PIN in their EchoNav mobile app.
+                This code will self-destruct from the dashboard once used.
               </p>
 
-              <div className="bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 w-full py-6 rounded-xl border-4 border-zinc-950 dark:border-zinc-100 shadow-[6px_6px_0px_0px_rgba(0,0,0,0.1)] mb-2 flex justify-center">
+              <div className="bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 w-full py-6 rounded-xl border-4 border-zinc-950 dark:border-zinc-100 mb-2 flex justify-center">
                 <span className="text-5xl sm:text-6xl font-mono font-black tracking-[0.2em] ml-4">
                   {generatedPin}
                 </span>
               </div>
             </div>
-            <Button onClick={handleClose} className="w-full bg-zinc-950 text-white font-bold h-11 uppercase tracking-widest">
+            <Button
+              onClick={handleClose}
+              className="w-full bg-zinc-950 text-white font-bold h-11 uppercase tracking-widest"
+            >
               Done
             </Button>
           </div>
@@ -184,7 +194,6 @@ export function InviteNewUser({
                     </span>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -202,9 +211,11 @@ export function InviteNewUser({
               <Button
                 type="submit"
                 disabled={inviteMutation.isPending}
-                className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-bold h-11 shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
+                className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white font-bold h-11  dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none"
               >
-                {inviteMutation.isPending ? "Generating..." : "Generate & Dispatch PIN"}
+                {inviteMutation.isPending
+                  ? "Generating..."
+                  : "Generate & Dispatch PIN"}
               </Button>
             </div>
           </form>

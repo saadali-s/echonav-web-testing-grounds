@@ -42,21 +42,7 @@ export function DashboardComposer({
           <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
             Welcome Back, {userName}
           </h1>
-          <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400 mt-1">
-            Monitoring live health metrics for APK Campus.
-          </p>
         </div>
-
-        {/* Generate PIN Button */}
-        <Button
-          asChild
-          className="bg-zinc-950 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-950 text-white rounded-lg font-bold h-11 px-6 dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none shrink-0"
-        >
-          <Link href="/user-management">
-            <KeyRound className="w-5 h-5 mr-2" />
-            Invite A New User
-          </Link>
-        </Button>
       </div>
 
       {/* The 75% / 25% Grid Layout */}

@@ -21,11 +21,7 @@ const textureStyle = {
 // Accept the dynamic data
 export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
   return (
-    <Card className="relative flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none overflow-hidden h-full">
-      <div
-        className="absolute inset-0 opacity-[0.03] text-zinc-950 dark:text-white pointer-events-none"
-        style={textureStyle}
-      />
+    <Card className="relative p-0 flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl  dark:shadow-none overflow-hidden h-full">
 
       <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-violet-400 dark:bg-violet-900 px-5 py-3 shrink-0">
         <CardTitle className="font-black uppercase text-sm tracking-wider text-violet-1050 dark:text-violet-100">
@@ -82,7 +78,7 @@ export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
               />
               <Line
                 type="step"
-                dataKey="hazards" 
+                dataKey="hazards"
                 name="Hazards"
                 stroke="#f43f5e"
                 strokeWidth={3}

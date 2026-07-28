@@ -20,16 +20,19 @@ export function FleetComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-  const { data: staffData = [], isLoading: staffLoading } = useGetStaff(orgIdNum);
-  const { data: tasksData = [], isLoading: tasksLoading } = useGetOrganizationTasks(orgIdNum);
-  const { data: beaconsData = [], isLoading: beaconsLoading } = useGetOrganizationBeacons(orgIdNum);
+  const { data: staffData = [], isLoading: staffLoading } =
+    useGetStaff(orgIdNum);
+  const { data: tasksData = [], isLoading: tasksLoading } =
+    useGetOrganizationTasks(orgIdNum);
+  const { data: beaconsData = [], isLoading: beaconsLoading } =
+    useGetOrganizationBeacons(orgIdNum);
 
   const [activeView, setActiveView] = useState<ViewState>("HUB");
 
   const isLoading = staffLoading || tasksLoading || beaconsLoading;
 
   const staffOptions = staffData
-    .filter(staff => staff.role === "TECHNICIAN")
+    .filter((staff) => staff.role === "TECHNICIAN")
     .map((staff) => ({
       id: String(staff.id),
       name: staff.email,
@@ -45,23 +48,34 @@ export function FleetComposer() {
     };
   });
 
-  const taskNodeIds = tasksData.map((task: DeploymentTaskDto) => Number(task.nodeId));
+  const taskNodeIds = tasksData.map((task: DeploymentTaskDto) =>
+    Number(task.nodeId),
+  );
   const inventoryNodeIds = beaconsData
     .filter((b: BeaconDto) => b.nodeId != null && b.status !== "UNLINKED")
     .map((b: BeaconDto) => Number(b.nodeId));
-    
-  const unavailableNodeIds = Array.from(new Set([...taskNodeIds, ...inventoryNodeIds]));
 
-  const mappedInventory: InventoryItem[] = beaconsData.map((beacon: BeaconDto) => ({
-    id: String(beacon.id),
-    nodeLabel: beacon.nodeLabel || `Node ID: ${beacon.nodeId}`,
-    beaconId: beacon.uuid,
-    rssi: beacon.calibratedRssiBaseline,
-    status: beacon.status as "ACTIVE" | "UNLINKED",
-  }));
+  const unavailableNodeIds = Array.from(
+    new Set([...taskNodeIds, ...inventoryNodeIds]),
+  );
 
-  const activeTasksCount = tasksData.filter((task: DeploymentTaskDto) => task.status === "TO_DO" || task.status === "IN_PROGRESS").length;
-  const unlinkedBeaconsCount = mappedInventory.filter((i) => i.status === "UNLINKED").length;
+  const mappedInventory: InventoryItem[] = beaconsData.map(
+    (beacon: BeaconDto) => ({
+      id: String(beacon.id),
+      nodeLabel: beacon.nodeLabel || `Node ID: ${beacon.nodeId}`,
+      beaconId: beacon.uuid,
+      rssi: beacon.calibratedRssiBaseline,
+      status: beacon.status as "ACTIVE" | "UNLINKED",
+    }),
+  );
+
+  const activeTasksCount = tasksData.filter(
+    (task: DeploymentTaskDto) =>
+      task.status === "TO_DO" || task.status === "IN_PROGRESS",
+  ).length;
+  const unlinkedBeaconsCount = mappedInventory.filter(
+    (i) => i.status === "UNLINKED",
+  ).length;
 
   if (activeView !== "HUB") {
     return (
@@ -76,9 +90,16 @@ export function FleetComposer() {
           </button>
         </div>
         <div className="flex-1 min-h-0">
-          {activeView === "ASSIGN" && <AssignmentEngine staff={staffOptions} activeNodeIds={unavailableNodeIds} />}
+          {activeView === "ASSIGN" && (
+            <AssignmentEngine
+              staff={staffOptions}
+              activeNodeIds={unavailableNodeIds}
+            />
+          )}
           {activeView === "BOARD" && <KanbanBoard tasks={mappedTasks} />}
-          {activeView === "INVENTORY" && <HardwareInventory items={mappedInventory} isLoading={isLoading} />}
+          {activeView === "INVENTORY" && (
+            <HardwareInventory items={mappedInventory} isLoading={isLoading} />
+          )}
         </div>
       </div>
     );
@@ -95,35 +116,59 @@ export function FleetComposer() {
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Active Tasks</span>
-            <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{activeTasksCount}</span>
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
+              Active Tasks
+            </span>
+            <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+              {activeTasksCount}
+            </span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Available Staff</span>
-            <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">{staffOptions.length}</span>
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
+              Available Staff
+            </span>
+            <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">
+              {staffOptions.length}
+            </span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Total Hardware</span>
-            <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">{mappedInventory.length}</span>
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
+              Total Hardware
+            </span>
+            <span className="text-2xl font-black text-zinc-950 dark:text-zinc-100">
+              {mappedInventory.length}
+            </span>
           </div>
-          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:shadow-none flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Pending Links</span>
-            <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{unlinkedBeaconsCount}</span>
+          <div className="bg-white dark:bg-zinc-950 border-2 border-zinc-950 dark:border-zinc-800 p-4 rounded-lg  dark:shadow-none flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">
+              Pending Links
+            </span>
+            <span className="text-2xl font-black text-amber-600 dark:text-amber-400">
+              {unlinkedBeaconsCount}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-8">
-        <Card onClick={() => setActiveView("ASSIGN")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-indigo-500 transition-all flex flex-col">
+        <Card
+          onClick={() => setActiveView("ASSIGN")}
+          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-indigo-500 transition-all flex flex-col"
+        >
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-indigo-100 dark:bg-indigo-950/50 border-2 border-indigo-200 dark:border-indigo-900 flex items-center justify-center">
                 <Send className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
               </div>
               <div>
-                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">Assign Tasks</h3>
-                <p className="text-sm font-bold text-zinc-500 mt-2">Filter maps, select unassigned nodes, and dispatch work orders to your field technicians.</p>
+                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">
+                  Assign Tasks
+                </h3>
+                <p className="text-sm font-bold text-zinc-500 mt-2">
+                  Filter maps, select unassigned nodes, and dispatch work orders
+                  to your field technicians.
+                </p>
               </div>
             </div>
             <div className="flex items-center text-xs font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400 group-hover:gap-3 transition-all gap-2">
@@ -132,15 +177,23 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        <Card onClick={() => setActiveView("BOARD")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-amber-500 transition-all flex flex-col">
+        <Card
+          onClick={() => setActiveView("BOARD")}
+          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-amber-500 transition-all flex flex-col"
+        >
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-amber-100 dark:bg-amber-950/50 border-2 border-amber-200 dark:border-amber-900 flex items-center justify-center">
                 <LayoutDashboard className="h-7 w-7 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">Task Board</h3>
-                <p className="text-sm font-bold text-zinc-500 mt-2">Monitor the live progress of all active, pending, and verified deployment tasks.</p>
+                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">
+                  Task Board
+                </h3>
+                <p className="text-sm font-bold text-zinc-500 mt-2">
+                  Monitor the live progress of all active, pending, and verified
+                  deployment tasks.
+                </p>
               </div>
             </div>
             <div className="flex items-center text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 group-hover:gap-3 transition-all gap-2">
@@ -149,15 +202,23 @@ export function FleetComposer() {
           </CardContent>
         </Card>
 
-        <Card onClick={() => setActiveView("INVENTORY")} className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(24,24,27,1)] dark:hover:border-emerald-500 transition-all flex flex-col">
+        <Card
+          onClick={() => setActiveView("INVENTORY")}
+          className="group cursor-pointer rounded-2xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 hover:-translate-y-1 hover:translate-x-1 hover: dark:hover:border-emerald-500 transition-all flex flex-col"
+        >
           <CardContent className="p-8 flex flex-col h-full justify-between gap-8">
             <div className="space-y-4">
               <div className="w-14 h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 border-2 border-emerald-200 dark:border-emerald-900 flex items-center justify-center">
                 <RadioTower className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">Hardware Inventory</h3>
-                <p className="text-sm font-bold text-zinc-500 mt-2">Manage physical beacons, view UUID linkages, and check calibrated RSSI signals.</p>
+                <h3 className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100">
+                  Hardware Inventory
+                </h3>
+                <p className="text-sm font-bold text-zinc-500 mt-2">
+                  Manage physical beacons, view UUID linkages, and check
+                  calibrated RSSI signals.
+                </p>
               </div>
             </div>
             <div className="flex items-center text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 group-hover:gap-3 transition-all gap-2">

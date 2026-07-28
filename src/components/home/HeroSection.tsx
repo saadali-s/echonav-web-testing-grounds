@@ -44,7 +44,6 @@ export default function HeroSection() {
         transition={{ duration: 0.6 }}
         className="flex-1 space-y-8 text-center lg:text-left"
       >
-        
         <h1 className="text-5xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight text-zinc-950 dark:text-white leading-[1.05] transition-colors">
           Enterprise{" "}
           <span className="text-transparent bg-clip-text bg-linear-to-r from-zinc-600 via-zinc-400 to-zinc-500 dark:from-zinc-100 dark:via-zinc-400 dark:to-zinc-600">
@@ -60,7 +59,7 @@ export default function HeroSection() {
         <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
           <Button
             size="lg"
-            className="h-14 px-8 rounded-lg bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all text-base font-bold group shadow-lg dark:shadow-[0_0_30px_rgba(255,255,255,0.1)]"
+            className="h-14 px-8 rounded-lg bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200 transition-all text-base font-bold group shadow-lg"
           >
             Launch Dashboard{" "}
             <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -77,7 +76,7 @@ export default function HeroSection() {
         <Card className="border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl overflow-hidden rounded-2xl bg-white/60 dark:bg-black/40 backdrop-blur-xl transition-colors">
           <CardHeader className="border-b border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/50 py-5 px-8 transition-colors">
             <CardTitle className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse shadow-[0_0_10px_rgba(0,0,0,0.5)] dark:shadow-[0_0_10px_rgba(255,255,255,0.8)]" />{" "}
+              <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse " />{" "}
               Live Telemetry
             </CardTitle>
           </CardHeader>

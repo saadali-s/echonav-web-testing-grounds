@@ -152,7 +152,7 @@ function MapCard({
       <CardFooter className="flex flex-col gap-4 pt-4 pb-6 px-6 mt-auto">
         <div className="flex items-center gap-2 w-full px-1">
           <span
-            className={`relative inline-flex rounded-full h-1.5 w-1.5 ${statusColor} shadow-[0_0_8px_currentColor]`}
+            className={`relative inline-flex rounded-full h-1.5 w-1.5 ${statusColor}`}
           ></span>
           <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest transition-colors">
             {status}
