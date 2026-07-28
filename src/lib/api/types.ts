@@ -302,12 +302,18 @@ export interface RecentPlanDto {
   updatedAt: string;
 }
 
+export interface CriticalBeaconDto {
+  id: string;
+  label: string;
+  battery: string;
+}
+
 export interface HardwareHealthDto {
   total: number;
   healthyCount: number;
   warningCount: number;
   criticalCount: number;
-  criticalItems: unknown[];
+  criticalItems: CriticalBeaconDto[];
 }
 
 export interface SystemEventDto {

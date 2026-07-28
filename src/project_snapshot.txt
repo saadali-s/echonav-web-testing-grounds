@@ -1047,7 +1047,6 @@ export function SignupForm() {
   const [postalCode, setPostalCode] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [length, setIsRightLength] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -1055,7 +1054,9 @@ export function SignupForm() {
   const currentCountry = COUNTRIES.find((c) => c.code === selectedCountryCode);
   const currentDialCode = currentCountry?.dialCode || "";
   const streetInputRef = useRef<HTMLInputElement>(null);
-  const passwordRe = new RegExp("/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/");
+  
+  // Clean string pattern without regex slashes
+  const passwordRe = new RegExp("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$");
 
   useGooglePlacesAutocomplete(streetInputRef, selectedCountryCode, (details) => {
     setStreetAddress(details.streetAddress);
@@ -1068,7 +1069,7 @@ export function SignupForm() {
     }
   });
 
-  const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -1079,18 +1080,15 @@ export function SignupForm() {
       return;
     }
     if (password.length < 8) {
-      setError("Password must be greater than 8 characters long");
-      setIsRightLength(false);
+      setError("Password must be at least 8 characters long.");
       setIsLoading(false);
       return;
     }
-    if (passwordRe.test(password)) {
-      setError("Invalid password")
+    // Corrected logic: trigger error when validation FAILS (!test)
+    if (!passwordRe.test(password)) {
+      setError("Password must contain an uppercase letter, lowercase letter, number, and special character.");
       setIsLoading(false);
       return;
-    }
-    else {
-      setIsRightLength(true);
     }
 
     try {
@@ -1105,7 +1103,6 @@ export function SignupForm() {
       });
       
     } catch (err: unknown) {
-      // Replaced 'any' with 'unknown' and typecast to a standard Error object
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -5381,6 +5378,298 @@ END FILE
 
 
 ====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\hooks\useCanvasKeyboardEvents.ts
+====================================================================================================
+
+import { useEffect } from "react";
+import { ToolMode } from "../Toolbelt";
+import { EdgeData, NodeData } from "../vector/types";
+
+interface UseCanvasKeyboardEventsProps {
+  state: any; // The state object returned from useEditorState
+  nodes: NodeData[];
+  edges: EdgeData[];
+  pushHistory: (n: NodeData[], e: EdgeData[]) => void;
+  undo: () => void;
+  redo: () => void;
+}
+
+export function useCanvasKeyboardEvents({ state, nodes, edges, pushHistory, undo, redo }: UseCanvasKeyboardEventsProps) {
+  useEffect(() => {
+    const handleDeleteSelection = () => {
+      if (state.selection === "NODE" && state.selectedNodeIds.length > 0) {
+        const newNodes = nodes.filter((n) => !state.selectedNodeIds.includes(n.id));
+        const newEdges = edges.filter((e) => !state.selectedNodeIds.includes(e.source) && !state.selectedNodeIds.includes(e.target));
+        pushHistory(newNodes, newEdges);
+        state.clearSelection();
+      } else if (state.selection === "EDGE" && state.selectedEdgeIds.length > 0) {
+        const newEdges = edges.filter((e) => !state.selectedEdgeIds.includes(e.id));
+        pushHistory(nodes, newEdges);
+        state.clearSelection();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+
+      if (e.code === "Space" && target === document.body) {
+        e.preventDefault();
+        state.setIsSpacePressed(true);
+      }
+      
+      if (!isTypingInInput) {
+        if (e.code === "Delete" || e.code === "Backspace") {
+          handleDeleteSelection();
+        }
+        
+        if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+          e.preventDefault();
+          if (e.shiftKey) redo();
+          else undo();
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space") state.setIsSpacePressed(false);
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [state, nodes, edges, pushHistory, undo, redo]);
+}
+
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\hooks\useCanvasPointerEvents.ts
+====================================================================================================
+
+import { RouteResponse } from "@/lib/api/types";
+import { EdgeData, NodeData } from "../vector/types";
+
+interface PointerEventsConfig {
+  state: any;
+  nodes: NodeData[];
+  edges: EdgeData[];
+  pan: { x: number; y: number };
+  setPan: (pan: { x: number; y: number }) => void;
+  scale: number;
+  getLogicalCoords: (x: number, y: number) => { x: number; y: number };
+  pushHistory: (n: NodeData[], e: EdgeData[]) => void;
+  isUncalibrated: boolean;
+  onCalculateRoute?: (startId: string, endId: string) => Promise<RouteResponse | null>;
+}
+
+export function useCanvasPointerEvents({
+  state, nodes, edges, pan, setPan, scale, getLogicalCoords, pushHistory, isUncalibrated, onCalculateRoute
+}: PointerEventsConfig) {
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const logical = getLogicalCoords(e.clientX, e.clientY);
+
+    // Right Click Box Selection
+    if (e.button === 2) {
+      state.setSelectionBox({ startX: logical.x, startY: logical.y, currentX: logical.x, currentY: logical.y });
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    // Panning
+    if (e.button === 1 || state.isSpacePressed || (state.activeTool === "SELECT" && e.shiftKey) || state.activeTool === "PAN") {
+      state.setIsPanning(true);
+      state.setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    // Calibration
+    if (state.activeTool === "SCALE") {
+      if (!state.calibrationStart || (state.calibrationStart && state.calibrationEnd)) {
+        state.setCalibrationStart({ x: logical.x, y: logical.y });
+        state.setCalibrationEnd(null);
+        state.setCalibrationCurrent({ x: logical.x, y: logical.y });
+      } else if (state.calibrationStart && !state.calibrationEnd) {
+        state.setCalibrationEnd({ x: logical.x, y: logical.y });
+        state.setCalibrationCurrent(null);
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if (isUncalibrated) return;
+
+    // Node Interaction
+    const clickedNode = nodes.find((n) => {
+      const dx = n.x - logical.x;
+      const dy = n.y - (16 / scale) - logical.y;
+      return Math.sqrt(dx * dx + dy * dy) < 24 / scale;
+    });
+
+    if (state.activeTool === "ROUTE") {
+      if (clickedNode) {
+        if (!state.routeStartNode || (state.routeStartNode && state.routeEndNode)) {
+          state.setRouteStartNode(clickedNode.id);
+          state.setRouteEndNode(null);
+          state.setCalculatedRoute(null);
+        } else if (state.routeStartNode && !state.routeEndNode && state.routeStartNode !== clickedNode.id) {
+          state.setRouteEndNode(clickedNode.id);
+          if (onCalculateRoute) {
+            state.setIsCalculatingRoute(true);
+            onCalculateRoute(state.routeStartNode, clickedNode.id)
+              .then(res => state.setCalculatedRoute(res))
+              .catch(err => console.error("Routing error:", err))
+              .finally(() => state.setIsCalculatingRoute(false));
+          }
+        }
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if (clickedNode) {
+      if (state.activeTool === "SELECT") {
+        const newSelection = [clickedNode.id];
+        state.setSelectedNodeIds(newSelection);
+        state.setSelectedEdgeIds([]);
+        state.setSelection("NODE");
+        state.setDragStartNodes(nodes.filter((n) => newSelection.includes(n.id)).map((n) => ({ id: n.id, startX: n.x, startY: n.y })));
+        state.setActiveDragNodes(nodes); 
+        state.setDragStartPos({ x: logical.x, y: logical.y });
+      } else if (state.activeTool === "EDGE") {
+        state.setDraftEdge({ source: clickedNode.id, currentX: clickedNode.x, currentY: clickedNode.y });
+      } else if (state.activeTool === "HAZARD") {
+        pushHistory(nodes.map((n) => (n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n)), edges);
+      }
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    if (state.activeTool === "NODE") {
+      const newNode = { id: `n${Date.now()}`, x: logical.x, y: logical.y, label: `Node ${nodes.length + 1}` };
+      pushHistory([...nodes, newNode], edges);
+      state.setSelectedNodeIds([newNode.id]);
+      state.setSelectedEdgeIds([]);
+      state.setSelection("NODE");
+    } else if (state.activeTool === "SELECT") {
+      state.clearSelection();
+    }
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const logical = getLogicalCoords(e.clientX, e.clientY);
+    if (state.isPanning) return setPan({ x: e.clientX - state.panStart.x, y: e.clientY - state.panStart.y });
+    if (state.selectionBox) return state.setSelectionBox({ ...state.selectionBox, currentX: logical.x, currentY: logical.y });
+    
+    if (state.activeTool === "SCALE" && state.calibrationStart && !state.calibrationEnd) {
+      state.setCalibrationCurrent({ x: logical.x, y: logical.y });
+    }
+
+    if (state.dragStartNodes && state.dragStartPos) {
+      const deltaX = logical.x - state.dragStartPos.x;
+      const deltaY = logical.y - state.dragStartPos.y;
+      state.setActiveDragNodes(
+        nodes.map((n) => {
+          const startNode = state.dragStartNodes?.find((d: { id: string; }) => d.id === n.id);
+          return startNode ? { ...n, x: startNode.startX + deltaX, y: startNode.startY + deltaY } : n;
+        })
+      );
+    }
+    if (state.draftEdge) state.setDraftEdge({ ...state.draftEdge, currentX: logical.x, currentY: logical.y });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    state.setIsPanning(false);
+    if (state.selectionBox) {
+      const minX = Math.min(state.selectionBox.startX, state.selectionBox.currentX);
+      const maxX = Math.max(state.selectionBox.startX, state.selectionBox.currentX);
+      const minY = Math.min(state.selectionBox.startY, state.selectionBox.currentY);
+      const maxY = Math.max(state.selectionBox.startY, state.selectionBox.currentY);
+      const insideNodes = nodes.filter((n) => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY).map((n) => n.id);
+      
+      state.setSelectedNodeIds(insideNodes);
+      state.setSelectedEdgeIds([]);
+      state.setSelection(insideNodes.length > 0 ? "NODE" : null);
+      state.setSelectionBox(null);
+      return;
+    }
+
+    if (state.dragStartNodes && state.activeDragNodes) {
+      pushHistory(state.activeDragNodes, edges);
+      state.setDragStartNodes(null);
+      state.setDragStartPos(null);
+      state.setActiveDragNodes(null);
+    }
+
+    if (state.draftEdge) {
+      const logical = getLogicalCoords(e.clientX, e.clientY);
+      const dropTarget = nodes.find((n) => {
+        const dx = n.x - logical.x;
+        const dy = n.y - (16 / scale) - logical.y;
+        return Math.sqrt(dx * dx + dy * dy) < 30 / scale;
+      });
+
+      if (dropTarget && dropTarget.id !== state.draftEdge.source) {
+        const exists = edges.some((edge) => 
+          (edge.source === state.draftEdge?.source && edge.target === dropTarget.id) || 
+          (edge.target === state.draftEdge?.source && edge.source === dropTarget.id)
+        );
+        if (!exists) {
+          const newEdges = [...edges, { id: `e${Date.now()}`, source: state.draftEdge.source, target: dropTarget.id }];
+          pushHistory(nodes, newEdges);
+          state.setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
+          state.setSelectedNodeIds([]);
+          state.setSelection("EDGE");
+        }
+      }
+      state.setDraftEdge(null);
+    }
+  };
+
+  const handleEdgeClick = (e: React.PointerEvent, edgeId: string) => {
+    const logical = getLogicalCoords(e.clientX, e.clientY);
+
+    // THE FIX: Check if the edge click physically overlaps a node's hit-box.
+    // If it does, we DO NOT stop propagation, allowing the event to bubble to handlePointerDown for node selection.
+    const clickedNode = nodes.find((n) => {
+      const dx = n.x - logical.x;
+      const dy = n.y - (16 / scale) - logical.y;
+      return Math.sqrt(dx * dx + dy * dy) < 24 / scale;
+    });
+
+    if (clickedNode) {
+      return; 
+    }
+
+    e.stopPropagation();
+
+    if (state.activeTool === "HAZARD") {
+      pushHistory(nodes, edges.map((ed) => (ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed)));
+    } else {
+      state.setSelectedEdgeIds([edgeId]);
+      state.setSelectedNodeIds([]);
+      state.setSelection("EDGE");
+    }
+  };
+
+  return { handlePointerDown, handlePointerMove, handlePointerUp, handleEdgeClick };
+}
+
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
 FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\hooks\useEditorState.ts
 ====================================================================================================
 
@@ -5617,32 +5906,19 @@ FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\compo
 
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { NodeDto, RouteResponse } from "@/lib/api/types";
-import { 
-  CheckCircle2, Clock, MapPin, MousePointer2, Navigation, Route, Ruler, Zap, 
-  Loader2, Play, Trash2, Mic 
-} from "lucide-react";
-import { useState, useEffect } from "react";
+import { useDeleteNode } from "@/hooks/api/useMapStudio";
+import { RouteResponse } from "@/lib/api/types";
+import { MapPin, Navigation, Route, Ruler } from "lucide-react";
 import { ToolMode } from "./Toolbelt";
 import { NodeData } from "./vector/types";
-import { useGenerateNodeTts, useDeleteNodeTts, useDeleteNode } from "@/hooks/api/useMapStudio";
+
+// Import Modularized Panels
+import { EdgeInspector } from "./inspectors/EdgeInspector";
+import { EmptyState } from "./inspectors/EmptyState";
+import { NodeInspector } from "./inspectors/NodeInspector";
+import { RouteInspector } from "./inspectors/RouteInspector";
+import { ScaleCalibration } from "./inspectors/ScaleCalibration";
 
 export type SelectionType = "NODE" | "EDGE" | null;
 
@@ -5664,7 +5940,91 @@ interface InspectorProps {
   onResolveHazard?: (nodeId: string) => void;
 }
 
-function EmptyState() {
+export function InspectorPanel({ 
+  selectionType, activeTool, selectedNode, updateNode, onSave, onDelete, calibrationPixelDistance, onCalibrate, edgeMeters, routeStartNode, routeEndNode, calculatedRoute, isCalculatingRoute, onResolveHazard 
+}: InspectorProps) {
+  const isScaling = activeTool === "SCALE";
+  const isRouting = activeTool === "ROUTE";
+  const isNode = selectionType === "NODE";
+  const isEdge = selectionType === "EDGE";
+
+  const deleteNodeMutation = useDeleteNode();
+  const handleNodeDelete = () => {
+    if (selectedNode?.id && (typeof selectedNode.id === 'number' || !String(selectedNode.id).startsWith('n'))) {
+       deleteNodeMutation.mutate(Number(selectedNode.id));
+    }
+    onDelete(); 
+  };
+
+  return (
+    <div className="w-80 shrink-0 bg-white dark:bg-zinc-950 border-l-2 border-zinc-950 flex flex-col z-10">
+      <div className="p-5 border-b-2 border-zinc-950 flex items-center gap-4 bg-zinc-50/50">
+        <div className="w-12 h-12 rounded-xl border-2 border-zinc-950 bg-white flex items-center justify-center shrink-0">
+          {isScaling ? <Ruler className="h-5 w-5" /> : isRouting ? <Navigation className="h-5 w-5 text-purple-600" /> : isNode ? <MapPin className="h-5 w-5" /> : <Route className="h-5 w-5" />}
+        </div>
+        <h3 className="font-black text-sm uppercase">{isScaling ? "Scale" : isRouting ? "Path Simulation" : isNode ? "Node" : "Path"}</h3>
+      </div>
+
+      {isScaling ? (
+        <ScaleCalibration pixelDistance={calibrationPixelDistance} onCalibrate={onCalibrate} />
+      ) : isRouting ? (
+        <RouteInspector start={routeStartNode} end={routeEndNode} route={calculatedRoute} isCalculating={isCalculatingRoute} />
+      ) : isNode ? (
+        <NodeInspector node={selectedNode} updateNode={updateNode} onSave={onSave} onResolveHazard={onResolveHazard} />
+      ) : isEdge ? (
+        <EdgeInspector meters={edgeMeters} />
+      ) : (
+        <EmptyState />
+      )}
+
+      {(isNode || isEdge) && !isScaling && !isRouting && (
+        <div className="p-5 border-t-2 border-zinc-950 bg-zinc-50 space-y-3 mt-auto">
+          <Button variant="destructive" onClick={isNode ? handleNodeDelete : onDelete} className="w-full border-2 border-zinc-950">Delete</Button>
+          <Button onClick={onSave} className="w-full bg-zinc-950 text-white border-2 border-zinc-950">Save Properties</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\inspectors\EdgeInspector.tsx
+====================================================================================================
+
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export function EdgeInspector({ meters }: { meters?: number | null }) {
+  return (
+    <div className="p-5 space-y-6">
+      <div className="space-y-3">
+        <Label className="text-[10px] font-black uppercase tracking-widest">Calculated Distance</Label>
+        <div className="flex items-center gap-3">
+          <Input readOnly value={meters ? meters.toFixed(2) : "--"} className="text-xl font-black bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 rounded-xl w-28 h-14 text-center" />
+          <span className="text-sm font-black uppercase tracking-widest">Meters</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\inspectors\EmptyState.tsx
+====================================================================================================
+
+import { MousePointer2 } from "lucide-react";
+
+export function EmptyState() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
       <div className="w-16 h-16 rounded-2xl border-2 border-zinc-950 dark:border-zinc-800 flex items-center justify-center mb-6 bg-zinc-50 dark:bg-zinc-900">
@@ -5676,7 +6036,215 @@ function EmptyState() {
   );
 }
 
-function RouteInspector({ start, end, route, isCalculating }: { start?: string | null, end?: string | null, route?: RouteResponse | null, isCalculating?: boolean }) {
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\inspectors\NodeInspector.tsx
+====================================================================================================
+
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { useDeleteNodeTts, useGenerateNodeTts } from "@/hooks/api/useMapStudio";
+import { CheckCircle2, Loader2, Mic, Play, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { NodeData } from "../vector/types";
+
+export function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { node?: NodeData | any, updateNode?: (u: Partial<NodeData>) => void, onSave?: () => void, onResolveHazard?: (id: string) => void }) {
+  const [ttsInput, setTtsInput] = useState(node?.ttsVerbalGuidance || "");
+  const [audioVersion, setAudioVersion] = useState(Date.now());
+  const generateMutation = useGenerateNodeTts();
+  const deleteTtsMutation = useDeleteNodeTts();
+
+  useEffect(() => {
+    setTtsInput(node?.ttsVerbalGuidance || "");
+    setAudioVersion(Date.now());
+  }, [node?.id, node?.ttsAudioUrl]);
+
+  const handleGenerate = () => {
+    if (!node?.id) return;
+    generateMutation.mutate({ nodeId: Number(node.id), text: ttsInput }, {
+      onSuccess: (updatedNodeFromDb) => {
+        if (updateNode) updateNode({ ttsAudioUrl: updatedNodeFromDb.ttsAudioUrl });
+      }
+    });
+  };
+
+  const handleDeleteTts = () => {
+    if (!node?.id) return;
+    deleteTtsMutation.mutate(Number(node.id), {
+      onSuccess: () => {
+        setTtsInput("");
+        if (updateNode) updateNode({ ttsVerbalGuidance: undefined, ttsAudioUrl: undefined } as any);
+      }
+    });
+  };
+
+  const isGenerating = generateMutation.isPending;
+  const hasAudio = !!node?.ttsAudioUrl;
+  const isInputDirty = ttsInput !== node?.ttsVerbalGuidance;
+  const isNewNode = !node?.id || String(node.id).startsWith("n");
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
+  const baseAudioUrl = node?.ttsAudioUrl ? (node.ttsAudioUrl.startsWith('/') ? `${apiUrl}${node.ttsAudioUrl}` : node.ttsAudioUrl) : "";
+  const fullAudioUrl = baseAudioUrl ? `${baseAudioUrl}?v=${audioVersion}` : "";
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+      <div className="p-5 space-y-6">
+        
+        <div className="space-y-3">
+          <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Node Label (Name)</Label>
+          <Input 
+            value={node?.label || ""} 
+            onChange={(e) => updateNode?.({ label: e.target.value })} 
+            onBlur={onSave} 
+            placeholder="e.g., Lobby Entrance" 
+            className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none" 
+          />
+        </div>
+        
+        <div className="space-y-3">
+          <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Verbal Guidance (TTS)</Label>
+          <Textarea 
+            value={ttsInput}
+            onChange={(e) => {
+              setTtsInput(e.target.value);
+              updateNode?.({ ttsVerbalGuidance: e.target.value } as any);
+            }}
+            placeholder="e.g., You are passing the Science Lab on your right." 
+            className="resize-none h-24 text-sm font-medium bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl focus-visible:ring-0 dark:shadow-none p-3" 
+          />
+          
+          {isNewNode ? (
+            <div className="p-3 mt-2 border-2 border-amber-500 bg-amber-50 rounded-xl text-center">
+               <p className="text-xs font-bold text-amber-700 mb-2">Save properties to register this node before generating audio.</p>
+               <Button onClick={onSave} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold">Save Properties Now</Button>
+            </div>
+          ) : !hasAudio || isInputDirty ? (
+            <Button onClick={handleGenerate} disabled={isGenerating || !ttsInput.trim()} className="w-full mt-2 bg-zinc-950 text-white hover:bg-zinc-800">
+              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
+              {isGenerating ? "Generating..." : "Generate Audio"}
+            </Button>
+          ) : (
+            <div className="flex items-center gap-2 mt-2">
+              <audio src={fullAudioUrl} className="hidden" id={`audio-${node.id}`} />
+              <Button 
+                variant="secondary" 
+                className="flex-1 border-2 border-zinc-950" 
+                onClick={() => {
+                  const audioEl = document.getElementById(`audio-${node.id}`) as HTMLAudioElement;
+                  if (audioEl) {
+                    audioEl.load();
+                    audioEl.play();
+                  }
+                }}
+              >
+                <Play className="h-4 w-4 mr-2" /> Play Audio
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="icon" className="border-2 border-zinc-950"><Trash2 className="h-4 w-4" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>Are you sure you want to delete this verbal guidance audio? This cannot be undone.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteTts} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-4 border-t-2 border-zinc-200 dark:border-zinc-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Mark as Hazard</Label>
+            <Switch 
+              checked={node?.isHazard || false} 
+              onCheckedChange={(c) => updateNode?.({ isHazard: c, hazardType: c ? node?.hazardType || "Fire" : undefined } as any)} 
+              className="data-[state=checked]:bg-rose-500 border-2 border-zinc-950 m-0"
+            />
+          </div>
+
+          {node?.isHazard && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-3">
+                <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Hazard Type</Label>
+                <Select value={node?.hazardType || "Fire"} onValueChange={(val) => updateNode?.({ hazardType: val } as any)}>
+                  <SelectTrigger className="h-11 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                    <SelectValue placeholder="Select type..." />
+                  </SelectTrigger>
+                  <SelectContent className="border-2 border-zinc-950 rounded-xl font-bold">
+                    <SelectItem value="Fire">Fire</SelectItem>
+                    <SelectItem value="Spill">Spill</SelectItem>
+                    <SelectItem value="Obstruction">Obstruction</SelectItem>
+                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="w-full h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold shadow-[2px_2px_0px_0px_rgba(16,185,129,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
+                    <CheckCircle2 className="w-4 h-4 mr-2" /> Resolve Hazard
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="font-black uppercase tracking-tight">Resolve Hazard?</AlertDialogTitle>
+                    <AlertDialogDescription className="font-bold text-zinc-500">
+                      Are you sure this hazard has been resolved? This will clear the hazard from the map and update the system logs.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => { if (node?.id) onResolveHazard?.(node.id); }}
+                      className="bg-emerald-600 hover:bg-emerald-700 dark:text-black text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                    >
+                      Confirm & Resolve
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
+        
+      </div>
+    </div>
+  );
+}
+
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\inspectors\RouteInspector.tsx
+====================================================================================================
+
+import { Label } from "@/components/ui/label";
+import { NodeDto, RouteResponse } from "@/lib/api/types";
+import { Clock, Zap } from "lucide-react";
+
+export function RouteInspector({ start, end, route, isCalculating }: { start?: string | null, end?: string | null, route?: RouteResponse | null, isCalculating?: boolean }) {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
       <div className="p-5 space-y-6">
@@ -5738,14 +6306,30 @@ function RouteInspector({ start, end, route, isCalculating }: { start?: string |
   );
 }
 
-function ScaleCalibration({ pixelDistance, onCalibrate }: { pixelDistance?: number | null; onCalibrate?: (s: number) => void; }) {
+====================================================================================================
+END FILE
+====================================================================================================
+
+
+====================================================================================================
+FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\components\map-studio\editor\inspectors\ScaleCalibration.tsx
+====================================================================================================
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+
+export function ScaleCalibration({ pixelDistance, onCalibrate }: { pixelDistance?: number | null; onCalibrate?: (s: number) => void; }) {
   const [meters, setMeters] = useState("");
+  
   const handleCalibrate = () => {
     if (!pixelDistance || !meters) return;
     const parsedMeters = parseFloat(meters);
     if (isNaN(parsedMeters) || parsedMeters <= 0) return;
     onCalibrate?.(parsedMeters / pixelDistance);
   };
+
   return (
     <div className="p-5 space-y-6">
       <div className="space-y-3">
@@ -5759,236 +6343,6 @@ function ScaleCalibration({ pixelDistance, onCalibrate }: { pixelDistance?: numb
         <Input type="number" value={meters} onChange={(e) => setMeters(e.target.value)} placeholder="e.g., 1.5" className="text-center font-bold border-2 border-zinc-950 rounded-xl h-12" />
       </div>
       <Button onClick={handleCalibrate} disabled={!pixelDistance || !meters} className="w-full bg-indigo-600 text-white font-black uppercase h-12 rounded-xl border-2 border-zinc-950">Calibrate</Button>
-    </div>
-  );
-}
-
-function NodeInspector({ node, updateNode, onSave, onResolveHazard }: { node?: NodeData | any, updateNode?: (u: Partial<NodeData>) => void, onSave?: () => void, onResolveHazard?: (id: string) => void }) {
-  const [ttsInput, setTtsInput] = useState(node?.ttsVerbalGuidance || "");
-  const generateMutation = useGenerateNodeTts();
-  const deleteTtsMutation = useDeleteNodeTts();
-
-  useEffect(() => {
-    setTtsInput(node?.ttsVerbalGuidance || "");
-  }, [node]);
-
-  const handleGenerate = () => {
-    if (!node?.id) return;
-    generateMutation.mutate({ nodeId: Number(node.id), text: ttsInput }, {
-      onSuccess: (updatedNodeFromDb) => {
-        if (updateNode) updateNode({ ttsAudioUrl: updatedNodeFromDb.ttsAudioUrl });
-      }
-    });
-  };
-
-  const handleDeleteTts = () => {
-    if (!node?.id) return;
-    deleteTtsMutation.mutate(Number(node.id), {
-      onSuccess: () => {
-        setTtsInput("");
-        if (updateNode) updateNode({ ttsVerbalGuidance: undefined, ttsAudioUrl: undefined } as any);
-      }
-    });
-  };
-
-  const isGenerating = generateMutation.isPending;
-  const hasAudio = !!node?.ttsAudioUrl;
-  const isInputDirty = ttsInput !== node?.ttsVerbalGuidance;
-  const isNewNode = !node?.id || String(node.id).startsWith("n");
-
-  // THE FIX: Fully resolving the absolute URL path so the `<audio>` tag successfully targets Spring Boot
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081";
-  const fullAudioUrl = node?.ttsAudioUrl ? (node.ttsAudioUrl.startsWith('/') ? `${apiUrl}${node.ttsAudioUrl}` : node.ttsAudioUrl) : "";
-
-  return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-      <div className="p-5 space-y-6">
-        
-        {/* LABEL SECTION */}
-        <div className="space-y-3">
-          <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Node Label (Name)</Label>
-          <Input 
-            value={node?.label || ""} 
-            onChange={(e) => updateNode?.({ label: e.target.value })} 
-            onBlur={onSave} 
-            placeholder="e.g., Lobby Entrance" 
-            className="text-sm font-bold bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl h-11 focus-visible:ring-0 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none" 
-          />
-        </div>
-        
-        {/* TTS SECTION */}
-        <div className="space-y-3">
-          <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Verbal Guidance (TTS)</Label>
-          <Textarea 
-            value={ttsInput}
-            onChange={(e) => {
-              setTtsInput(e.target.value);
-              updateNode?.({ ttsVerbalGuidance: e.target.value } as any);
-            }}
-            placeholder="e.g., You are passing the Science Lab on your right." 
-            className="resize-none h-24 text-sm font-medium bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl focus-visible:ring-0 dark:shadow-none p-3" 
-          />
-          
-          {isNewNode ? (
-            <div className="p-3 mt-2 border-2 border-amber-500 bg-amber-50 rounded-xl text-center">
-               <p className="text-xs font-bold text-amber-700 mb-2">Save properties to register this node before generating audio.</p>
-               <Button onClick={onSave} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold">Save Properties Now</Button>
-            </div>
-          ) : !hasAudio || isInputDirty ? (
-            <Button onClick={handleGenerate} disabled={isGenerating || !ttsInput.trim()} className="w-full mt-2 bg-zinc-950 text-white hover:bg-zinc-800">
-              {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mic className="h-4 w-4 mr-2" />}
-              {isGenerating ? "Generating..." : "Generate Audio"}
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2 mt-2">
-              <audio src={fullAudioUrl} className="hidden" id={`audio-${node.id}`} />
-              <Button 
-                variant="secondary" 
-                className="flex-1 border-2 border-zinc-950" 
-                onClick={() => {
-                  const audioEl = document.getElementById(`audio-${node.id}`) as HTMLAudioElement;
-                  if (audioEl) audioEl.play();
-                }}
-              >
-                <Play className="h-4 w-4 mr-2" /> Play Audio
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon" className="border-2 border-zinc-950"><Trash2 className="h-4 w-4" /></Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>Are you sure you want to delete this verbal guidance audio? This cannot be undone.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteTts} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
-
-        {/* HAZARDS SECTION */}
-        <div className="pt-4 border-t-2 border-zinc-200 dark:border-zinc-800 space-y-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-[10px] font-black text-rose-600 uppercase tracking-widest">Mark as Hazard</Label>
-            <Switch 
-              checked={node?.isHazard || false} 
-              onCheckedChange={(c) => updateNode?.({ isHazard: c, hazardType: c ? node?.hazardType || "Fire" : undefined } as any)} 
-              className="data-[state=checked]:bg-rose-500 border-2 border-zinc-950 m-0"
-            />
-          </div>
-
-          {node?.isHazard && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black text-zinc-950 dark:text-zinc-100 uppercase tracking-widest">Hazard Type</Label>
-                <Select value={node?.hazardType || "Fire"} onValueChange={(val) => updateNode?.({ hazardType: val } as any)}>
-                  <SelectTrigger className="h-11 rounded-xl border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 font-bold shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
-                    <SelectValue placeholder="Select type..." />
-                  </SelectTrigger>
-                  <SelectContent className="border-2 border-zinc-950 rounded-xl font-bold">
-                    <SelectItem value="Fire">Fire</SelectItem>
-                    <SelectItem value="Spill">Spill</SelectItem>
-                    <SelectItem value="Obstruction">Obstruction</SelectItem>
-                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="w-full h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold shadow-[2px_2px_0px_0px_rgba(16,185,129,1)] dark:shadow-none transition-transform active:translate-y-1 active:translate-x-1 active:shadow-none">
-                    <CheckCircle2 className="w-4 h-4 mr-2" /> Resolve Hazard
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl shadow-[8px_8px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="font-black uppercase tracking-tight">Resolve Hazard?</AlertDialogTitle>
-                    <AlertDialogDescription className="font-bold text-zinc-500">
-                      Are you sure this hazard has been resolved? This will clear the hazard from the map and update the system logs.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={() => { if (node?.id) onResolveHazard?.(node.id); }}
-                      className="bg-emerald-600 hover:bg-emerald-700 dark:text-black text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
-                    >
-                      Confirm & Resolve
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
-        
-      </div>
-    </div>
-  );
-}
-
-function EdgeInspector({ meters }: { meters?: number | null }) {
-  return (
-    <div className="p-5 space-y-6">
-      <div className="space-y-3">
-        <Label className="text-[10px] font-black uppercase tracking-widest">Calculated Distance</Label>
-        <div className="flex items-center gap-3">
-          <Input readOnly value={meters ? meters.toFixed(2) : "--"} className="text-xl font-black bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-950 rounded-xl w-28 h-14 text-center" />
-          <span className="text-sm font-black uppercase tracking-widest">Meters</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export function InspectorPanel({ 
-  selectionType, activeTool, selectedNode, updateNode, onSave, onDelete, calibrationPixelDistance, onCalibrate, edgeMeters, routeStartNode, routeEndNode, calculatedRoute, isCalculatingRoute, onResolveHazard 
-}: InspectorProps) {
-  const isScaling = activeTool === "SCALE";
-  const isRouting = activeTool === "ROUTE";
-  const isNode = selectionType === "NODE";
-  const isEdge = selectionType === "EDGE";
-
-  const deleteNodeMutation = useDeleteNode();
-  const handleNodeDelete = () => {
-    if (selectedNode?.id && (typeof selectedNode.id === 'number' || !String(selectedNode.id).startsWith('n'))) {
-       deleteNodeMutation.mutate(Number(selectedNode.id));
-    }
-    onDelete(); 
-  };
-
-  return (
-    <div className="w-80 shrink-0 bg-white dark:bg-zinc-950 border-l-2 border-zinc-950 flex flex-col z-10">
-      <div className="p-5 border-b-2 border-zinc-950 flex items-center gap-4 bg-zinc-50/50">
-        <div className="w-12 h-12 rounded-xl border-2 border-zinc-950 bg-white flex items-center justify-center shrink-0">
-          {isScaling ? <Ruler className="h-5 w-5" /> : isRouting ? <Navigation className="h-5 w-5 text-purple-600" /> : isNode ? <MapPin className="h-5 w-5" /> : <Route className="h-5 w-5" />}
-        </div>
-        <h3 className="font-black text-sm uppercase">{isScaling ? "Scale" : isRouting ? "Path Simulation" : isNode ? "Node" : "Path"}</h3>
-      </div>
-
-      {isScaling ? (
-        <ScaleCalibration pixelDistance={calibrationPixelDistance} onCalibrate={onCalibrate} />
-      ) : isRouting ? (
-        <RouteInspector start={routeStartNode} end={routeEndNode} route={calculatedRoute} isCalculating={isCalculatingRoute} />
-      ) : isNode ? (
-        <NodeInspector node={selectedNode} updateNode={updateNode} onSave={onSave} onResolveHazard={onResolveHazard} />
-      ) : isEdge ? (
-        <EdgeInspector meters={edgeMeters} />
-      ) : (
-        <EmptyState />
-      )}
-
-      {(isNode || isEdge) && !isScaling && !isRouting && (
-        <div className="p-5 border-t-2 border-zinc-950 bg-zinc-50 space-y-3 mt-auto">
-          <Button variant="destructive" onClick={isNode ? handleNodeDelete : onDelete} className="w-full border-2 border-zinc-950">Delete</Button>
-          <Button onClick={onSave} className="w-full bg-zinc-950 text-white border-2 border-zinc-950">Save Properties</Button>
-        </div>
-      )}
     </div>
   );
 }
@@ -6110,7 +6464,7 @@ interface EdgeLayerProps {
   draftEdge: { source: string; currentX: number; currentY: number } | null;
   selectionBox: { startX: number; startY: number; currentX: number; currentY: number } | null;
   scale: number;
-  floorPlanScale: number; // FIXED: Injecting parsed real-world scale
+  floorPlanScale: number; 
   onEdgeClick: (e: React.PointerEvent, edgeId: string) => void;
   calibrationStart?: { x: number; y: number } | null;
   calibrationEnd?: { x: number; y: number } | null;
@@ -6132,19 +6486,22 @@ export function EdgeLayer({
         const isSelected = selectedEdgeIds.includes(edge.id) && selection === "EDGE";
         const isHazard = edge.isHazard;
         
-        // FIXED: Realtime Thick-Client Mathematics for smooth dragging UX
         const pixelDistance = Math.hypot(target.x - source.x, target.y - source.y);
         const realtimeWeightM = !isNaN(floorPlanScale) ? (pixelDistance * floorPlanScale) : null;
         const displayWeight = realtimeWeightM ? `${realtimeWeightM.toFixed(1)}m` : 'Uncalibrated';
         
         return (
           <g key={edge.id} className="pointer-events-auto cursor-pointer" onPointerDown={(e) => onEdgeClick(e, edge.id)}>
-            <line x1={source.x} y1={source.y} x2={target.x} y2={target.y} stroke="transparent" strokeWidth={20} />
+            <line 
+                x1={source.x} y1={source.y} x2={target.x} y2={target.y} 
+                stroke="transparent" 
+                strokeWidth={20 / scale} 
+            />
             <line 
                 x1={source.x} y1={source.y} x2={target.x} y2={target.y} 
                 stroke={isHazard ? "#ef4444" : isSelected ? "#6366f1" : "#10b981"} 
-                strokeWidth={isSelected ? 6 : 4} 
-                strokeDasharray={isHazard ? "8 8" : "none"}
+                strokeWidth={(isSelected ? 6 : 4) / scale} 
+                strokeDasharray={isHazard ? `${8 / scale} ${8 / scale}` : "none"}
                 className="transition-colors hover:stroke-indigo-400" 
             />
             {/* Realtime Label Rendering */}
@@ -6166,26 +6523,27 @@ export function EdgeLayer({
         );
       })}
   
-     {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
-    <polyline
-
-        points={calculatedRoute.path.map((step: NodeDto) => `${step.x},${step.y}`).join(" ")}
-        fill="none"
-        stroke="#a855f7"
-        strokeWidth={8 / scale}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="animate-pulse"
-        style={{ filter: "drop-shadow(0px 0px 8px rgba(168,85,247,0.8))" }}
-    />
-)}
+      {calculatedRoute && calculatedRoute.path && calculatedRoute.path.length > 0 && (
+        <polyline
+            points={calculatedRoute.path.map((step: NodeDto) => `${step.x},${step.y}`).join(" ")}
+            fill="none"
+            stroke="#a855f7"
+            strokeWidth={8 / scale}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="animate-pulse"
+            style={{ filter: "drop-shadow(0px 0px 8px rgba(168,85,247,0.8))" }}
+        />
+      )}
 
       {draftEdge && (
           <line 
               x1={nodes.find(n => n.id === draftEdge.source)?.x || 0} 
               y1={nodes.find(n => n.id === draftEdge.source)?.y || 0} 
               x2={draftEdge.currentX} y2={draftEdge.currentY} 
-              stroke="#10b981" strokeWidth={4} strokeDasharray="6 6" 
+              stroke="#10b981" 
+              strokeWidth={4 / scale} 
+              strokeDasharray={`${6 / scale} ${6 / scale}`} 
           />
       )}
 
@@ -6265,9 +6623,10 @@ import { NodeData } from "./types";
 interface NodeLayerProps {
   nodes: NodeData[];
   selectedNodeIds: string[];
+  scale: number; // Added to enable scale-invariant rendering
 }
 
-export function NodeLayer({ nodes, selectedNodeIds }: NodeLayerProps) {
+export function NodeLayer({ nodes, selectedNodeIds, scale }: NodeLayerProps) {
   return (
     <>
       {nodes.map(node => {
@@ -6277,10 +6636,11 @@ export function NodeLayer({ nodes, selectedNodeIds }: NodeLayerProps) {
               key={node.id}
               className="absolute pointer-events-none flex flex-col items-center"
               style={{ 
-                left: 0, 
-                top: 0, 
-                // Places the bottom-center tip of the pin exactly at the clicked coordinate
-                transform: `translate(${node.x}px, ${node.y}px) translate(-50%, -100%)`, 
+                left: `${node.x}px`, 
+                top: `${node.y}px`, 
+                // Counter-scale to maintain a fixed physical size on screen, anchored at the pin tip
+                transform: `translate(-50%, -100%) scale(${1 / scale})`, 
+                transformOrigin: "bottom center",
                 zIndex: isSelected ? 50 : 10
               }}
           >
@@ -6291,7 +6651,6 @@ export function NodeLayer({ nodes, selectedNodeIds }: NodeLayerProps) {
             
             {/* The Teardrop Pin Icon */}
             <div className={`relative flex items-center justify-center transition-transform origin-bottom ${isSelected ? 'scale-125' : 'hover:scale-110'}`}>
-                {/* THE FIX: Changed strokeLineJoin to strokeLinejoin */}
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`drop-shadow-md ${node.isHazard ? 'text-red-500 fill-red-100 dark:fill-red-950' : isSelected ? 'text-indigo-600 fill-indigo-100 dark:fill-indigo-900' : 'text-zinc-950 dark:text-zinc-100 fill-white dark:fill-zinc-900'}`}>
                     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                     <circle cx="12" cy="10" r="3" className={node.isHazard ? "fill-red-500" : isSelected ? "fill-indigo-600" : "fill-zinc-950 dark:fill-zinc-100"}></circle>
@@ -6417,7 +6776,7 @@ FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\compo
 
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { InspectorPanel } from "./InspectorPanel";
 import { BlueprintLayer } from "./vector/BlueprintLayer";
 import { EdgeLayer } from "./vector/EdgeLayer";
@@ -6426,11 +6785,13 @@ import { NodeLayer } from "./vector/NodeLayer";
 import { StatusBar } from "./vector/StatusBar";
 import { VectorComposerProps } from "./vector/types";
 import { ZoomControls } from "./vector/ZoomControls";
-
 import { Ruler } from "lucide-react";
+
 import { useEditorState } from "./hooks/useEditorState";
 import { useHistory } from "./hooks/useHistory";
 import { useViewport } from "./hooks/useViewport";
+import { useCanvasKeyboardEvents } from "./hooks/useCanvasKeyboardEvents";
+import { useCanvasPointerEvents } from "./hooks/useCanvasPointerEvents";
 
 export function VectorComposer({ 
   activeTool: externalActiveTool, imageUrl, onSaveDb, onUpdateScale, onCalculateRoute,
@@ -6440,7 +6801,6 @@ export function VectorComposer({
   const containerRef = useRef<HTMLDivElement>(null);
   const hasHydrated = useRef(false);
   
-  // Custom Hooks
   const { pan, setPan, scale, adjustZoomCentered, resetZoom, getLogicalCoords } = useViewport(containerRef);
   const { nodes, edges, pushHistory, undo, redo, canUndo, canRedo, resetHistory } = useHistory(initialNodes, initialEdges);
   const state = useEditorState(externalActiveTool);
@@ -6448,7 +6808,7 @@ export function VectorComposer({
   const isUncalibrated = initialScale === "" || initialScale === "0.05";
   const parsedScale = parseFloat(initialScale);
 
-  // Enforce Scale Tool Lockout
+  // 1. Tool Locks & State Resets
   useEffect(() => {
     if (isUncalibrated && state.activeTool !== "SCALE") {
         state.setActiveTool("SCALE");
@@ -6457,13 +6817,12 @@ export function VectorComposer({
     }
   }, [isUncalibrated, externalActiveTool, state.activeTool, state]);
 
-  // Handle Tool Changes
   useEffect(() => {
     if (state.activeTool !== "SCALE") state.clearCalibration();
     if (state.activeTool !== "ROUTE") state.clearRouting();
   }, [state.activeTool, state]); 
 
-  // STRICT HYDRATION
+  // 2. Initial Hydration
   useEffect(() => {
     if (initialNodes.length > 0 && !hasHydrated.current) {
       resetHistory(initialNodes, initialEdges);
@@ -6472,7 +6831,14 @@ export function VectorComposer({
     }
   }, [initialNodes, initialEdges, resetHistory, state]);
 
-  // Distance Calculations
+  // 3. Delegate Event Handling to Hooks
+  useCanvasKeyboardEvents({ state, nodes, edges, pushHistory, undo, redo });
+  
+  const { handlePointerDown, handlePointerMove, handlePointerUp, handleEdgeClick } = useCanvasPointerEvents({
+    state, nodes, edges, pan, setPan, scale, getLogicalCoords, pushHistory, isUncalibrated, onCalculateRoute
+  });
+
+  // 4. Derived Math for Inspector
   const calibrationPixelDistance = useMemo(() => {
     if (state.calibrationStart && state.calibrationEnd) {
       return Math.hypot(state.calibrationEnd.x - state.calibrationStart.x, state.calibrationEnd.y - state.calibrationStart.y);
@@ -6480,7 +6846,6 @@ export function VectorComposer({
     return null;
   }, [state.calibrationStart, state.calibrationEnd]);
 
-  // FIXED: Realtime Inspector Math
   const selectedEdgeDistance = useMemo(() => {
     if (state.selection === "EDGE" && state.selectedEdgeIds.length === 1) {
       const edge = edges.find(e => e.id === state.selectedEdgeIds[0]);
@@ -6496,264 +6861,26 @@ export function VectorComposer({
     return null;
   }, [state.selection, state.selectedEdgeIds, edges, nodes, parsedScale]);
 
-  // Handlers
-  const handleDeleteSelection = useCallback(() => {
-    if (state.selection === "NODE" && state.selectedNodeIds.length > 0) {
-      const newNodes = nodes.filter((n) => !state.selectedNodeIds.includes(n.id));
-      const newEdges = edges.filter((e) => !state.selectedNodeIds.includes(e.source) && !state.selectedNodeIds.includes(e.target));
-      pushHistory(newNodes, newEdges);
-      state.clearSelection();
-    } else if (state.selection === "EDGE" && state.selectedEdgeIds.length > 0) {
-      const newEdges = edges.filter((e) => !state.selectedEdgeIds.includes(e.id));
-      pushHistory(nodes, newEdges);
-      state.clearSelection();
-    }
-  }, [state, nodes, edges, pushHistory]);
-
-  // Keyboard Listeners
-useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      const isTypingInInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
-
-      if (e.code === "Space" && target === document.body) {
-        e.preventDefault();
-        state.setIsSpacePressed(true);
-      }
-      
-      if (!isTypingInInput) {
-        if (e.code === "Delete" || e.code === "Backspace") {
-          handleDeleteSelection();
-        }
-        
-        if ((e.ctrlKey || e.metaKey) && e.key === "z") {
-          e.preventDefault();
-          if (e.shiftKey) {
-            redo();
-          } else {
-            undo();
-          }
-        }
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") state.setIsSpacePressed(false);
-    };
-    
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
-  }, [handleDeleteSelection, undo, redo, state]);
-
-  // Pointer Events
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const logical = getLogicalCoords(e.clientX, e.clientY);
-
-    if (e.button === 2) {
-      state.setSelectionBox({ startX: logical.x, startY: logical.y, currentX: logical.x, currentY: logical.y });
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return;
-    }
-
-    if (e.button === 1 || state.isSpacePressed || (state.activeTool === "SELECT" && e.shiftKey) || state.activeTool === "PAN") {
-      state.setIsPanning(true);
-      state.setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return;
-    }
-
-    if (state.activeTool === "SCALE") {
-      if (!state.calibrationStart || (state.calibrationStart && state.calibrationEnd)) {
-        state.setCalibrationStart({ x: logical.x, y: logical.y });
-        state.setCalibrationEnd(null);
-        state.setCalibrationCurrent({ x: logical.x, y: logical.y });
-      } else if (state.calibrationStart && !state.calibrationEnd) {
-        state.setCalibrationEnd({ x: logical.x, y: logical.y });
-        state.setCalibrationCurrent(null);
-      }
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return;
-    }
-
-    if (isUncalibrated) return;
-
-    const clickedNode = nodes.find((n) => {
-      const dx = n.x - logical.x;
-      const dy = n.y - 16 - logical.y;
-      return Math.sqrt(dx * dx + dy * dy) < 24 / scale;
-    });
-
-    if (state.activeTool === "ROUTE") {
-      if (clickedNode) {
-        if (!state.routeStartNode || (state.routeStartNode && state.routeEndNode)) {
-          state.setRouteStartNode(clickedNode.id);
-          state.setRouteEndNode(null);
-          state.setCalculatedRoute(null);
-        } else if (state.routeStartNode && !state.routeEndNode && state.routeStartNode !== clickedNode.id) {
-          state.setRouteEndNode(clickedNode.id);
-          if (onCalculateRoute) {
-            state.setIsCalculatingRoute(true);
-            onCalculateRoute(state.routeStartNode, clickedNode.id)
-              .then(res => state.setCalculatedRoute(res))
-              .catch(err => console.error("Routing error:", err))
-              .finally(() => state.setIsCalculatingRoute(false));
-          }
-        }
-      }
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return;
-    }
-
-    if (clickedNode) {
-      if (state.activeTool === "SELECT") {
-        const newSelection = [clickedNode.id];
-        state.setSelectedNodeIds(newSelection);
-        state.setSelectedEdgeIds([]);
-        state.setSelection("NODE");
-        state.setDragStartNodes(nodes.filter((n) => newSelection.includes(n.id)).map((n) => ({ id: n.id, startX: n.x, startY: n.y })));
-        state.setActiveDragNodes(nodes); 
-        state.setDragStartPos({ x: logical.x, y: logical.y });
-      } else if (state.activeTool === "EDGE") {
-        state.setDraftEdge({ source: clickedNode.id, currentX: clickedNode.x, currentY: clickedNode.y });
-      } else if (state.activeTool === "HAZARD") {
-        pushHistory(nodes.map((n) => (n.id === clickedNode.id ? { ...n, isHazard: !n.isHazard } : n)), edges);
-      }
-      e.currentTarget.setPointerCapture(e.pointerId);
-      return;
-    }
-
-    if (state.activeTool === "NODE") {
-      const newNode = { id: `n${Date.now()}`, x: logical.x, y: logical.y, label: `Node ${nodes.length + 1}` };
-      pushHistory([...nodes, newNode], edges);
-      state.setSelectedNodeIds([newNode.id]);
-      state.setSelectedEdgeIds([]);
-      state.setSelection("NODE");
-    } else if (state.activeTool === "SELECT") {
-      state.clearSelection();
-    }
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    const logical = getLogicalCoords(e.clientX, e.clientY);
-    if (state.isPanning) return setPan({ x: e.clientX - state.panStart.x, y: e.clientY - state.panStart.y });
-    if (state.selectionBox) return state.setSelectionBox({ ...state.selectionBox, currentX: logical.x, currentY: logical.y });
-    
-    if (state.activeTool === "SCALE" && state.calibrationStart && !state.calibrationEnd) {
-      state.setCalibrationCurrent({ x: logical.x, y: logical.y });
-    }
-
-    if (state.dragStartNodes && state.dragStartPos) {
-      const deltaX = logical.x - state.dragStartPos.x;
-      const deltaY = logical.y - state.dragStartPos.y;
-      state.setActiveDragNodes(
-        nodes.map((n) => {
-          const startNode = state.dragStartNodes?.find((d) => d.id === n.id);
-          return startNode ? { ...n, x: startNode.startX + deltaX, y: startNode.startY + deltaY } : n;
-        })
-      );
-    }
-    if (state.draftEdge) state.setDraftEdge({ ...state.draftEdge, currentX: logical.x, currentY: logical.y });
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    state.setIsPanning(false);
-    if (state.selectionBox) {
-      const minX = Math.min(state.selectionBox.startX, state.selectionBox.currentX);
-      const maxX = Math.max(state.selectionBox.startX, state.selectionBox.currentX);
-      const minY = Math.min(state.selectionBox.startY, state.selectionBox.currentY);
-      const maxY = Math.max(state.selectionBox.startY, state.selectionBox.currentY);
-      const insideNodes = nodes.filter((n) => n.x >= minX && n.x <= maxX && n.y >= minY && n.y <= maxY).map((n) => n.id);
-      
-      state.setSelectedNodeIds(insideNodes);
-      state.setSelectedEdgeIds([]);
-      state.setSelection(insideNodes.length > 0 ? "NODE" : null);
-      state.setSelectionBox(null);
-      return;
-    }
-
-    if (state.dragStartNodes && state.activeDragNodes) {
-      pushHistory(state.activeDragNodes, edges);
-      state.setDragStartNodes(null);
-      state.setDragStartPos(null);
-      state.setActiveDragNodes(null);
-    }
-
-    if (state.draftEdge) {
-      const logical = getLogicalCoords(e.clientX, e.clientY);
-      const dropTarget = nodes.find((n) => {
-        const dx = n.x - logical.x;
-        const dy = n.y - 16 - logical.y;
-        return Math.sqrt(dx * dx + dy * dy) < 30 / scale;
-      });
-
-      if (dropTarget && dropTarget.id !== state.draftEdge.source) {
-        const exists = edges.some((edge) => 
-          (edge.source === state.draftEdge?.source && edge.target === dropTarget.id) || 
-          (edge.target === state.draftEdge?.source && edge.source === dropTarget.id)
-        );
-        if (!exists) {
-          const newEdges = [...edges, { id: `e${Date.now()}`, source: state.draftEdge.source, target: dropTarget.id }];
-          pushHistory(nodes, newEdges);
-          state.setSelectedEdgeIds([newEdges[newEdges.length - 1].id]);
-          state.setSelectedNodeIds([]);
-          state.setSelection("EDGE");
-        }
-      }
-      state.setDraftEdge(null);
-    }
-  };
-
-  const handleEdgeClick = (e: React.PointerEvent, edgeId: string) => {
-    e.stopPropagation();
-    if (state.activeTool === "HAZARD") {
-      pushHistory(nodes, edges.map((ed) => (ed.id === edgeId ? { ...ed, isHazard: !ed.isHazard } : ed)));
-    } else {
-      state.setSelectedEdgeIds([edgeId]);
-      state.setSelectedNodeIds([]);
-      state.setSelection("EDGE");
-    }
-  };
-
+  // 5. Database Save Handlers
   const handleSaveWrapper = async () => {
     pushHistory(nodes, edges);
     if (onSaveDb) {
       try {
-        // 1. Capture the fresh graph data straight from Postgres
         const updatedGraph = await onSaveDb(nodes, edges);
-        
-        // 2. THIS IS THE FIX: Instantly inject the real Database IDs into the canvas!
         if (updatedGraph && updatedGraph.nodes) {
            const freshNodes = updatedGraph.nodes.map((n: any) => ({
-             id: String(n.id),
-             x: n.x,
-             y: n.y,
-             label: n.label || "",
-             isHazard: n.isHazard || false,
-             ttsVerbalGuidance: n.ttsVerbalGuidance,
-             ttsAudioUrl: n.ttsAudioUrl
+             id: String(n.id), x: n.x, y: n.y, label: n.label || "",
+             isHazard: n.isHazard || false, ttsVerbalGuidance: n.ttsVerbalGuidance, ttsAudioUrl: n.ttsAudioUrl
            }));
            
            const freshEdges = updatedGraph.edges.map((e: any) => ({
-             id: String(e.id),
-             source: String(e.fromNodeId),
-             target: String(e.toNodeId),
-             isHazard: e.isHazard || false,
-             weightM: e.weightM,
-             distance: e.distance
+             id: String(e.id), source: String(e.fromNodeId), target: String(e.toNodeId),
+             isHazard: e.isHazard || false, weightM: e.weightM, distance: e.distance
            }));
            
-           // Overwrite the canvas state with the real data
            resetHistory(freshNodes, freshEdges);
         }
-        
-        // 3. Clear the selection so the user clicks the fresh node
         state.clearSelection();
-        
       } catch (err) {
         console.error("Save failed", err);
       }
@@ -6763,23 +6890,16 @@ useEffect(() => {
   const handleResolveHazard = async (nodeId: string) => {
     const newNodes = nodes.map(n => n.id === nodeId ? { ...n, isHazard: false, hazardType: undefined } : n);
     pushHistory(newNodes, edges);
-    
     if (onSaveDb) {
-      try {
-        await onSaveDb(newNodes, edges);
-      } catch (err) {
-        console.error("Resolve save failed", err);
-      }
+      try { await onSaveDb(newNodes, edges); } 
+      catch (err) { console.error("Resolve save failed", err); }
     }
   };
 
   const handleCalibrateWrapper = async (newScaleRatio: number) => {
     if (onUpdateScale) {
-      try {
-        await onUpdateScale(newScaleRatio);
-      } catch (err) {
-        console.error("Scale update failed", err);
-      }
+      try { await onUpdateScale(newScaleRatio); } 
+      catch (err) { console.error("Scale update failed", err); }
     }
     state.clearCalibration();
   };
@@ -6819,28 +6939,18 @@ useEffect(() => {
         >
           <BlueprintLayer imageUrl={imageUrl} />
           <EdgeLayer 
-            nodes={displayNodes} 
-            edges={edges} 
-            selectedEdgeIds={state.selectedEdgeIds} 
-            selection={state.selection} 
-            draftEdge={state.draftEdge} 
-            selectionBox={state.selectionBox} 
-            scale={scale} 
-            floorPlanScale={parsedScale} 
-            onEdgeClick={handleEdgeClick} 
-            calibrationStart={state.calibrationStart}
-            calibrationEnd={state.calibrationEnd}
-            calibrationCurrent={state.calibrationCurrent}
-            calculatedRoute={state.calculatedRoute}
+            nodes={displayNodes} edges={edges} selectedEdgeIds={state.selectedEdgeIds} 
+            selection={state.selection} draftEdge={state.draftEdge} selectionBox={state.selectionBox} 
+            scale={scale} floorPlanScale={parsedScale} onEdgeClick={handleEdgeClick} 
+            calibrationStart={state.calibrationStart} calibrationEnd={state.calibrationEnd}
+            calibrationCurrent={state.calibrationCurrent} calculatedRoute={state.calculatedRoute}
           />
-          <NodeLayer nodes={displayNodes} selectedNodeIds={state.selectedNodeIds} />
+          <NodeLayer nodes={displayNodes} selectedNodeIds={state.selectedNodeIds} scale={scale} />
         </div>
       </div>
 
       <InspectorPanel
-        selectionType={state.selection}
-        activeTool={state.activeTool}
-        floorPlanScale={initialScale} 
+        selectionType={state.selection} activeTool={state.activeTool} floorPlanScale={initialScale} 
         selectedNode={state.selectedNodeIds.length === 1 ? nodes.find((n) => n.id === state.selectedNodeIds[0]) : undefined}
         updateNode={(updates) => {
           if (state.selectedNodeIds.length === 1) {
@@ -6848,15 +6958,13 @@ useEffect(() => {
           }
         }}
         onSave={handleSaveWrapper}
-        onDelete={handleDeleteSelection}
-        calibrationPixelDistance={calibrationPixelDistance}
-        onCalibrate={handleCalibrateWrapper}
-        edgeMeters={selectedEdgeDistance} 
-        routeStartNode={state.routeStartNode}
-        routeEndNode={state.routeEndNode}
-        calculatedRoute={state.calculatedRoute}
-        isCalculatingRoute={state.isCalculatingRoute}
-        onResolveHazard={handleResolveHazard}
+        onDelete={() => {
+            const e = new KeyboardEvent("keydown", { code: "Delete" });
+            window.dispatchEvent(e);
+        }}
+        calibrationPixelDistance={calibrationPixelDistance} onCalibrate={handleCalibrateWrapper} edgeMeters={selectedEdgeDistance} 
+        routeStartNode={state.routeStartNode} routeEndNode={state.routeEndNode} calculatedRoute={state.calculatedRoute}
+        isCalculatingRoute={state.isCalculatingRoute} onResolveHazard={handleResolveHazard}
       />
     </div>
   );
@@ -7737,7 +7845,7 @@ FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\compo
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/layout/auth-provider";
-import { useDeleteStaff, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
+import { useDeleteStaff, useDeleteStaffInvite, useGetPendingInvites, useGetStaff } from "@/hooks/api/useStaff";
 import { ActiveStaff, ActiveStaffRoster } from "./ActiveStaffRoster";
 import { InvitationQueue, PendingInvite } from "./InvitationQueue";
 import { InviteEngine } from "./InviteEngine";
@@ -7757,17 +7865,16 @@ export function StaffComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-  // Fetch the real data from Spring Boot
   const { data: staffDtoList, isLoading, isError } = useGetStaff(orgIdNum);
   const [showError, setShowError] = useState(false);
 
   const { data: invitesDtoList } = useGetPendingInvites(orgIdNum);
   const deleteStaffMutation = useDeleteStaff(orgIdNum);
+  const deleteStaffInviteMutation = useDeleteStaffInvite(orgIdNum);
 
-  // Map the backend DTO to the frontend UI interface
   const activeStaff: ActiveStaff[] = (staffDtoList || []).map((staff) => ({
     id: String(staff.id),
-    name: staff.email.split("@")[0], // Extracted from email since Staff table doesn't have names
+    name: staff.email.split("@")[0],
     email: staff.email,
     role: (staff.role === "ADMIN" ? "ADMIN" : "TECHNICIAN"),
     joinedDate: staff.joinedDate || "Recently",
@@ -7789,8 +7896,12 @@ export function StaffComposer() {
     }
   };
 
-  const handleDeleteInvitedStaff = (id: string) => {
-    console.log("Invite deletion will be implemented later.", id);
+  const handleDeleteInvitedStaff = async (id: string) => {
+    try {
+      await deleteStaffInviteMutation.mutateAsync(Number(id));
+    } catch (error: unknown) {
+      if (error instanceof Error) setErrorMessage(error.message);
+    }
   };
 
   useEffect(() => {
@@ -7804,10 +7915,8 @@ export function StaffComposer() {
   };
 
   return (
-    // THE FIX: Reduced outer space-y-8 to space-y-6 for tighter layout cohesion
     <div className="space-y-6 pb-12">
       
-      {/* THE FIX: Removed mb-8 from sticky header to stop margin double-dipping with space-y-6 */}
       <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-zinc-950 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
@@ -12543,6 +12652,17 @@ FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\compo
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, UserCog2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export interface ActiveUsers {
   id: string;
@@ -12614,15 +12734,36 @@ export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
                       {member.joinedDate}
                     </span>
 
-                    {/* Delete Action Button: triggers the onDelete function passed from the parent */}
                     <div className="flex justify-center">
-                      <button
-                        onClick={() => onDelete(member.id)}
-                        className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                        title="Delete User"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="font-black uppercase tracking-tight">Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription className="font-bold text-zinc-500">
+                              Are you sure you want to remove this record? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(member.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 );
@@ -12634,7 +12775,6 @@ export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
     </Card>
   );
 }
-
 
 ====================================================================================================
 END FILE
@@ -12649,6 +12789,17 @@ FILE: C:\Users\bbdnet2832\Desktop\projects\echonav-web-testing-grounds\src\compo
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, UserCog2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export interface InvitedUsers {
   id: string;
@@ -12719,13 +12870,35 @@ export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
                     </span>
 
                     <div className="flex justify-center">
-                      <button
-                        onClick={() => onDelete(member.id)}
-                        className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
-                        title="Delete User"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            className="p-2 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-red-400 dark:hover:bg-red-500 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500"
+                            title="Delete User"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800 rounded-xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="font-black uppercase tracking-tight">Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription className="font-bold text-zinc-500">
+                              Are you sure you want to remove this record? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="border-2 border-zinc-950 dark:border-zinc-800 font-bold uppercase text-[11px] tracking-wider h-10 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(member.id)}
+                              className="bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-wider h-10 border-2 border-zinc-950 shadow-[2px_2px_0px_0px_rgba(24,24,27,1)] dark:shadow-none"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 );
@@ -12737,7 +12910,6 @@ export function InvitedUsersList({ users, onDelete }: InvitedUserListProps) {
     </Card>
   );
 }
-
 
 ====================================================================================================
 END FILE
@@ -13007,7 +13179,7 @@ export function UserComposer() {
     id: String(pin.id),
     name: `${pin.firstName} ${pin.lastName}`.trim(),
     email: pin.email,
-    pin: pin.pinCode, // THE FIX: This will render the 6-digit pin if Concierge Mode is active
+    pin: pin.pinCode, 
     generatedBy: pin.generatedBy,
     invitedDate: new Date(pin.invitedDate).toLocaleDateString(),
   }));
@@ -13459,6 +13631,8 @@ export function useGetStaff(orgId: number | undefined) {
     queryKey: queryKeys.staff.roster(orgId),
     queryFn: () => staffActions.getStaff(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Refreshes active roster every 10 seconds
+    refetchInterval: 10000, 
   });
 }
 
@@ -13467,7 +13641,6 @@ export function useInviteStaff() {
   return useMutation({
     mutationFn: (data: InviteStaffRequest) => staffActions.inviteStaff(data),
     onSuccess: (_, variables) => {
-      // THE FIX: Refreshes both tables automatically without needing an F5 manual refresh
       queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(variables.organisationId) });
       queryClient.invalidateQueries({ queryKey: ["staff", "invites", variables.organisationId] });
     },
@@ -13479,6 +13652,8 @@ export function useGetPendingInvites(orgId: number | undefined) {
     queryKey: ["staff", "invites", orgId],
     queryFn: () => staffActions.getPendingInvites(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Aggressively checks for invite acceptance every 3 seconds
+    refetchInterval: 3000,
   });
 }
 
@@ -13491,6 +13666,20 @@ export function useDeleteStaff(orgId: number | undefined) {
         queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(orgId) });
       } else {
         queryClient.invalidateQueries({ queryKey: ["staff"] });
+      }
+    },
+  });
+}
+
+export function useDeleteStaffInvite(orgId: number | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: number) => staffActions.deleteStaffInvite(inviteId),
+    onSuccess: () => {
+      if (orgId) {
+        queryClient.invalidateQueries({ queryKey: ["staff", "invites", orgId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["staff", "invites"] });
       }
     },
   });
@@ -13515,6 +13704,8 @@ export function useGetUsers(orgId: number | undefined) {
     queryKey: queryKeys.users.roster(orgId),
     queryFn: () => userActions.getUsers(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Refreshes active roster every 10 seconds
+    refetchInterval: 10000,
   });
 }
 
@@ -13535,6 +13726,8 @@ export function useGetPendingUserPins(orgId: number | undefined) {
     queryKey: ["users", "pins", orgId],
     queryFn: () => userActions.getPendingUserPins(orgId!),
     enabled: !!orgId && !isNaN(orgId),
+    // SMART POLLING: Aggressively checks for PIN activation every 3 seconds
+    refetchInterval: 3000,
   });
 }
 
@@ -14165,16 +14358,27 @@ export const staffActions = {
       throw new Error(axiosError.response?.data?.message || "Failed to invite staff.");
     }
   },
+
   getPendingInvites: async (orgId: number): Promise<StaffInviteDto[]> => {
     const response = await axiosInstance.get<StaffInviteDto[]>(`/api/staff/invites/organisation/${orgId}`);
     return response.data;
   },
+
   deleteStaff: async (staffId: number): Promise<void> => {
     try {
       await axiosInstance.delete(`/api/staff/${staffId}`);
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || "Failed to delete staff member.");
+    }
+  },
+
+  deleteStaffInvite: async (inviteId: number): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/api/staff/invites/${inviteId}`);
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || "Failed to delete staff invite.");
     }
   }
 };
