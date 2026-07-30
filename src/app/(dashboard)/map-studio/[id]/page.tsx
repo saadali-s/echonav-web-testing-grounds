@@ -9,7 +9,6 @@ export default async function BuildingDirectoryPage({
 
   return (
     <div className="h-full">
-      {/* Pass the raw ID down to the client component */}
       <BuildingMapsComposer buildingId={id} />
     </div>
   );

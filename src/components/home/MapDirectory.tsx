@@ -98,7 +98,6 @@ function MapCard({
       <div
         className={`aspect-video flex items-center justify-center border-b border-zinc-200 dark:border-zinc-800/80 relative overflow-hidden bg-zinc-100 dark:bg-zinc-900 transition-colors`}
       >
-        {/* Minimalist Topographical overlay */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-zinc-200/60 dark:from-zinc-800/40 to-transparent opacity-50 transition-colors" />
         <Badge
           variant="secondary"

@@ -28,7 +28,6 @@ export default function ResetPasswordPage() {
     setError("");
     setIsSuccess(false);
 
-    // Mock API delay to test UI state
     setTimeout(() => {
       setIsSuccess(true);
       setEmail("");
@@ -39,7 +38,6 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4 bg-linear-to-b from-background to-secondary/20">
       <div className="flex flex-col items-center gap-8 w-full max-w-105 animate-in fade-in zoom-in-95 duration-500">
-        
         <div className="flex flex-col items-center gap-2 text-center">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <Image

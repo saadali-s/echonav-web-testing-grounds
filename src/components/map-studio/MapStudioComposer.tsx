@@ -18,7 +18,6 @@ import { Map, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { BuildingCard, BuildingData } from "./BuildingCard";
 
-// SHADCN IMPORTS
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,13 +34,10 @@ export function MapStudioComposer() {
   const { activeOrgId } = useAuth();
   const orgIdNum = activeOrgId ? Number(activeOrgId) : undefined;
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
 
-  // NEW: Alert State
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
-  // TanStack Hooks
   const { data: buildingsDto, isLoading, isError } = useGetBuildings(orgIdNum);
   const createBuildingMutation = useCreateBuilding();
   const deleteBuildingMutation = useDeleteBuilding();
@@ -83,7 +79,7 @@ export function MapStudioComposer() {
       });
       setCurrentPage(1);
     } catch (error: unknown) {
-      if (error instanceof Error) setAlertMessage(error.message); // REPLACED NATIVE ALERT
+      if (error instanceof Error) setAlertMessage(error.message);
     }
   };
 
@@ -92,7 +88,7 @@ export function MapStudioComposer() {
     try {
       await deleteBuildingMutation.mutateAsync({ buildingId: Number(id) });
     } catch (error: unknown) {
-      if (error instanceof Error) setAlertMessage(error.message); // REPLACED NATIVE ALERT
+      if (error instanceof Error) setAlertMessage(error.message);
     }
   };
 
@@ -192,7 +188,6 @@ export function MapStudioComposer() {
         </div>
       )}
 
-      {/* SHADCN ALERT DIALOG COMPONENT */}
       <AlertDialog
         open={!!alertMessage}
         onOpenChange={(open) => !open && setAlertMessage(null)}

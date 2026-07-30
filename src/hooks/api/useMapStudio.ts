@@ -1,14 +1,12 @@
 import { mapStudioActions } from "@/lib/actions/mapStudio";
 import {
-    RegisterBuildingRequest,
-    UpdateBuildingPrivacyRequest,
-    UpdateFloorPlanRequest,
-    UpdateGraphRequest
+  RegisterBuildingRequest,
+  UpdateBuildingPrivacyRequest,
+  UpdateFloorPlanRequest,
+  UpdateGraphRequest,
 } from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./queryKeys";
-
-// --- BUILDINGS ---
 
 export function useGetBuildings(orgId: number | undefined) {
   return useQuery({
@@ -21,10 +19,17 @@ export function useGetBuildings(orgId: number | undefined) {
 export function useCreateBuilding() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ orgId, data }: { orgId: number; data: RegisterBuildingRequest }) => 
-      mapStudioActions.createBuilding(orgId, data),
+    mutationFn: ({
+      orgId,
+      data,
+    }: {
+      orgId: number;
+      data: RegisterBuildingRequest;
+    }) => mapStudioActions.createBuilding(orgId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.buildings(variables.orgId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mapStudio.buildings(variables.orgId),
+      });
     },
   });
 }
@@ -32,9 +37,9 @@ export function useCreateBuilding() {
 export function useDeleteBuilding() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ buildingId }: { buildingId: number }) => 
+    mutationFn: ({ buildingId }: { buildingId: number }) =>
       mapStudioActions.deleteBuilding(buildingId),
-    // Invalidating the base key ensures all orgs refresh if necessary
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["buildings"] });
     },
@@ -44,16 +49,22 @@ export function useDeleteBuilding() {
 export function useUpdateBuildingPrivacy() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ buildingId, orgId, data }: { buildingId: number; orgId: number; data: UpdateBuildingPrivacyRequest }) => 
-      mapStudioActions.updateBuildingPrivacy(buildingId, data),
+    mutationFn: ({
+      buildingId,
+      orgId,
+      data,
+    }: {
+      buildingId: number;
+      orgId: number;
+      data: UpdateBuildingPrivacyRequest;
+    }) => mapStudioActions.updateBuildingPrivacy(buildingId, data),
     onSuccess: (_, variables) => {
-      // Instantly refreshes the building list UI without a page reload
-      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.buildings(variables.orgId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mapStudio.buildings(variables.orgId),
+      });
     },
   });
 }
-
-// --- FLOOR PLANS ---
 
 export function useGetFloorPlans(buildingId: number | undefined) {
   return useQuery({
@@ -66,8 +77,13 @@ export function useGetFloorPlans(buildingId: number | undefined) {
 export function useUpdateFloorPlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ floorPlanId, data }: { floorPlanId: number; data: UpdateFloorPlanRequest }) => 
-      mapStudioActions.updateFloorPlan(floorPlanId, data),
+    mutationFn: ({
+      floorPlanId,
+      data,
+    }: {
+      floorPlanId: number;
+      data: UpdateFloorPlanRequest;
+    }) => mapStudioActions.updateFloorPlan(floorPlanId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["floorPlans"] });
     },
@@ -77,15 +93,13 @@ export function useUpdateFloorPlan() {
 export function useDeleteFloorPlan() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ floorPlanId }: { floorPlanId: number }) => 
+    mutationFn: ({ floorPlanId }: { floorPlanId: number }) =>
       mapStudioActions.deleteFloorPlan(floorPlanId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["floorPlans"] });
     },
   });
 }
-
-// --- SPATIAL GRAPHS ---
 
 export function useGetSpatialGraph(floorPlanId: number | undefined) {
   return useQuery({
@@ -98,10 +112,17 @@ export function useGetSpatialGraph(floorPlanId: number | undefined) {
 export function useUpdateSpatialGraph() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ floorPlanId, data }: { floorPlanId: number; data: UpdateGraphRequest }) => 
-      mapStudioActions.updateSpatialGraph(floorPlanId, data),
+    mutationFn: ({
+      floorPlanId,
+      data,
+    }: {
+      floorPlanId: number;
+      data: UpdateGraphRequest;
+    }) => mapStudioActions.updateSpatialGraph(floorPlanId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.mapStudio.spatialGraph(variables.floorPlanId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.mapStudio.spatialGraph(variables.floorPlanId),
+      });
     },
   });
 }
@@ -109,7 +130,7 @@ export function useUpdateSpatialGraph() {
 export const useGenerateNodeTts = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ nodeId, text }: { nodeId: number; text: string }) => 
+    mutationFn: ({ nodeId, text }: { nodeId: number; text: string }) =>
       mapStudioActions.generateNodeTts(nodeId, text),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["spatialGraph"] });
@@ -136,8 +157,6 @@ export const useDeleteNode = () => {
     },
   });
 };
-
-// --- STATS (TICKET 8) ---
 
 export function useGetBuildingStats(buildingId: number | undefined) {
   return useQuery({

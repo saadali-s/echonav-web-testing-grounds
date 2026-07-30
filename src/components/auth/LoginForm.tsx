@@ -29,10 +29,8 @@ export function LoginForm() {
     setError("");
 
     try {
-      // Trigger the real Spring Boot login flow
       await login(email, password);
     } catch (err: unknown) {
-      // Catch Spring Boot's custom ErrorResponse
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
@@ -44,7 +42,6 @@ export function LoginForm() {
 
   return (
     <div className="space-y-4 animate-in fade-in zoom-in-95 duration-500">
-      {/* Local Error Display */}
       {error && (
         <div className="p-3 text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-md text-center">
           {error}

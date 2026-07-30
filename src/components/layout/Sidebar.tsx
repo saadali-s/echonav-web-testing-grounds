@@ -11,7 +11,7 @@ import {
   Map,
   RadioTower,
   Settings,
-  Users
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,15 +31,16 @@ export function Sidebar() {
   const [manualCollapsed, setManualCollapsed] = useState(false);
   const { isLoggedIn } = useAuth();
 
-  // Completely hide the sidebar if we are on an auth/activation page
-  const isPublicRoute = pathname === "/" || pathname.startsWith("/auth") || pathname.startsWith("/reset-password");
-  
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/reset-password");
+
   if (!isLoggedIn || isPublicRoute) return null;
 
   const isAutoCollapsed = /\/map-studio\/[a-zA-Z0-9_-]+/.test(pathname);
   const isCollapsed = manualCollapsed || isAutoCollapsed;
 
-  // Define if the settings route is active
   const isSettingsActive = pathname.startsWith("/settings");
 
   return (
@@ -49,7 +50,6 @@ export function Sidebar() {
         isCollapsed ? "w-20" : "w-64",
       )}
     >
-      {/* HEADER SECTION */}
       <div
         className={cn(
           "h-20 flex items-center border-b border-chart-3 shrink-0 overflow-hidden transition-all duration-300",
@@ -89,7 +89,6 @@ export function Sidebar() {
         )}
       </div>
 
-      {/* COLLAPSED TOGGLE VIEW */}
       {isCollapsed && (
         <div className="flex justify-center py-4 border-b border-chart-3 shrink-0">
           <Button
@@ -103,7 +102,6 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* NAVIGATION SECTION */}
       <nav
         className={cn(
           "flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden transition-all duration-300",
@@ -143,7 +141,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* FOOTER SECTION */}
       <div
         className={cn(
           "border-t border-chart-3 bg-sidebar/50 shrink-0 transition-all duration-300",

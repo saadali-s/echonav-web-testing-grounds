@@ -7,7 +7,7 @@ import {
   Ruler,
   Trash2,
   AlertCircle,
-} from "lucide-react"; // <-- Added AlertCircle
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -30,7 +30,7 @@ import {
   useDeleteFloorPlan,
   useGetFloorPlans,
   useGetFloorPlanStats,
-} from "@/hooks/api/useMapStudio"; // <-- Added useGetFloorPlanStats
+} from "@/hooks/api/useMapStudio";
 import { useQueryClient } from "@tanstack/react-query";
 import { CreateFloorPlan } from "./CreateFloorPlan";
 
@@ -50,7 +50,6 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
   const buildingIdNum = Number(buildingId);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // NEW: Alert State for Errors
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const {
@@ -91,7 +90,7 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
     try {
       await deleteMutation.mutateAsync({ floorPlanId: Number(id) });
     } catch (error: unknown) {
-      if (error instanceof Error) setAlertMessage(error.message); // REPLACED NATIVE ALERT
+      if (error instanceof Error) setAlertMessage(error.message);
     }
   };
 
@@ -151,7 +150,6 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
 
       {!isLoading && !isError && paginatedFloors.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
-          {/* <-- Replaced static cards with our newly extracted FloorPlanCard --> */}
           {paginatedFloors.map((floor) => (
             <FloorPlanCard
               key={floor.id}
@@ -163,7 +161,6 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
         </div>
       )}
 
-      {/* FINAL SHADCN ALERT DIALOG */}
       <AlertDialog
         open={!!alertMessage}
         onOpenChange={(open) => !open && setAlertMessage(null)}
@@ -204,7 +201,6 @@ export function BuildingMapsComposer({ buildingId }: { buildingId: string }) {
   );
 }
 
-// --- TICKET 8 EXTRACTED COMPONENT ---
 interface FloorPlanCardProps {
   buildingId: string;
   floor: FloorData;
@@ -212,7 +208,6 @@ interface FloorPlanCardProps {
 }
 
 function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
-  // <-- Safe hook call inside isolated component
   const { data: stats } = useGetFloorPlanStats(Number(floor.id));
 
   return (
@@ -226,7 +221,7 @@ function FloorPlanCard({ buildingId, floor, onDelete }: FloorPlanCardProps) {
             <h3 className="font-black text-lg text-zinc-950 dark:text-zinc-100 uppercase tracking-tight">
               {floor.name}
             </h3>
-            {/* <-- Dynamic UI mapped to backend counts --> */}
+
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
               {stats?.nodeCount || 0} Nodes | {stats?.edgeCount || 0} Edges
             </p>

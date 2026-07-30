@@ -8,8 +8,8 @@ export function useGetStaff(orgId: number | undefined) {
     queryKey: queryKeys.staff.roster(orgId),
     queryFn: () => staffActions.getStaff(orgId!),
     enabled: !!orgId && !isNaN(orgId),
-    // SMART POLLING: Refreshes active roster every 10 seconds
-    refetchInterval: 10000, 
+
+    refetchInterval: 10000,
   });
 }
 
@@ -18,8 +18,12 @@ export function useInviteStaff() {
   return useMutation({
     mutationFn: (data: InviteStaffRequest) => staffActions.inviteStaff(data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(variables.organisationId) });
-      queryClient.invalidateQueries({ queryKey: ["staff", "invites", variables.organisationId] });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.staff.roster(variables.organisationId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["staff", "invites", variables.organisationId],
+      });
     },
   });
 }
@@ -29,7 +33,7 @@ export function useGetPendingInvites(orgId: number | undefined) {
     queryKey: ["staff", "invites", orgId],
     queryFn: () => staffActions.getPendingInvites(orgId!),
     enabled: !!orgId && !isNaN(orgId),
-    // SMART POLLING: Aggressively checks for invite acceptance every 3 seconds
+
     refetchInterval: 3000,
   });
 }
@@ -40,7 +44,9 @@ export function useDeleteStaff(orgId: number | undefined) {
     mutationFn: (staffId: number) => staffActions.deleteStaff(staffId),
     onSuccess: () => {
       if (orgId) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.staff.roster(orgId) });
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.staff.roster(orgId),
+        });
       } else {
         queryClient.invalidateQueries({ queryKey: ["staff"] });
       }
@@ -54,7 +60,9 @@ export function useDeleteStaffInvite(orgId: number | undefined) {
     mutationFn: (inviteId: number) => staffActions.deleteStaffInvite(inviteId),
     onSuccess: () => {
       if (orgId) {
-        queryClient.invalidateQueries({ queryKey: ["staff", "invites", orgId] });
+        queryClient.invalidateQueries({
+          queryKey: ["staff", "invites", orgId],
+        });
       } else {
         queryClient.invalidateQueries({ queryKey: ["staff", "invites"] });
       }

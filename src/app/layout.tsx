@@ -2,13 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-// Providers
 import { AuthProvider } from "@/components/layout/auth-provider";
-import { QueryProvider } from "@/components/layout/query-provider"; // <-- NEW IMPORT
+import { QueryProvider } from "@/components/layout/query-provider";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
-// Layout Components
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
 
@@ -36,7 +34,6 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* --- INJECT THE QUERY PROVIDER HERE --- */}
           <QueryProvider>
             <AuthProvider>
               <SidebarProvider>

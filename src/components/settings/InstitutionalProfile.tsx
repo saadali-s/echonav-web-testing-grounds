@@ -20,7 +20,6 @@ import { OrganisationDto, UpdateOrgRequest } from "@/lib/api/types";
 export function InstitutionalProfile() {
   const { user } = useAuth();
 
-  // Pulling the ID from your team's specific metadata structure
   const activeOrgId = user?.user_metadata?.organization_id
     ? parseInt(user.user_metadata.organization_id)
     : undefined;

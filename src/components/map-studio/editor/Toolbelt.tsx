@@ -40,7 +40,6 @@ export function Toolbelt({
 
   return (
     <div className="w-16 bg-zinc-950 flex flex-col items-center py-4 gap-2 border-r-2 border-zinc-800 z-20 shrink-0">
-      {/* Navigation Action */}
       <div className="w-full flex justify-center border-b-2 border-zinc-800 pb-4 mb-2">
         <button
           onClick={() => router.back()}
@@ -51,7 +50,6 @@ export function Toolbelt({
         </button>
       </div>
 
-      {/* Existing Canvas Tools */}
       {tools.map((t) => {
         const Icon = t.icon;
         const isActive = activeTool === t.id;

@@ -74,7 +74,7 @@ export function RecentMapsCarousel({ plans }: { plans: FloorPlan[] }) {
             </CarouselItem>
           ))}
         </CarouselContent>
-        {/* Navigation Arrows */}
+
         <div className="absolute -top-10 right-12 flex gap-2">
           <CarouselPrevious className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />
           <CarouselNext className="relative top-0 right-0 left-0 transform-none h-8 w-8 rounded-lg bg-white dark:bg-zinc-900 border-2 border-zinc-950 dark:border-zinc-800 text-zinc-950 dark:text-white  dark:shadow-none hover:bg-zinc-100 dark:hover:bg-zinc-800" />

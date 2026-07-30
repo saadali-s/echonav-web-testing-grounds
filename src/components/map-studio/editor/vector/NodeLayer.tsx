@@ -3,7 +3,7 @@ import { NodeData } from "./types";
 interface NodeLayerProps {
   nodes: NodeData[];
   selectedNodeIds: string[];
-  scale: number; // Added to enable scale-invariant rendering
+  scale: number;
 }
 
 export function NodeLayer({ nodes, selectedNodeIds, scale }: NodeLayerProps) {
@@ -18,20 +18,18 @@ export function NodeLayer({ nodes, selectedNodeIds, scale }: NodeLayerProps) {
             style={{
               left: `${node.x}px`,
               top: `${node.y}px`,
-              // Counter-scale to maintain a fixed physical size on screen, anchored at the pin tip
+
               transform: `translate(-50%, -100%) scale(${1 / scale})`,
               transformOrigin: "bottom center",
               zIndex: isSelected ? 50 : 10,
             }}
           >
-            {/* The Dynamic Label Box */}
             <div
               className={`mb-1 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border-2 whitespace-nowrap transition-colors ${isSelected ? "bg-indigo-500 text-white border-indigo-700 " : "bg-white dark:bg-zinc-950 text-zinc-950 dark:text-white border-zinc-950 dark:border-zinc-800  dark:shadow-none"}`}
             >
               {node.label}
             </div>
 
-            {/* The Teardrop Pin Icon */}
             <div
               className={`relative flex items-center justify-center transition-transform origin-bottom ${isSelected ? "scale-125" : "hover:scale-110"}`}
             >

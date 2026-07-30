@@ -9,7 +9,6 @@ export function ModeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    // Flips the theme to the opposite of whatever is currently active
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 

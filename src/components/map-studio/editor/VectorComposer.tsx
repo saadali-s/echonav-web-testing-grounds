@@ -53,7 +53,6 @@ export function VectorComposer({
   const isUncalibrated = initialScale === "" || initialScale === "0.05";
   const parsedScale = parseFloat(initialScale);
 
-  // 1. Tool Locks & State Resets
   useEffect(() => {
     if (isUncalibrated && state.activeTool !== "SCALE") {
       state.setActiveTool("SCALE");
@@ -67,7 +66,6 @@ export function VectorComposer({
     if (state.activeTool !== "ROUTE") state.clearRouting();
   }, [state.activeTool, state]);
 
-  // 2. Initial Hydration
   useEffect(() => {
     if (initialNodes.length > 0 && !hasHydrated.current) {
       resetHistory(initialNodes, initialEdges);
@@ -76,7 +74,6 @@ export function VectorComposer({
     }
   }, [initialNodes, initialEdges, resetHistory, state]);
 
-  // 3. Delegate Event Handling to Hooks
   useCanvasKeyboardEvents({ state, nodes, edges, pushHistory, undo, redo });
 
   const {
@@ -97,7 +94,6 @@ export function VectorComposer({
     onCalculateRoute,
   });
 
-  // 4. Derived Math for Inspector
   const calibrationPixelDistance = useMemo(() => {
     if (state.calibrationStart && state.calibrationEnd) {
       return Math.hypot(
@@ -123,7 +119,6 @@ export function VectorComposer({
     return null;
   }, [state.selection, state.selectedEdgeIds, edges, nodes, parsedScale]);
 
-  // 5. Database Save Handlers
   const handleSaveWrapper = async () => {
     pushHistory(nodes, edges);
     if (onSaveDb) {

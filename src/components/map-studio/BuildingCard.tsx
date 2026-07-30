@@ -33,8 +33,6 @@ import {
   useGetBuildingStats,
 } from "@/hooks/api/useMapStudio";
 
-// 1. ISOLATED PRIVACY TOGGLE COMPONENT (From alphas)
-
 interface PrivacyToggleProps {
   buildingId: string;
   buildingName: string;
@@ -143,8 +141,6 @@ export function PrivacyToggle({
   );
 }
 
-// 2. MAIN BUILDING CARD COMPONENT
-
 export interface BuildingData {
   id: string;
   name: string;
@@ -174,7 +170,6 @@ export function BuildingCard({ building, orgId, onDelete }: BuildingCardProps) {
           strokeWidth={1.5}
         />
 
-        {/* Confirm Delete Popup Wrapper */}
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button

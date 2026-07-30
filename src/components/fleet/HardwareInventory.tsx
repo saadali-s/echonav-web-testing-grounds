@@ -49,7 +49,6 @@ export function HardwareInventory({
 
   return (
     <Card className="h-full p-0 flex flex-col rounded-xl border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
-      {/* Header & Controls Area */}
       <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 pb-6 p-6">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -61,7 +60,6 @@ export function HardwareInventory({
               )}
             </CardTitle>
 
-            {/* Summary Chips */}
             <div className="flex gap-2">
               <Badge
                 variant="outline"

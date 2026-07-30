@@ -13,10 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { mapStudioActions } from "@/lib/actions/mapStudio";
-import { FileText, Plus, UploadCloud, AlertCircle } from "lucide-react"; // <-- Added AlertCircle
+import { FileText, Plus, UploadCloud, AlertCircle } from "lucide-react";
 import { useRef, useState } from "react";
 
-// SHADCN IMPORTS
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +38,6 @@ export function CreateFloorPlan({
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // NEW: Alert State
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const [newFloorLabel, setNewFloorLabel] = useState("");
@@ -54,7 +52,7 @@ export function CreateFloorPlan({
 
   const handleUpload = async () => {
     if (!newFloorLabel.trim() || !selectedFile) {
-      setAlertMessage("Please provide both a label and a file."); // REPLACED NATIVE ALERT
+      setAlertMessage("Please provide both a label and a file.");
       return;
     }
 
@@ -66,7 +64,6 @@ export function CreateFloorPlan({
         selectedFile,
       );
 
-      // If we just uploaded an .echonav file, catch the transient nodes before switching screens
       if (res.transientNodes || res.transientEdges) {
         sessionStorage.setItem(
           `echonav_import_${res.id}`,
@@ -183,7 +180,6 @@ export function CreateFloorPlan({
         </DialogContent>
       </Dialog>
 
-      {/* FINAL SHADCN ALERT DIALOG */}
       <AlertDialog
         open={!!alertMessage}
         onOpenChange={(open) => !open && setAlertMessage(null)}

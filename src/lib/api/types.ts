@@ -1,16 +1,8 @@
-// ============================================================================
-// ECHONAV DOMAIN TYPES
-// Single Source of Truth for Frontend/Backend Data Contracts
-// ============================================================================
-
-// --- USER MANAGEMENT DOMAIN ---
-
 export interface UserDto {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
-  // Based on Phase 1, the backend returns the raw NavigatingUser entity/DTO
 }
 
 export interface InviteUserRequest {
@@ -26,8 +18,6 @@ export interface InviteUserResponse {
   pairingPin: string;
 }
 
-// --- AUTH DOMAIN ---
-
 export interface LoginResponse {
   token: string;
   role: string;
@@ -39,7 +29,7 @@ export interface RegisterOrgRequest {
   orgName: string;
   adminName: string;
   email: string;
-  password?: string; // Optional on frontend if handling via separate state, but required by backend
+  password?: string; 
   country: string;
   address: string;
   contactNo: string;
@@ -49,7 +39,7 @@ export interface UpdateOrgRequest {
   orgName: string;
   contactNo: string;
   address: string;
-  adminName: string; // <-- ADDED FOR PHASE 2
+  adminName: string; 
 }
 
 export interface OrganisationDto {
@@ -83,8 +73,6 @@ export interface ActivateInviteRequest {
   password?: string;
 }
 
-// --- MAP STUDIO DOMAIN ---
-
 export interface BuildingDto {
   id: number;
   name: string;
@@ -115,7 +103,7 @@ export interface FloorPlanDto {
   id: number;
   buildingId: number | null;
   name: string;
-  floorPlanUrl: string; // Updated from legacy floorPlanDWG
+  floorPlanUrl: string; 
   scale: number | null;
   access: "PUBLIC" | "PRIVATE";
 }
@@ -195,27 +183,25 @@ export interface GraphEdgePayload {
   target: string;
 }
 
-// --- FLEET DOMAIN ---
-
 export interface BeaconDto {
   id: number;
   nodeId: number | null;
   nodeLabel?: string | null; 
-  uuid: string | null; // Mapped from Java UUID
+  uuid: string | null; 
   major: number | null;
   minor: number | null;
   calibratedRssiBaseline: number | null;
-  status: string; // e.g., "ACTIVE", "UNLINKED"
-  linkedDate: string | null; // Mapped from ZonedDateTime
+  status: string;
+  linkedDate: string | null; 
 }
 
 export interface DeploymentTaskDto {
   id: number;
   nodeId: number | null;
   staffId: number | null;
-  status: string; // e.g., "TO_DO", "IN_PROGRESS", "VERIFIED"
-  timeAssigned: string | null; // Mapped from ZonedDateTime
-  timeCompleted: string | null; // Mapped from ZonedDateTime
+  status: string; 
+  timeAssigned: string | null; 
+  timeCompleted: string | null; 
 }
 
 export interface CreateBatchTasksRequest {
@@ -224,15 +210,13 @@ export interface CreateBatchTasksRequest {
 }
 
 export interface LinkBeaconRequest {
-  uuid: string; // Mapped from Java UUID
+  uuid: string; 
   nodeId: number;
 }
 
 export interface UpdateTaskRequest {
   status: string;
 }
-
-// --- NAVIGATION DOMAIN ---
 
 export interface RouteRequest {
   floorPlanId: number;
@@ -246,8 +230,6 @@ export interface RouteResponse {
   estimatedTimeSeconds: number;
   status: "SUCCESS" | "NO_PATH_FOUND";
 }
-
-// --- STAFF DOMAIN ---
 
 export interface StaffDto {
   id: number;
@@ -268,7 +250,7 @@ export interface StaffInviteDto {
   id: number;
   email: string;
   role: string;
-  status: string; // "PENDING" | "EXPIRED"
+  status: string; 
   expirationDate: string;
 }
 
@@ -277,12 +259,10 @@ export interface PairingPinDto {
   firstName: string;
   lastName: string;
   email: string;
-  pinCode: string; // The concealed ****** pin
+  pinCode: string; 
   generatedBy: string;
   invitedDate: string;
 }
-
-// --- DASHBOARD DOMAIN ---
 
 export interface StatMetric {
   count: number;

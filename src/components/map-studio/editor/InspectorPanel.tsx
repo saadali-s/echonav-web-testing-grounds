@@ -7,7 +7,6 @@ import { MapPin, Navigation, Route, Ruler } from "lucide-react";
 import { ToolMode } from "./Toolbelt";
 import { NodeData } from "./vector/types";
 
-// Import Modularized Panels
 import { EdgeInspector } from "./inspectors/EdgeInspector";
 import { EmptyState } from "./inspectors/EmptyState";
 import { NodeInspector } from "./inspectors/NodeInspector";
@@ -112,7 +111,6 @@ export function InspectorPanel({
         </h3>
       </div>
 
-      {/* Dynamic Inspector Content */}
       {isScaling ? (
         <ScaleCalibration
           pixelDistance={calibrationPixelDistance}
@@ -138,7 +136,6 @@ export function InspectorPanel({
         <EmptyState />
       )}
 
-      {/* Bottom Action Bar */}
       {(isNode || isEdge) && !isScaling && !isRouting && (
         <div className="p-5 border-t-2 border-zinc-950 bg-zinc-50 space-y-3 mt-auto">
           {isNode ? (

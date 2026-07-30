@@ -40,7 +40,6 @@ export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
 
       <CardContent className="p-0 overflow-x-auto flex-1">
         <div className="min-w-[700px]">
-          {/* Column Headers */}
           <div className="grid grid-cols-[1.2fr_1.5fr_1fr_1.5fr_1fr_80px] gap-4 px-6 py-4 border-b-2 border-zinc-950 dark:border-zinc-800 text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-widest bg-zinc-50/50 dark:bg-zinc-900/50">
             <span>Name</span>
             <span>Email</span>
@@ -50,7 +49,6 @@ export function ActiveUserList({ users, onDelete }: ActiveUserListProps) {
             <span className="text-center">Remove</span>
           </div>
 
-          {/* User Rows */}
           <div className="flex flex-col">
             {users.length === 0 ? (
               <div className="px-6 py-8 text-center text-sm font-bold text-zinc-500 uppercase tracking-widest bg-zinc-50/30 dark:bg-zinc-900/30">

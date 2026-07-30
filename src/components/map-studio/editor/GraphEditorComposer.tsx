@@ -58,7 +58,6 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     ? String(graphData.floorPlan.scale)
     : "";
 
-  // Progress Bar Simulation
   useEffect(() => {
     const timer = setInterval(() => {
       setProgress((oldProgress) => {
@@ -73,7 +72,6 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
     return () => clearInterval(timer);
   }, []);
 
-  // HYDRATION: Check for imported .echonav transient data
   const importedDataStr =
     typeof window !== "undefined"
       ? sessionStorage.getItem(`echonav_import_${idNum}`)
@@ -115,7 +113,6 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
         data: payload,
       });
 
-      // Cleanup hydration buffer explicitly after the transient maps hit the database tables
       sessionStorage.removeItem(`echonav_import_${idNum}`);
       setAlertMessage("Vector graph securely saved to database.");
 
@@ -312,13 +309,12 @@ export function GraphEditorComposer({ floorPlanId }: { floorPlanId: string }) {
       >
         <AlertDialogContent className="border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none rounded-xl p-6 sm:max-w-[425px]">
           <AlertDialogHeader className="flex flex-row items-center gap-4 space-y-0">
-            {/* DYNAMIC ICON & BACKGROUND */}
             <div
               className={`${alertConfig.bg} p-2.5 rounded-lg border-2 ${alertConfig.border} shrink-0`}
             >
               {alertConfig.icon}
             </div>
-            {/* DYNAMIC TITLE */}
+
             <AlertDialogTitle className="font-black uppercase tracking-wider text-xl text-zinc-950 dark:text-zinc-100 m-0">
               {alertConfig.title}
             </AlertDialogTitle>

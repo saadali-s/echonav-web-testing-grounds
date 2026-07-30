@@ -37,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    // Hydrate the UI state entirely from localStorage
     const storedUser = localStorage.getItem("echonav_user");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
@@ -51,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await authActions.login(email, password);
-    
+
     const { token, role, organisationId, userId } = response;
 
     const userData: User = {
@@ -64,10 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     };
 
-    // 1. Store the UI user state
     localStorage.setItem("echonav_user", JSON.stringify(userData));
-    
-    // 2. Store the REAL JWT in a standard cookie so both Client and Server can read it
+
     document.cookie = `echonav_token=${token}; path=/; max-age=86400; SameSite=Lax`;
 
     setAuthState({
@@ -79,16 +76,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/dashboard";
   }, []);
 
-  const register = useCallback(async (payload: RegisterOrgRequest) => {
-    await authActions.register(payload);
-    // The backend login requires a password, which is optional on the frontend type but required here
-    if (payload.password) {
-      await login(payload.email, payload.password);
-    } else {
-      // Fallback if password isn't passed through for some reason
-      window.location.href = "/auth?tab=login";
-    }
-  }, [login]);
+  const register = useCallback(
+    async (payload: RegisterOrgRequest) => {
+      await authActions.register(payload);
+
+      if (payload.password) {
+        await login(payload.email, payload.password);
+      } else {
+        window.location.href = "/auth?tab=login";
+      }
+    },
+    [login],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -96,10 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       console.warn("Cleared local state regardless of server response.");
     } finally {
-      // 1. Clear Local Storage
       localStorage.removeItem("echonav_user");
-      
-      // Destroy the real JWT cookie
+
       document.cookie = `echonav_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
 
       setAuthState({ isLoggedIn: false, user: null, activeOrgId: null });
@@ -114,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       register,
     }),
-    [authState, login, logout, register]
+    [authState, login, logout, register],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

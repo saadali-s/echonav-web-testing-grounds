@@ -1,11 +1,13 @@
-// Centralized Query Key Factory
 export const queryKeys = {
   mapStudio: {
     buildings: (orgId?: number) => ["buildings", orgId] as const,
     floorPlans: (buildingId?: number) => ["floorPlans", buildingId] as const,
-    spatialGraph: (floorPlanId?: number) => ["spatialGraph", floorPlanId] as const,
-    buildingStats: (buildingId?: number) => ["buildingStats", buildingId] as const,
-    floorPlanStats: (floorPlanId?: number) => ["floorPlanStats", floorPlanId] as const,
+    spatialGraph: (floorPlanId?: number) =>
+      ["spatialGraph", floorPlanId] as const,
+    buildingStats: (buildingId?: number) =>
+      ["buildingStats", buildingId] as const,
+    floorPlanStats: (floorPlanId?: number) =>
+      ["floorPlanStats", floorPlanId] as const,
   },
   fleet: {
     staffTasks: (staffId?: number) => ["staffTasks", staffId] as const,

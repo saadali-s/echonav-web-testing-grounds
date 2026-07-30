@@ -24,7 +24,6 @@ export function UserAccountNav() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Show a blank brutalist box for a split second while loading
   if (!isMounted) {
     return (
       <Button
@@ -41,7 +40,6 @@ export function UserAccountNav() {
   const displayName = user?.user_metadata?.display_name || "Admin";
   const userEmail = user?.email || "No email provided";
 
-  // Extract initials safely
   const initials = displayName
     .split(" ")
     .map((n: string) => n[0])
@@ -60,7 +58,6 @@ export function UserAccountNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* Brutalist Avatar Button */}
         <Button
           variant="ghost"
           className="relative h-10 w-10 rounded-lg border-2 border-zinc-950 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all overflow-hidden shrink-0 p-0 dark:shadow-none active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
@@ -74,7 +71,6 @@ export function UserAccountNav() {
         </Button>
       </DropdownMenuTrigger>
 
-      {/* Brutalist Dropdown Content */}
       <DropdownMenuContent
         className="w-64 border-2 border-zinc-950 dark:border-zinc-800 rounded-xl dark:shadow-none p-2 bg-white dark:bg-zinc-950"
         align="end"
@@ -118,7 +114,6 @@ export function UserAccountNav() {
         <DropdownMenuItem
           className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-500 dark:focus:bg-red-950/30 cursor-pointer font-bold rounded-lg p-3 transition-colors"
           onSelect={(e) => {
-            // Prevent default to stop the dropdown from destroying itself before the window navigates
             e.preventDefault();
             handleSignOut();
           }}

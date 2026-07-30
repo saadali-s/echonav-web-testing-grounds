@@ -42,7 +42,6 @@ function BuildingForm({
 
   const streetInputRef = useRef<HTMLInputElement>(null);
 
-  // Robust Google Autocomplete
   useGooglePlacesAutocomplete(streetInputRef, "", (details) => {
     setStreet(details.streetAddress);
     setCity(details.city);
@@ -53,7 +52,6 @@ function BuildingForm({
   const handleRegister = () => {
     if (!name || !street) return;
 
-    // Construct the display address for the card
     const fullAddress = `${street}${city ? `, ${city}` : ""}${zip ? `, ${zip}` : ""}`;
 
     onAdd({

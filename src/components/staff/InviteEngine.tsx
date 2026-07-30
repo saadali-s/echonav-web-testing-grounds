@@ -47,7 +47,7 @@ export function InviteEngine() {
         organisationId: Number(activeOrgId),
         invitedById: Number(user.id),
       });
-      // Clear the form on success
+
       setEmail("");
       setAlertMessage("Invitation sent successfully!");
     } catch (error: unknown) {
@@ -67,9 +67,7 @@ export function InviteEngine() {
         <CardContent className="p-0">
           <form onSubmit={handleSubmit} className="p-8">
             <div className="flex flex-col gap-6">
-              {/* Input Grid Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {/* Role Selection */}
                 <div className="space-y-3">
                   <label className="text-xs font-black text-zinc-950 dark:text-zinc-300 uppercase tracking-widest">
                     Assign Role
@@ -85,7 +83,6 @@ export function InviteEngine() {
                   </Select>
                 </div>
 
-                {/* Email Input */}
                 <div className="space-y-3 sm:col-span-2">
                   <label className="text-xs font-black text-zinc-950 dark:text-zinc-300 uppercase tracking-widest">
                     Email Address
@@ -104,7 +101,6 @@ export function InviteEngine() {
                 </div>
               </div>
 
-              {/* Footer & Action Area */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold uppercase tracking-wider text-center sm:text-left">
                   Invites expire automatically after 48 hours for security

@@ -18,8 +18,6 @@ export function AuthComposer() {
 
   return (
     <div className="flex flex-col items-center justify-start gap-8 w-full max-w-5xl animate-in fade-in zoom-in-95 duration-500">
-      
-      {/* Header & Logo */}
       <div className="flex flex-col items-center gap-2 text-center">
         <Link href="/" className="hover:opacity-80 transition-opacity">
           <Image
@@ -36,7 +34,6 @@ export function AuthComposer() {
         </p>
       </div>
 
-      {/* Tabs Control */}
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}

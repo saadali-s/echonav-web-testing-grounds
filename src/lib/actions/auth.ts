@@ -6,7 +6,7 @@ import {
   PairingRequest,
   RegisterOrgRequest,
   UpdateOrgRequest,
-  OrganisationDto
+  OrganisationDto,
 } from "@/lib/api/types";
 import { AxiosError } from "axios";
 
@@ -17,47 +17,74 @@ export const authActions = {
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Registration failed.");
+      throw new Error(
+        axiosError.response?.data?.message || "Registration failed.",
+      );
     }
   },
 
   login: async (email: string, password: string): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>("/api/auth/login", { email, password });
+      const response = await axiosInstance.post<LoginResponse>(
+        "/api/auth/login",
+        { email, password },
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Invalid credentials.");
+      throw new Error(
+        axiosError.response?.data?.message || "Invalid credentials.",
+      );
     }
   },
 
   pairDevice: async (payload: PairingRequest): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>("/api/auth/pair", payload);
+      const response = await axiosInstance.post<LoginResponse>(
+        "/api/auth/pair",
+        payload,
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Invalid pairing PIN.");
+      throw new Error(
+        axiosError.response?.data?.message || "Invalid pairing PIN.",
+      );
     }
   },
 
-  mobileSignup: async (payload: MobileSignupRequest): Promise<LoginResponse> => {
+  mobileSignup: async (
+    payload: MobileSignupRequest,
+  ): Promise<LoginResponse> => {
     try {
-      const response = await axiosInstance.post<LoginResponse>("/api/auth/mobile-signup", payload);
+      const response = await axiosInstance.post<LoginResponse>(
+        "/api/auth/mobile-signup",
+        payload,
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Mobile signup failed.");
+      throw new Error(
+        axiosError.response?.data?.message || "Mobile signup failed.",
+      );
     }
   },
 
-  activateInvite: async (token: string, payload: ActivateInviteRequest): Promise<string> => {
+  activateInvite: async (
+    token: string,
+    payload: ActivateInviteRequest,
+  ): Promise<string> => {
     try {
-      const response = await axiosInstance.post(`/api/auth/activate/${token}`, payload);
+      const response = await axiosInstance.post(
+        `/api/auth/activate/${token}`,
+        payload,
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Activation failed.");
+      throw new Error(
+        axiosError.response?.data?.message || "Activation failed.",
+      );
     }
   },
 
@@ -69,25 +96,36 @@ export const authActions = {
     }
   },
 
-  // --- NEW: Fetch Organisation Details ---
   getOrganisation: async (orgId: number): Promise<OrganisationDto> => {
     try {
-      const response = await axiosInstance.get<OrganisationDto>(`/api/auth/organisations/${orgId}`);
+      const response = await axiosInstance.get<OrganisationDto>(
+        `/api/auth/organisations/${orgId}`,
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Failed to fetch organisation details.");
+      throw new Error(
+        axiosError.response?.data?.message ||
+          "Failed to fetch organisation details.",
+      );
     }
   },
 
-  // --- NEW: Update Organisation ---
-  updateOrganisation: async (orgId: number, payload: UpdateOrgRequest): Promise<OrganisationDto> => {
+  updateOrganisation: async (
+    orgId: number,
+    payload: UpdateOrgRequest,
+  ): Promise<OrganisationDto> => {
     try {
-      const response = await axiosInstance.put<OrganisationDto>(`/api/auth/organisations/${orgId}`, payload);
+      const response = await axiosInstance.put<OrganisationDto>(
+        `/api/auth/organisations/${orgId}`,
+        payload,
+      );
       return response.data;
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message: string }>;
-      throw new Error(axiosError.response?.data?.message || "Failed to update organisation.");
+      throw new Error(
+        axiosError.response?.data?.message || "Failed to update organisation.",
+      );
     }
-  }
+  },
 };

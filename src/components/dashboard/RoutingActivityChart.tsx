@@ -18,11 +18,9 @@ const textureStyle = {
     "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 8px)",
 };
 
-// Accept the dynamic data
 export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
   return (
     <Card className="relative p-0 flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl  dark:shadow-none overflow-hidden h-full">
-
       <CardHeader className="relative z-10 border-b-2 border-zinc-950 dark:border-zinc-800 bg-violet-400 dark:bg-violet-900 px-5 py-3 shrink-0">
         <CardTitle className="font-black uppercase text-sm tracking-wider text-violet-1050 dark:text-violet-100">
           Routing Engine Activity

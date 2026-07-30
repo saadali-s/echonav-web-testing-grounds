@@ -1,5 +1,9 @@
 import { fleetActions } from "@/lib/actions/fleet";
-import { CreateBatchTasksRequest, LinkBeaconRequest, UpdateTaskRequest } from "@/lib/api/types";
+import {
+  CreateBatchTasksRequest,
+  LinkBeaconRequest,
+  UpdateTaskRequest,
+} from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "./queryKeys";
 
@@ -14,10 +18,14 @@ export function useGetStaffTasks(staffId: number | undefined) {
 export function useUpdateTaskStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, data }: { taskId: number; data: UpdateTaskRequest }) => 
-      fleetActions.updateTaskStatus(taskId, data),
+    mutationFn: ({
+      taskId,
+      data,
+    }: {
+      taskId: number;
+      data: UpdateTaskRequest;
+    }) => fleetActions.updateTaskStatus(taskId, data),
     onSuccess: () => {
-      // Invalidate both the specific staff tasks and the global tasks
       queryClient.invalidateQueries({ queryKey: ["staffTasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
@@ -45,19 +53,21 @@ export function useLinkBeacon() {
   return useMutation({
     mutationFn: (data: LinkBeaconRequest) => fleetActions.linkBeacon(data),
     onSuccess: () => {
-      // Instantly refresh the inventory table the second a beacon is linked
       queryClient.invalidateQueries({ queryKey: ["beacons"] });
-    }
+    },
   });
 }
 
 export function useCreateTasks() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateBatchTasksRequest) => fleetActions.createTasks(data),
+    mutationFn: (data: CreateBatchTasksRequest) =>
+      fleetActions.createTasks(data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.fleet.staffTasks(variables.staffId) });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] }); 
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.fleet.staffTasks(variables.staffId),
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
   });
 }

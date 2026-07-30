@@ -12,7 +12,7 @@ import {
   SystemEvent,
   SystemEventsFeed,
 } from "@/components/dashboard/SystemEventsFeed";
-import { ActivityChartDto } from "@/lib/api/types"; 
+import { ActivityChartDto } from "@/lib/api/types";
 import { Button } from "@/components/ui/button";
 import { KeyRound } from "lucide-react";
 import Link from "next/link";
@@ -23,7 +23,7 @@ interface DashboardComposerProps {
   recentPlans: FloorPlan[];
   healthData: HardwareHealthData;
   systemEvents: SystemEvent[];
-  routingActivity: ActivityChartDto[]; 
+  routingActivity: ActivityChartDto[];
 }
 
 export function DashboardComposer({
@@ -32,11 +32,10 @@ export function DashboardComposer({
   recentPlans,
   healthData,
   systemEvents,
-  routingActivity, 
+  routingActivity,
 }: DashboardComposerProps) {
   return (
     <div className="flex flex-col min-h-full">
-      {/* Header */}
       <div className="sticky -top-6 md:-top-14 z-40 bg-zinc-50 dark:bg-zinc-900 border-b-2 border-zinc-950 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 -mt-6 md:-mt-8 -mx-6 md:-mx-8 px-6 md:px-8 pt-6 md:pt-8 pb-5 mb-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight text-zinc-950 dark:text-zinc-100 uppercase">
@@ -45,14 +44,11 @@ export function DashboardComposer({
         </div>
       </div>
 
-      {/* The 75% / 25% Grid Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 pb-8">
-        {/* --- LEFT COLUMN (75%) --- */}
         <div className="xl:col-span-3 flex flex-col gap-6 min-w-0">
           <StatCards stats={stats} />
 
           <div className="h-100">
-            {/* --- PASS THE DATA TO THE CHART --- */}
             <RoutingActivityChart data={routingActivity} />
           </div>
 
@@ -61,7 +57,6 @@ export function DashboardComposer({
           </div>
         </div>
 
-        {/* --- RIGHT COLUMN (25%) --- */}
         <div className="xl:col-span-1 flex flex-col gap-6">
           <HardwareHealthChart healthData={healthData} />
 

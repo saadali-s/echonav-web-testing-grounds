@@ -111,9 +111,7 @@ export function AssignmentEngine({
         </div>
       </div>
 
-      {/* 3-Column Grid for step-by-step selection */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
-        {/* Column 1: Floor Plans */}
         <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
@@ -149,7 +147,6 @@ export function AssignmentEngine({
           </CardContent>
         </Card>
 
-        {/* Column 2: Nodes */}
         <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <div className="flex items-center justify-between">
@@ -214,7 +211,6 @@ export function AssignmentEngine({
           </CardContent>
         </Card>
 
-        {/* Column 3: Staff & Dispatch */}
         <Card className="flex p-0 flex-col border-2 border-zinc-950 dark:border-zinc-800  dark:shadow-none bg-white dark:bg-zinc-950 overflow-hidden relative">
           <CardHeader className="border-b-2 border-zinc-950 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 py-4">
             <CardTitle className="font-black uppercase tracking-widest text-sm flex items-center gap-2">
@@ -240,7 +236,6 @@ export function AssignmentEngine({
             ))}
           </CardContent>
 
-          {/* Sticky Summary / Action Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-zinc-50 dark:bg-zinc-900 border-t-2 border-zinc-950 dark:border-zinc-800">
             <Button
               onClick={handleAssign}

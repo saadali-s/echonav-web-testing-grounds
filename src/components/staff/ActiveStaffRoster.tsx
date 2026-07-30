@@ -81,7 +81,6 @@ export function ActiveStaffRoster({ staff, onDelete }: ActiveStaffRosterProps) {
                       {member.joinedDate}
                     </span>
 
-                    {/* Delete Action Button */}
                     <div className="flex justify-center">
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
