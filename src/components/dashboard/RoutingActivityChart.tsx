@@ -13,11 +13,6 @@ import {
   YAxis,
 } from "recharts";
 
-const textureStyle = {
-  backgroundImage:
-    "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 8px)",
-};
-
 export function RoutingActivityChart({ data }: { data: ActivityChartDto[] }) {
   return (
     <Card className="relative p-0 flex flex-col border-2 border-zinc-950 dark:border-zinc-800 bg-white dark:bg-zinc-950 rounded-xl  dark:shadow-none overflow-hidden h-full">

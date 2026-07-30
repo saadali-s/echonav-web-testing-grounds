@@ -13,9 +13,6 @@ import {
   SystemEventsFeed,
 } from "@/components/dashboard/SystemEventsFeed";
 import { ActivityChartDto } from "@/lib/api/types";
-import { Button } from "@/components/ui/button";
-import { KeyRound } from "lucide-react";
-import Link from "next/link";
 
 interface DashboardComposerProps {
   userName: string;

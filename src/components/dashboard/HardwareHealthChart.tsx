@@ -21,10 +21,6 @@ export interface HardwareHealthData {
 }
 
 const ITEMS_PER_PAGE = 2;
-const textureStyle = {
-  backgroundImage:
-    "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 8px)",
-};
 
 export function HardwareHealthChart({
   healthData,

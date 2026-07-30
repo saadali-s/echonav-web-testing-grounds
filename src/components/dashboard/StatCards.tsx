@@ -7,11 +7,6 @@ export interface DashboardStats {
   pendingTasks: { count: number; subtext: string };
 }
 
-const textureStyle = {
-  backgroundImage:
-    "repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 1px, transparent 8px)",
-};
-
 export function StatCards({ stats }: { stats: DashboardStats }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
