@@ -1,0 +1,124 @@
+"use client";
+
+import { authActions } from "@/lib/actions/auth";
+import { RegisterOrgRequest } from "@/lib/api/types";
+import * as React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+export interface User {
+  id: string;
+  email?: string;
+  role?: string;
+  user_metadata?: {
+    organization_id?: string;
+    display_name?: string;
+  };
+}
+
+interface AuthState {
+  isLoggedIn: boolean;
+  user: User | null;
+  activeOrgId: string | null;
+}
+
+interface AuthContextType extends AuthState {
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (payload: RegisterOrgRequest) => Promise<void>;
+}
+
+const AuthContext = React.createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [authState, setAuthState] = useState<AuthState>({
+    isLoggedIn: false,
+    user: null,
+    activeOrgId: null,
+  });
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("echonav_user");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setAuthState({
+        isLoggedIn: true,
+        user: parsedUser,
+        activeOrgId: parsedUser.user_metadata?.organization_id || null,
+      });
+    }
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const response = await authActions.login(email, password);
+
+    const { token, role, organisationId, userId } = response;
+
+    const userData: User = {
+      id: String(userId),
+      email: email,
+      role: role,
+      user_metadata: {
+        organization_id: String(organisationId),
+        display_name: email.split("@")[0],
+      },
+    };
+
+    localStorage.setItem("echonav_user", JSON.stringify(userData));
+
+    document.cookie = `echonav_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+
+    setAuthState({
+      isLoggedIn: true,
+      user: userData,
+      activeOrgId: String(organisationId),
+    });
+
+    window.location.href = "/dashboard";
+  }, []);
+
+  const register = useCallback(
+    async (payload: RegisterOrgRequest) => {
+      await authActions.register(payload);
+
+      if (payload.password) {
+        await login(payload.email, payload.password);
+      } else {
+        window.location.href = "/auth?tab=login";
+      }
+    },
+    [login],
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await authActions.logout();
+    } catch {
+      console.warn("Cleared local state regardless of server response.");
+    } finally {
+      localStorage.removeItem("echonav_user");
+
+      document.cookie = `echonav_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+
+      setAuthState({ isLoggedIn: false, user: null, activeOrgId: null });
+      window.location.href = "/";
+    }
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      ...authState,
+      login,
+      logout,
+      register,
+    }),
+    [authState, login, logout, register],
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = React.useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+}
