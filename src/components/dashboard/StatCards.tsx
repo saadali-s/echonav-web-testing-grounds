@@ -1,0 +1,65 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, ClipboardList, RadioTower } from "lucide-react";
+
+export interface DashboardStats {
+  mappedBuildings: { count: number; subtext: string };
+  activeBeacons: { count: number; subtext: string };
+  pendingTasks: { count: number; subtext: string };
+}
+
+export function StatCards({ stats }: { stats: DashboardStats }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-indigo-300 dark:bg-indigo-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-indigo-1050 dark:text-indigo-100">
+            Mapped Buildings
+          </CardTitle>
+          <Building2 className="h-4 w-4 text-indigo-950 dark:text-indigo-100" />
+        </CardHeader>
+        <CardContent className="relative z-10 pt-5 px-5 pb-5">
+          <div className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
+            {stats.mappedBuildings.count}
+          </div>
+          <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 mt-1">
+            {stats.mappedBuildings.subtext}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-emerald-300 dark:bg-emerald-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-emerald-1050 dark:text-emerald-100">
+            Active Beacons
+          </CardTitle>
+          <RadioTower className="h-4 w-4 text-emerald-950 dark:text-emerald-100" />
+        </CardHeader>
+        <CardContent className="relative z-10 pt-5 px-5 pb-5">
+          <div className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
+            {stats.activeBeacons.count}
+          </div>
+          <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 mt-1">
+            {stats.activeBeacons.subtext}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="relative overflow-hidden rounded-xl border-2 border-zinc-950 dark:border-zinc-800 dark:shadow-none bg-white dark:bg-zinc-950 p-0">
+        <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 border-b-2 border-zinc-950 dark:border-zinc-800 bg-amber-300 dark:bg-amber-900 rounded-t-lg px-5 py-3">
+          <CardTitle className="text-[11px] font-black uppercase tracking-wider text-amber-1050 dark:text-amber-100">
+            Pending Tasks
+          </CardTitle>
+          <ClipboardList className="h-4 w-4 text-amber-950 dark:text-amber-100" />
+        </CardHeader>
+        <CardContent className="relative z-10 pt-5 px-5 pb-5">
+          <div className="text-3xl font-black text-zinc-950 dark:text-zinc-100">
+            {stats.pendingTasks.count}
+          </div>
+          <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 mt-1">
+            {stats.pendingTasks.subtext}
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
